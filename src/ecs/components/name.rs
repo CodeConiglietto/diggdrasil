@@ -1,4 +1,4 @@
-use specs::{Component, Entity, VecStorage};
+use specs::{Component, VecStorage};
 
 #[derive(Component)]
 #[storage(VecStorage)]

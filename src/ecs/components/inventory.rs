@@ -1,6 +1,6 @@
 use specs::{Component, Entity, VecStorage};
 
-#[derive(Component)]
+#[derive(Component, Default)]
 #[storage(VecStorage)]
 pub struct InventoryComponent {
     pub items: [Option<Entity>; 10],
@@ -12,7 +12,7 @@ impl InventoryComponent {
             if self.items[i].is_none() {
                 self.items[i] = Some(item);
 
-                return true
+                return true;
             }
         }
 

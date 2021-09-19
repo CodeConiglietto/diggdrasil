@@ -32,12 +32,16 @@ impl CreatureBuilder {
                     value: 10,
                     max_value: 10,
                 })
+                .with(InventoryComponent::default())
                 .with(DrawComponent {
                     sprite_builder: SpriteBuilder::Humanoid { race: *race },
                     symbol_builder: Some(SymbolBuilder::Humanoid { race: *race }),
                 }),
             Self::Tree => {
-                let contained_entities = vec![CreatureBuilder::Log.build(ecs_world, false)];
+                let contained_entities = vec![
+                    CreatureBuilder::Log.build(ecs_world, false),
+                    CreatureBuilder::Log.build(ecs_world, false),
+                ];
 
                 ecs_world
                     .create_entity()
@@ -52,14 +56,20 @@ impl CreatureBuilder {
                     })
                     .with(DeathComponent { contained_entities })
             }
-            Self::Log => ecs_world.create_entity().with(DrawComponent {
-                sprite_builder: SpriteBuilder::Log,
-                symbol_builder: Some(SymbolBuilder::Log),
-            }),
+            Self::Log => ecs_world
+                .create_entity()
+                .with(DrawComponent {
+                    sprite_builder: SpriteBuilder::Log,
+                    symbol_builder: Some(SymbolBuilder::Log),
+                })
+                .with(ItemComponent)
+                .with(NameComponent {
+                    name: String::from("log"),
+                }),
         };
 
         if under_player_control {
-            builder = builder.with(InputComponent {popup: None});
+            builder = builder.with(InputComponent { popup: None });
         }
 
         builder.build()

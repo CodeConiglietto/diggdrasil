@@ -8,8 +8,12 @@ use ggez::{
 use glam::*;
 use ndarray::prelude::*;
 use rand::prelude::*;
-use specs::{Builder, Read, ReadStorage, RunNow, World as ECSWorld, WorldExt as ECSWorldExt};
+use specs::{Builder, Join, RunNow, World as ECSWorld, WorldExt as ECSWorldExt};
 use std::{env, path::PathBuf};
+use tui::{
+    widgets::{Block, Borders, List, ListItem},
+    Terminal,
+};
 
 use crate::prelude::*;
 
@@ -23,6 +27,7 @@ pub mod util;
 struct MainState {
     //Assets
     font_batch: GgBunnyFontBatch,
+    tui: Terminal<Ui>,
 
     //World architecture
     ecs_world: ECSWorld,
@@ -115,7 +120,13 @@ impl MainState {
         //Construct game state
         let s = MainState {
             //Assets
-            font_batch: GgBunnyFontBatch::new(GgBunnyFont::new(texture, (8, 8))).unwrap(),
+            font_batch: GgBunnyFontBatch::new(GgBunnyFont::new(texture.clone(), (8, 8))).unwrap(),
+            tui: Terminal::new(Ui::new(
+                GgBunnyFontBatch::new(GgBunnyFont::new(texture, (8, 8))).unwrap(),
+                (MAP_X_SIZE + INVENTORY_SIZE, MAP_Y_SIZE),
+                RENDER_SCALE,
+            ))
+            .unwrap(),
 
             //World architecture
             ecs_world,
@@ -202,15 +213,9 @@ impl event::EventHandler<ggez::GameError> for MainState {
 
         self.font_batch.clear();
 
-        let (tile_map, entity_map, particle_map, particle_component, draw_component): (
-            Read<TileMapResource>,
-            Read<EntityMapResource>,
-            Read<ParticleMapResource>,
-            ReadStorage<ParticleComponent>,
-            ReadStorage<DrawComponent>,
-        ) = self.ecs_world.system_data();
+        let data: RenderData = self.ecs_world.system_data();
 
-        let tiles = &tile_map.contents;
+        let tiles = &data.tile_map.contents;
 
         for y in 0..MAP_Y_SIZE {
             for x in 0..MAP_X_SIZE {
@@ -233,8 +238,8 @@ impl event::EventHandler<ggez::GameError> for MainState {
                     );
                 }
 
-                for entity in entity_map.contents[[x, y]].iter() {
-                    let dc = &draw_component.get(*entity).unwrap();
+                for entity in data.entity_map.contents[[x, y]].iter() {
+                    let dc = data.draw.get(*entity).unwrap();
 
                     if self.symbolic_view {
                         if let Some(sym_build) = &dc.symbol_builder {
@@ -254,8 +259,8 @@ impl event::EventHandler<ggez::GameError> for MainState {
                 }
             }
 
-            for particle in particle_map.contents[y].iter() {
-                let pac = particle_component.get(*particle).unwrap();
+            for particle in data.particle_map.contents[y].iter() {
+                let pac = data.particle.get(*particle).unwrap();
                 let (x, y, z) = pac.position;
                 let (ix, iy) = (x, y - z);
 
@@ -267,7 +272,49 @@ impl event::EventHandler<ggez::GameError> for MainState {
             }
         }
 
+        self.tui
+            .draw(|f| {
+                for (inventory, _input) in (&data.inventory, &data.input).join() {
+                    let list = List::new(
+                        inventory
+                            .items
+                            .iter()
+                            .enumerate()
+                            .map(|(i, slot)| {
+                                if let Some(item) = slot {
+                                    let c = char::from(u32::from('a') as u8 + i as u8); // TODO Change this to a sane function later
+
+                                    let name = data.name.get(*item).unwrap();
+                                    ListItem::new(format!("{}) {}", c, name.name))
+                                } else {
+                                    ListItem::new("")
+                                }
+                            })
+                            .collect::<Vec<_>>(),
+                    );
+
+                    let block = Block::default().title("Inventory").borders(Borders::ALL);
+
+                    f.render_widget(
+                        list.block(block),
+                        tui::layout::Rect::new(MAP_X_SIZE as u16, 0, INVENTORY_SIZE as u16, 12),
+                    );
+                }
+
+                for input in (&data.input).join() {
+                    if let Some(popup) = &input.popup {
+                        popup.render(
+                            f,
+                            tui::layout::Rect::new(0, 0, MAP_X_SIZE as u16, MAP_Y_SIZE as u16),
+                            &data,
+                        );
+                    }
+                }
+            })
+            .unwrap();
+
         ggez::graphics::draw(ctx, &mut self.font_batch, DrawParam::default())?;
+        ggez::graphics::draw(ctx, self.tui.backend_mut(), DrawParam::default())?;
 
         graphics::present(ctx)?;
         Ok(())

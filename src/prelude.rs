@@ -26,6 +26,7 @@ pub use crate::{
         ui::{
             popup_state::PopupState,
             popup::Popup,
+            ui::Ui,
         },
         world::{
             tile_type::TileType,
@@ -60,6 +61,7 @@ pub use crate::{
         },
         system_data::{
             input_data::InputData,
+            render_data::RenderData,
         },
         systems::{
             action_resolution::ActionResolutionSystem,

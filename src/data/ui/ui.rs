@@ -19,10 +19,14 @@ pub struct Ui {
 }
 
 impl Ui {
-    pub fn new(font_batch: GgBunnyFontBatch, size: (usize, usize), scaling: f32) -> Self {
+    pub fn new(
+        font_batch: GgBunnyFontBatch,
+        (width, height): (usize, usize),
+        scaling: f32,
+    ) -> Self {
         Self {
             font_batch,
-            buffer: Array2::default(size),
+            buffer: Array2::default((height, width)),
             scaling,
         }
     }
@@ -39,6 +43,15 @@ impl Backend for Ui {
             let tui_char = cell.symbol.chars().next().unwrap();
 
             let (index, mirror, rotation) = match tui_char {
+                '┌' => (0x0DA, CharMirror::None, CharRotation::None),
+                '─' => (0x0C4, CharMirror::None, CharRotation::None),
+                '┐' => (0x0BF, CharMirror::None, CharRotation::None),
+                '│' => (0x0B3, CharMirror::None, CharRotation::None),
+                '└' => (0x0C0, CharMirror::None, CharRotation::None),
+                '┘' => (0x0D9, CharMirror::None, CharRotation::None),
+
+                ' ' => (0x000, CharMirror::None, CharRotation::None),
+
                 _ => {
                     if tui_char.is_ascii_graphic() {
                         (
@@ -60,8 +73,8 @@ impl Backend for Ui {
 
             let c = GgBunnyChar {
                 index,
-                foreground: convert_color(cell.fg),
-                background: Some(convert_color(cell.bg)),
+                foreground: convert_color(cell.fg).unwrap_or(GgColor::WHITE),
+                background: convert_color(cell.bg),
                 mirror,
                 rotation,
             };
@@ -95,7 +108,7 @@ impl Backend for Ui {
     }
 
     fn size(&self) -> Result<TuiRect, Error> {
-        let (width, height) = self.buffer.dim();
+        let (height, width) = self.buffer.dim();
 
         Ok(TuiRect::new(
             0,
@@ -106,6 +119,8 @@ impl Backend for Ui {
     }
 
     fn flush(&mut self) -> Result<(), Error> {
+        self.font_batch.clear();
+
         for ((y, x), c) in self.buffer.indexed_iter() {
             if let Some(c) = c {
                 c.draw_to_font_batch(
@@ -120,29 +135,29 @@ impl Backend for Ui {
     }
 }
 
-fn convert_color(tui_color: TuiColor) -> GgColor {
+fn convert_color(tui_color: TuiColor) -> Option<GgColor> {
     match tui_color {
-        TuiColor::Reset => GgColor::BLACK,
-        TuiColor::Black => GgColor::BLACK,
-        TuiColor::Red => GgColor::RED,
-        TuiColor::Green => GgColor::GREEN,
-        TuiColor::Yellow => GgColor::YELLOW,
-        TuiColor::Blue => GgColor::BLUE,
-        TuiColor::Magenta => GgColor::MAGENTA,
-        TuiColor::Cyan => GgColor::CYAN,
-        TuiColor::White => GgColor::WHITE,
+        TuiColor::Reset => None,
+        TuiColor::Black => Some(GgColor::BLACK),
+        TuiColor::Red => Some(GgColor::RED),
+        TuiColor::Green => Some(GgColor::GREEN),
+        TuiColor::Yellow => Some(GgColor::YELLOW),
+        TuiColor::Blue => Some(GgColor::BLUE),
+        TuiColor::Magenta => Some(GgColor::MAGENTA),
+        TuiColor::Cyan => Some(GgColor::CYAN),
+        TuiColor::White => Some(GgColor::WHITE),
 
         // Semi-arbitrary color mappings
-        TuiColor::Gray => GgColor::from_rgb(190, 190, 190),
-        TuiColor::DarkGray => GgColor::from_rgb(84, 84, 84),
-        TuiColor::LightRed => GgColor::from_rgb(255, 84, 84),
-        TuiColor::LightGreen => GgColor::from_rgb(84, 255, 84),
-        TuiColor::LightYellow => GgColor::from_rgb(255, 255, 84),
-        TuiColor::LightBlue => GgColor::from_rgb(84, 84, 255),
-        TuiColor::LightMagenta => GgColor::from_rgb(255, 84, 255),
-        TuiColor::LightCyan => GgColor::from_rgb(84, 255, 255),
+        TuiColor::Gray => Some(GgColor::from_rgb(190, 190, 190)),
+        TuiColor::DarkGray => Some(GgColor::from_rgb(84, 84, 84)),
+        TuiColor::LightRed => Some(GgColor::from_rgb(255, 84, 84)),
+        TuiColor::LightGreen => Some(GgColor::from_rgb(84, 255, 84)),
+        TuiColor::LightYellow => Some(GgColor::from_rgb(255, 255, 84)),
+        TuiColor::LightBlue => Some(GgColor::from_rgb(84, 84, 255)),
+        TuiColor::LightMagenta => Some(GgColor::from_rgb(255, 84, 255)),
+        TuiColor::LightCyan => Some(GgColor::from_rgb(84, 255, 255)),
 
-        TuiColor::Rgb(r, g, b) => GgColor::from_rgb(r, g, b),
+        TuiColor::Rgb(r, g, b) => Some(GgColor::from_rgb(r, g, b)),
         TuiColor::Indexed(_) => unimplemented!(),
     }
 }

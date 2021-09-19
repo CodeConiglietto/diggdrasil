@@ -1,4 +1,4 @@
-use specs::{Entities, Join, ReadStorage, System, Write, WriteStorage};
+use specs::{Entities, Join, System, Write, WriteStorage};
 
 use crate::prelude::*;
 
@@ -45,11 +45,13 @@ impl<'a> System<'a> for ActionResolutionSystem {
                             }
                         }
                     }
-                    AIAction::PickUpItem {item} => {
-                        if let Some(inventory) = inv.get_mut(eid){
+                    AIAction::PickUpItem { item } => {
+                        if let Some(inventory) = inv.get_mut(eid) {
                             if let Some(entity_position) = pos.get(eid) {
                                 if let Some(item_position) = pos.get(*item) {
-                                    if entity_position.x == item_position.x && entity_position.y == item_position.y {
+                                    if entity_position.x == item_position.x
+                                        && entity_position.y == item_position.y
+                                    {
                                         inventory.insert(*item);
                                         emap.despawn_entity(*item, &mut pos);
                                     }
