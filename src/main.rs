@@ -200,6 +200,8 @@ impl event::EventHandler<ggez::GameError> for MainState {
     fn draw(&mut self, ctx: &mut Context) -> GameResult {
         graphics::clear(ctx, [0.05, 0.05, 0.05, 1.0].into());
 
+        self.font_batch.clear();
+
         let (tile_map, entity_map, particle_map, particle_component, draw_component): (
             Read<TileMapResource>,
             Read<EntityMapResource>,
@@ -273,6 +275,25 @@ impl event::EventHandler<ggez::GameError> for MainState {
 }
 
 pub fn main() -> GameResult {
+    fern::Dispatch::new()
+        .format(|out, message, record| {
+            out.finish(format_args!(
+                "{}[{}][{}] {}",
+                chrono::Local::now().format("[%Y-%m-%d][%H:%M:%S%.3f]"),
+                record.target(),
+                record.level(),
+                message
+            ))
+        })
+        .level(log::LevelFilter::Trace)
+        .level_for("gfx_device_gl", log::LevelFilter::Warn)
+        .level_for("winit", log::LevelFilter::Info)
+        .level_for("gilrs", log::LevelFilter::Warn)
+        .level_for("ggez", log::LevelFilter::Info)
+        .chain(std::io::stdout())
+        .apply()
+        .unwrap();
+
     let mut cb = ggez::ContextBuilder::new("Diggdrasil", "CodeBunny");
 
     if let Ok(manifest_dir) = env::var("CARGO_MANIFEST_DIR") {

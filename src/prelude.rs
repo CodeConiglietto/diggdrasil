@@ -23,11 +23,6 @@ pub use crate::{
             axis::Axis,
             direction::Direction
         },
-        rendering::{
-            char::DiggChar,
-            color::DiggColor,
-            texture::DiggTexture
-        },
         ui::{
             popup_state::PopupState,
             popup::Popup,
