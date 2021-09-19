@@ -6,6 +6,7 @@ pub enum AIGoal {
     // Wander,
     MoveInDirection { x: i32, y: i32 },
     PickUpItem { item: Entity },
+    DropItem { item: Entity },
     // MoveToTile{x: i32, y: i32},
     // KillEntity { target: Entity },
     // AttackEntity { target: Entity },
@@ -21,6 +22,9 @@ impl AIGoal {
             }
             Self::PickUpItem { item } => {
                 format!("Pick up {}", data.name.get(*item).unwrap().name)
+            }
+            Self::DropItem { item } => {
+                format!("Drop {}", data.name.get(*item).unwrap().name)
             }
         }
     }

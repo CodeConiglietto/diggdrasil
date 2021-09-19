@@ -18,4 +18,16 @@ impl InventoryComponent {
 
         false
     }
+
+    pub fn remove(&mut self, item: Entity) -> bool {
+        for i in 0..self.items.len() {
+            if self.items[i] == Some(item) {
+                self.items[i] = None;
+
+                return true;
+            }
+        }
+
+        false
+    }
 }

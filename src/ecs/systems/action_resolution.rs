@@ -59,6 +59,14 @@ impl<'a> System<'a> for ActionResolutionSystem {
                             }
                         }
                     }
+                    AIAction::DropItem { item } => {
+                        if let Some(inventory) = inv.get_mut(eid) {
+                            if let Some(entity_position) = pos.get(eid) {
+                                inventory.remove(*item);
+                                emap.spawn_entity(*item, (entity_position.x, entity_position.y), &mut pos);
+                            }
+                        }
+                    }
                 }
             }
 

@@ -82,7 +82,7 @@ impl ParticleType {
                 foreground: Color::new(0.0, 0.0, 0.75, 1.0),
                 background: None,
                 rotation: CharRotation::None,
-                mirror: CharMirror::MirrorX,
+                mirror: CharMirror::None,
             },
             Self::RainSplash { lifetime } => {
                 let splash_anim = [

@@ -9,19 +9,23 @@ impl<'a> System<'a> for InputResolutionSystem {
     type SystemData = InputData<'a>;
 
     fn run(&mut self, data: Self::SystemData) {
+        //Entities
+        let eids = data.entities;
+
         //Resources
-        let kb = data.keyboard;
         let emap = data.entity_map;
+        let kb = data.keyboard;
 
         //Readable components
         let pos = data.position;
         let itc = data.item;
 
         //Writable components
-        let mut inc = data.input;
         let mut gol = data.ai_goal;
+        let mut inc = data.input;
+        let mut inv = data.inventory;
 
-        for (pos, inc, gol) in (&pos, &mut inc, &mut gol).join() {
+        for (eid, pos, inc, gol) in (&eids, &pos, &mut inc, &mut gol).join() {
             println!("Key pressed: {:?}", kb.last_pressed_key);
             //skip input if player already has goal that they are completing.
             //Add keypress to interrupt player goal (space?)
@@ -93,6 +97,33 @@ impl<'a> System<'a> for InputResolutionSystem {
                                     })
                                 }
                             }
+                        }
+                        KeyCode::D => {
+                            let PositionComponent { x, y } = pos;
+                            let mut drop_goals: Vec<_> = inv.get_mut(eid).unwrap().items
+                                .iter()
+                                .filter(|inventory_slot| 
+                                    //Check that the inventory slot has something in it, and also that it is an item
+                                    if let Some(item) = inventory_slot {
+                                        itc.get(*item).is_some()
+                                    } else {
+                                        false
+                                    }
+                                )
+                                .map(|item| AIGoal::DropItem { item: item.unwrap() })
+                                .collect();
+
+                            match drop_goals.len() {
+                                0 => {}
+                                _ => {
+                                    inc.popup = Some(Popup {
+                                        heading: String::from("Drop what?"),
+                                        available_goals: drop_goals,
+                                        state: PopupState::Waiting,
+                                    })
+                                }
+                            }
+
                         }
                         _ => (),
                     }
