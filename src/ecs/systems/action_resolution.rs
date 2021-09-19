@@ -7,7 +7,6 @@ pub struct ActionResolutionSystem;
 impl<'a> System<'a> for ActionResolutionSystem {
     type SystemData = (
         Entities<'a>,
-        Write<'a, ParticleMapResource>,
         Write<'a, EntityMapResource>,
         WriteStorage<'a, PositionComponent>,
         WriteStorage<'a, AIActionComponent>,
@@ -17,7 +16,7 @@ impl<'a> System<'a> for ActionResolutionSystem {
     );
 
     fn run(&mut self, data: Self::SystemData) {
-        let (eids, mut pmap, mut emap, mut pos, mut act, mut imc, mut inv, mut hpc) = data;
+        let (eids, mut emap, mut pos, mut act, mut imc, mut inv, mut hpc) = data;
 
         for (eid, act, imc) in (&eids, &mut act, &mut imc).join() {
             let current_action = &act.current_action;
@@ -41,8 +40,10 @@ impl<'a> System<'a> for ActionResolutionSystem {
                                     target_hp.value -= 1;
                                 }
                             } else {
-                                println!("Failed attack!");
+                                println!("Entity attempted to attack target that has no HP component!");
                             }
+                        } else {
+                            println!("Entity attempted to attack target that it cannot reach!");
                         }
                     }
                     AIAction::PickUpItem { item } => {
@@ -52,11 +53,20 @@ impl<'a> System<'a> for ActionResolutionSystem {
                                     if entity_position.x == item_position.x
                                         && entity_position.y == item_position.y
                                     {
-                                        inventory.insert(*item);
-                                        emap.despawn_entity(*item, &mut pos);
+                                        if inventory.insert(*item) {
+                                            emap.despawn_entity(*item, &mut pos);
+                                        }
+                                    } else {
+                                        println!("Entity attempted to pick up item that it cannot reach!");
                                     }
+                                } else {
+                                    println!("Entity attempting to pick up item that has no position!");
                                 }
+                            } else {
+                                println!("Entity attempting to pick up item despite having no position!");
                             }
+                        } else {
+                            println!("No inventory to store item in!");
                         }
                     }
                     AIAction::DropItem { item } => {
@@ -64,7 +74,11 @@ impl<'a> System<'a> for ActionResolutionSystem {
                             if let Some(entity_position) = pos.get(eid) {
                                 inventory.remove(*item);
                                 emap.spawn_entity(*item, (entity_position.x, entity_position.y), &mut pos);
+                            } else {
+                                println!("Entity attempting to drop an item despite having no position!");
                             }
+                        } else {
+                            println!("Entity attempting to drop an item despite having no inventory!");
                         }
                     }
                 }

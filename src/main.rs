@@ -1,6 +1,6 @@
 use bunnyfont::ggez::{GgBunnyFont, GgBunnyFontBatch};
 use ggez::{
-    event::{self, KeyCode},
+    event::{self, KeyCode, KeyMods},
     graphics::{self, DrawParam, FilterMode, Image},
     input::keyboard,
     Context, GameResult,
@@ -44,6 +44,8 @@ struct MainState {
 
     //Player and UI variables
     symbolic_view: bool,
+
+    current_tic: u32,
 }
 
 impl MainState {
@@ -74,6 +76,7 @@ impl MainState {
         //Initialise all resources
         let keyboard = KeyboardResource {
             last_pressed_key: None,
+            modifiers: KeyMods::default(),
         };
 
         let tile_map = TileMapResource {
@@ -143,6 +146,8 @@ impl MainState {
 
             //Player and UI variables
             symbolic_view: false,
+
+            current_tic: 0,
         };
 
         Ok(s)
@@ -173,21 +178,33 @@ impl event::EventHandler<ggez::GameError> for MainState {
             .build();
 
         //Write resources
-        let last_keypress = self
-            .ecs_world
-            .read_resource::<KeyboardResource>()
-            .last_pressed_key;
-        let next_keypress = keyboard::pressed_keys(ctx).iter().next().copied();
-        let mut final_keypress = None;
 
-        //TODO: find proper system to prevent or slow keypresses
-        if last_keypress != next_keypress {
-            final_keypress = next_keypress;
-        }
+        // //TODO: find proper system to prevent or slow keypresses
+        // let last_keypress = self
+        //     .ecs_world
+        //     .read_resource::<KeyboardResource>()
+        //     .last_pressed_key;
+        // let next_keypress = keyboard::pressed_keys(ctx).iter().next().copied();
+        // let mut final_keypress = None;
+        // if last_keypress != next_keypress {
+        //     final_keypress = next_keypress;
+        // }
+        // self.ecs_world
+        //     .write_resource::<KeyboardResource>()
+        //     .last_pressed_key = final_keypress
 
         self.ecs_world
             .write_resource::<KeyboardResource>()
-            .last_pressed_key = final_keypress;
+            .last_pressed_key = 
+            if self.current_tic % 5 == 0 {
+                keyboard::pressed_keys(ctx).iter().next().copied()
+            } else {
+                None
+            };
+
+        self.ecs_world
+            .write_resource::<KeyboardResource>()
+            .modifiers = keyboard::active_mods(ctx);
 
         self.ecs_world
             .write_resource::<ParticleMapResource>()
@@ -204,6 +221,8 @@ impl event::EventHandler<ggez::GameError> for MainState {
         self.particle_system.run_now(&self.ecs_world);
 
         self.ecs_world.maintain();
+
+        self.current_tic += 1;
 
         Ok(())
     }

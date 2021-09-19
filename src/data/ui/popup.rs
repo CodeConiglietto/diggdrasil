@@ -1,4 +1,4 @@
-use ggez::event::KeyCode;
+use ggez::event::{KeyCode, KeyMods};
 use tui::{
     layout::Rect,
     style::{Color, Style},
@@ -10,24 +10,23 @@ use crate::prelude::*;
 
 pub struct Popup {
     pub heading: String,
-    pub available_goals: Vec<AIGoal>,
+    pub available_goals: Vec<(usize, AIGoal)>,//TODO: make popup option struct which contain both an index and a goal in a named structure
     pub state: PopupState,
 }
 
 impl Popup {
-    pub fn handle_input(&mut self, key: KeyCode) {
-        // TODO Make this a saner function
-        match key {
-            KeyCode::A => self.state = PopupState::Returning(self.available_goals[0].clone()),
-            KeyCode::B => self.state = PopupState::Returning(self.available_goals[1].clone()),
-            KeyCode::C => self.state = PopupState::Returning(self.available_goals[2].clone()),
-            KeyCode::D => self.state = PopupState::Returning(self.available_goals[3].clone()),
-            KeyCode::E => self.state = PopupState::Returning(self.available_goals[4].clone()),
-            KeyCode::F => self.state = PopupState::Returning(self.available_goals[5].clone()),
-
-            KeyCode::Escape => self.state = PopupState::Canceling,
-
-            _ => {}
+    pub fn handle_input(&mut self, keycode: KeyCode, keymods: KeyMods) {
+        if keycode == KeyCode::Escape {
+            self.state = PopupState::Canceling;
+        } else {
+            if let Some(key_index) = key_to_index(keycode, keymods) {
+                for i in 0..self.available_goals.len() {
+                    if self.available_goals[i].0 == key_index {
+                        self.state = PopupState::Returning(self.available_goals[i].1.clone());
+                        break;
+                    }
+                }
+            }
         }
     }
 
@@ -35,9 +34,9 @@ impl Popup {
         let list = List::new(
             self.available_goals
                 .iter()
-                .enumerate()
-                .map(|(i, goal)| {
-                    let c = index_to_letter(i).unwrap();
+                .map(|(index, goal)| {
+                    let c = index_to_letter(*index).unwrap();
+
                     let text = goal.get_textual_representation(data);
 
                     ListItem::new(format!("{}) {}", c, text))
@@ -51,8 +50,5 @@ impl Popup {
             .style(Style::default().bg(Color::Black));
 
         frame.render_widget(list.block(block), size);
-
-        //a) Goal 1
-        //b) Goal 2
     }
 }

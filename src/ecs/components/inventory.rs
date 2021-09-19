@@ -7,6 +7,16 @@ pub struct InventoryComponent {
 }
 
 impl InventoryComponent {
+    pub fn any_slot_free(&self) -> bool {
+        for i in 0..self.items.len() {
+            if self.items[i].is_none() {
+                return true;
+            }
+        }
+
+        false
+    }
+    
     pub fn insert(&mut self, item: Entity) -> bool {
         for i in 0..self.items.len() {
             if self.items[i].is_none() {
