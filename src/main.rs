@@ -61,6 +61,7 @@ impl MainState {
         ecs_world.register::<InventoryComponent>();
         ecs_world.register::<ItemComponent>();
         ecs_world.register::<ManipulatorComponent>();
+        ecs_world.register::<NameComponent>();
         ecs_world.register::<ParticleComponent>();
         ecs_world.register::<PositionComponent>();
         ecs_world.register::<VelocityComponent>();
