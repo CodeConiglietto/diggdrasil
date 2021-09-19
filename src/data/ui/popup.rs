@@ -37,11 +37,10 @@ impl Popup {
                 .iter()
                 .enumerate()
                 .map(|(i, goal)| {
-                    ListItem::new(format!(
-                        "{}) {}",
-                        char::from(u32::from('a') as u8 + i as u8), // TODO Change this to a sane function later
-                        goal.get_textual_representation(data)
-                    ))
+                    let c = index_to_letter(i).unwrap();
+                    let text = goal.get_textual_representation(data);
+
+                    ListItem::new(format!("{}) {}", c, text))
                 })
                 .collect::<Vec<_>>(),
         );

@@ -282,9 +282,9 @@ impl event::EventHandler<ggez::GameError> for MainState {
                             .enumerate()
                             .map(|(i, slot)| {
                                 if let Some(item) = slot {
-                                    let c = char::from(u32::from('a') as u8 + i as u8); // TODO Change this to a sane function later
-
+                                    let c = index_to_letter(i).unwrap();
                                     let name = data.name.get(*item).unwrap();
+
                                     ListItem::new(format!("{}) {}", c, name.name))
                                 } else {
                                     ListItem::new("")
