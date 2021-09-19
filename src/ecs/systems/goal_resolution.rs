@@ -137,7 +137,10 @@ impl<'a> System<'a> for GoalResolutionSystem {
                                 }
                             }
                         }
-                    }
+                    },
+                    AIGoal::PickUpItem{item} => {
+                        act.current_action = Some(AIAction::PickUpItem{item: *item});
+                    },
                 }
             }
             //Assume goal is resolved for now

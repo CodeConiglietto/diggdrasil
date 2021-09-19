@@ -12,4 +12,4 @@ glam = { version = "0.18.0", features=["mint"] }
 ndarray = "0.15.3"
 rand = "0.8.4"
 bunnyfont = { git="https://github.com/CodeConiglietto/bunnyfont.git", branch="master" }
-specs = { version="0.17.0", features=["specs-derive"] }
+specs = { version="0.17.0", features=["shred-derive", "specs-derive"] }

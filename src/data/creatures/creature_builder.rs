@@ -59,7 +59,7 @@ impl CreatureBuilder {
         };
 
         if under_player_control {
-            builder = builder.with(PlayerControlComponent);
+            builder = builder.with(InputComponent {popup: None});
         }
 
         builder.build()

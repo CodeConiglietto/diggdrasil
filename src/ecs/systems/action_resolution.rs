@@ -1,4 +1,4 @@
-use specs::{Join, ReadStorage, System, Write, WriteStorage};
+use specs::{Entities, Join, ReadStorage, System, Write, WriteStorage};
 
 use crate::prelude::*;
 
@@ -6,17 +6,20 @@ pub struct ActionResolutionSystem;
 
 impl<'a> System<'a> for ActionResolutionSystem {
     type SystemData = (
+        Entities<'a>,
         Write<'a, ParticleMapResource>,
-        ReadStorage<'a, PositionComponent>,
+        Write<'a, EntityMapResource>,
+        WriteStorage<'a, PositionComponent>,
         WriteStorage<'a, AIActionComponent>,
         WriteStorage<'a, IntendedMovementComponent>,
+        WriteStorage<'a, InventoryComponent>,
         WriteStorage<'a, HealthComponent>,
     );
 
     fn run(&mut self, data: Self::SystemData) {
-        let (pmap, pos, mut act, mut imc, mut hpc) = data;
+        let (eids, mut pmap, mut emap, mut pos, mut act, mut imc, mut inv, mut hpc) = data;
 
-        for (epos, act, imc) in (&pos, &mut act, &mut imc).join() {
+        for (eid, act, imc) in (&eids, &mut act, &mut imc).join() {
             let current_action = &act.current_action;
 
             if let Some(action) = current_action {
@@ -29,8 +32,9 @@ impl<'a> System<'a> for ActionResolutionSystem {
                     AIAction::AttackEntity { target } => {
                         //Will crash if attempting to attack a target without a position
                         let target_pos = pos.get(*target).unwrap();
+                        let this_pos = pos.get(eid).unwrap();
 
-                        if pos_is_adjacent((epos.x, epos.y), (target_pos.x, target_pos.y)) {
+                        if pos_is_adjacent((this_pos.x, this_pos.y), (target_pos.x, target_pos.y)) {
                             //Will crash if attempting to attack a target that has no health component
                             if let Some(target_hp) = &mut hpc.get_mut(*target) {
                                 if target_hp.value > 0 {
@@ -38,6 +42,18 @@ impl<'a> System<'a> for ActionResolutionSystem {
                                 }
                             } else {
                                 println!("Failed attack!");
+                            }
+                        }
+                    }
+                    AIAction::PickUpItem {item} => {
+                        if let Some(inventory) = inv.get_mut(eid){
+                            if let Some(entity_position) = pos.get(eid) {
+                                if let Some(item_position) = pos.get(*item) {
+                                    if entity_position.x == item_position.x && entity_position.y == item_position.y {
+                                        inventory.insert(*item);
+                                        emap.despawn_entity(*item, &mut pos);
+                                    }
+                                }
                             }
                         }
                     }

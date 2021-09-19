@@ -28,7 +28,7 @@ struct MainState {
     ecs_world: ECSWorld,
 
     //Systems in the order which they are run
-    player_control_system: PlayerControlSystem,
+    input_resolution_system: InputResolutionSystem,
     goal_resolution_system: GoalResolutionSystem,
     action_resolution_system: ActionResolutionSystem,
     collision_calculation_system: CollisionCalculationSystem,
@@ -48,18 +48,22 @@ impl MainState {
 
         //Register all components
         let mut ecs_world = ECSWorld::new();
-        ecs_world.register::<PositionComponent>();
-        ecs_world.register::<VelocityComponent>();
-        ecs_world.register::<IntendedMovementComponent>();
-        ecs_world.register::<CollisionComponent>();
-        ecs_world.register::<ColliderComponent>();
-        ecs_world.register::<DrawComponent>();
-        ecs_world.register::<ParticleComponent>();
-        ecs_world.register::<PlayerControlComponent>();
         ecs_world.register::<AIActionComponent>();
         ecs_world.register::<AIGoalComponent>();
-        ecs_world.register::<HealthComponent>();
+        ecs_world.register::<ButcherableComponent>();
+        ecs_world.register::<ColliderComponent>();
+        ecs_world.register::<CollisionComponent>();
         ecs_world.register::<DeathComponent>();
+        ecs_world.register::<DrawComponent>();
+        ecs_world.register::<HealthComponent>();
+        ecs_world.register::<InputComponent>();
+        ecs_world.register::<IntendedMovementComponent>();
+        ecs_world.register::<InventoryComponent>();
+        ecs_world.register::<ItemComponent>();
+        ecs_world.register::<ManipulatorComponent>();
+        ecs_world.register::<ParticleComponent>();
+        ecs_world.register::<PositionComponent>();
+        ecs_world.register::<VelocityComponent>();
 
         //Initialise all resources
         let keyboard = KeyboardResource {
@@ -111,7 +115,7 @@ impl MainState {
             ecs_world,
 
             //Systems in the order which they are run
-            player_control_system: PlayerControlSystem,
+            input_resolution_system: InputResolutionSystem,
             goal_resolution_system: GoalResolutionSystem,
             action_resolution_system: ActionResolutionSystem,
             collision_calculation_system: CollisionCalculationSystem,
@@ -173,8 +177,8 @@ impl event::EventHandler<ggez::GameError> for MainState {
             .write_resource::<ParticleMapResource>()
             .clear_all();
 
-        //Run systems
-        self.player_control_system.run_now(&self.ecs_world);
+        //Run systems in order
+        self.input_resolution_system.run_now(&self.ecs_world);
         self.goal_resolution_system.run_now(&self.ecs_world);
         self.action_resolution_system.run_now(&self.ecs_world);
         self.collision_calculation_system.run_now(&self.ecs_world);

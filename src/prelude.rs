@@ -28,9 +28,13 @@ pub use crate::{
             color::DiggColor,
             texture::DiggTexture
         },
+        ui::{
+            popup_state::PopupState,
+            popup::Popup,
+        },
         world::{
+            tile_type::TileType,
             tile::Tile,
-            tile_type::TileType
         },
     },
     ecs::{
@@ -43,12 +47,13 @@ pub use crate::{
             death::DeathComponent,
             draw::DrawComponent,
             health::HealthComponent,
+            input::InputComponent,
             intended_movement::IntendedMovementComponent,
             inventory::InventoryComponent,
             item::ItemComponent,
-            manipulation::ManipulationComponent,
+            manipulator::ManipulatorComponent,
+            name::NameComponent,
             particle::ParticleComponent,
-            player_control::PlayerControlComponent,
             position::PositionComponent,
             velocity::VelocityComponent,
         },
@@ -58,15 +63,18 @@ pub use crate::{
             particle_map::ParticleMapResource,
             tile_map::TileMapResource,
         },
+        system_data::{
+            input_data::InputData,
+        },
         systems::{
             action_resolution::ActionResolutionSystem,
             collision_calculation::CollisionCalculationSystem,
             collision_resolution::CollisionResolutionSystem,
             goal_resolution::GoalResolutionSystem,
             health_resolution::HealthResolutionSystem,
+            input_resolution::InputResolutionSystem,
             movement_resolution::MovementResolutionSystem,
             particle::ParticleSystem,
-            player_control::PlayerControlSystem,
         },
     },
     util::*,
