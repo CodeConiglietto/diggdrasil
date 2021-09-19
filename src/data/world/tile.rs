@@ -13,4 +13,10 @@ impl Tile {
             TileType::Ground => SpriteBuilder::Ground { seed: self.seed },
         }
     }
+    pub fn get_symbolbuilder(&self) -> SymbolBuilder {
+        match self.tile_type {
+            TileType::Wall => SymbolBuilder::Wall { seed: self.seed },
+            TileType::Ground => SymbolBuilder::Ground { seed: self.seed },
+        }
+    }
 }

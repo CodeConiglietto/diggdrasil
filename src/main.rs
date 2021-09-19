@@ -211,7 +211,7 @@ impl event::EventHandler<ggez::GameError> for MainState {
                 let tile = &tiles[[x, y]];
 
                 if self.symbolic_view {
-                    &tile.get_spritebuilder().get_symbol().draw_to_spritebatch(
+                    &tile.get_symbolbuilder().get_symbol().draw_to_spritebatch(
                         (ix, iy),
                         &self.font,
                         sprite_batch,
@@ -227,17 +227,18 @@ impl event::EventHandler<ggez::GameError> for MainState {
                 }
 
                 for entity in entity_map.contents[[x, y]].iter() {
+                    let dc = &draw_component
+                        .get(*entity)
+                        .unwrap();
+                    
                     if self.symbolic_view {
-                        &draw_component
-                            .get(*entity)
-                            .unwrap()
-                            .sprite_builder
+                        if let Some(sym_build) = &dc.symbol_builder {
+                            sym_build
                             .get_symbol()
                             .draw_to_spritebatch((ix, iy), &self.font, sprite_batch, RENDER_SCALE);
+                        }
                     } else {
-                        draw_component
-                            .get(*entity)
-                            .unwrap()
+                        dc
                             .sprite_builder
                             .get_sprite()
                             .draw_to_spritebatch((ix, iy), &self.font, sprite_batch, RENDER_SCALE);

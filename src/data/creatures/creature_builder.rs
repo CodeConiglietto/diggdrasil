@@ -34,6 +34,7 @@ impl CreatureBuilder {
                 })
                 .with(DrawComponent {
                     sprite_builder: SpriteBuilder::Humanoid { race: *race },
+                    symbol_builder: Some(SymbolBuilder::Humanoid { race: *race }),
                 }),
             Self::Tree => {
                 let contained_entities = vec![CreatureBuilder::Log.build(ecs_world, false)];
@@ -42,6 +43,7 @@ impl CreatureBuilder {
                     .create_entity()
                     .with(DrawComponent {
                         sprite_builder: SpriteBuilder::Tree,
+                        symbol_builder: Some(SymbolBuilder::Tree),
                     })
                     .with(ColliderComponent)
                     .with(HealthComponent {
@@ -52,6 +54,7 @@ impl CreatureBuilder {
             }
             Self::Log => ecs_world.create_entity().with(DrawComponent {
                 sprite_builder: SpriteBuilder::Log,
+                symbol_builder: Some(SymbolBuilder::Log),
             }),
         };
 

@@ -5,4 +5,6 @@ use specs::{Component, VecStorage};
 #[storage(VecStorage)]
 pub struct DrawComponent {
     pub sprite_builder: SpriteBuilder,
+    //TODO: perhaps make this a seperate component
+    pub symbol_builder: Option<SymbolBuilder>,
 }

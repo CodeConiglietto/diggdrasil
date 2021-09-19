@@ -9,7 +9,8 @@ pub use crate::{
         },
         assets::{
             sprite::Sprite,
-            sprite_builder::SpriteBuilder
+            sprite_builder::SpriteBuilder,
+            symbol_builder::SymbolBuilder
         },
         creatures::{
             creature_builder::CreatureBuilder,
