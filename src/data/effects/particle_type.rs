@@ -1,9 +1,9 @@
 use bunnyfont::{
-    char::BunnyChar,
     char_transforms::{CharMirror, CharRotation},
+    ggez::GgBunnyChar,
 };
-use rand::prelude::*;
 use ggez::graphics::Color;
+use rand::prelude::*;
 
 use crate::prelude::*;
 
@@ -26,7 +26,11 @@ impl ParticleType {
         match self {
             Self::Rain { .. } => (x - 1, y, z - 1),
             Self::RainSplash { .. } => (x, y, z),
-            Self::Leaf => (x + thread_rng().gen_range(-1..=1), y + thread_rng().gen_range(-1..=1), z - 1),
+            Self::Leaf => (
+                x + thread_rng().gen_range(-1..=1),
+                y + thread_rng().gen_range(-1..=1),
+                z - 1,
+            ),
             _ => todo!(),
         }
     }
@@ -71,82 +75,60 @@ impl ParticleType {
         }
     }
 
-    pub fn get_char(&self) -> DiggChar {
+    pub fn get_char(&self) -> GgBunnyChar {
         match self {
-            Self::Rain { .. } => DiggChar {
-                inner: BunnyChar {
-                    index: 0x11F,
-                    foreground: DiggColor {
-                        inner: Color::new(0.0, 0.0, 0.75, 1.0),
-                    },
-                    background: None,
-                    rotation: CharRotation::None,
-                    mirror: CharMirror::MirrorX,
-                },
+            Self::Rain { .. } => GgBunnyChar {
+                index: 0x11F,
+                foreground: Color::new(0.0, 0.0, 0.75, 1.0),
+                background: None,
+                rotation: CharRotation::None,
+                mirror: CharMirror::MirrorX,
             },
             Self::RainSplash { lifetime } => {
                 let splash_anim = [
-                    DiggChar {
-                        inner: BunnyChar {
-                            index: 0x189,
-                            foreground: DiggColor {
-                                inner: Color::new(0.0, 0.0, 0.75, 1.0),
-                            },
-                            background: None,
-                            rotation: CharRotation::None,
-                            mirror: CharMirror::MirrorX,
-                        },
+                    GgBunnyChar {
+                        index: 0x189,
+                        foreground: Color::new(0.0, 0.0, 0.75, 1.0),
+                        background: None,
+                        rotation: CharRotation::None,
+                        mirror: CharMirror::MirrorX,
                     },
-                    DiggChar {
-                        inner: BunnyChar {
-                            index: 0x15F,
-                            foreground: DiggColor {
-                                inner: Color::new(0.0, 0.0, 0.75, 1.0),
-                            },
-                            background: None,
-                            rotation: CharRotation::None,
-                            mirror: CharMirror::MirrorX,
-                        },
+                    GgBunnyChar {
+                        index: 0x15F,
+                        foreground: Color::new(0.0, 0.0, 0.75, 1.0),
+                        background: None,
+                        rotation: CharRotation::None,
+                        mirror: CharMirror::MirrorX,
                     },
-                    DiggChar {
-                        inner: BunnyChar {
-                            index: 0x13F,
-                            foreground: DiggColor {
-                                inner: Color::new(0.0, 0.0, 0.75, 1.0),
-                            },
-                            background: None,
-                            rotation: CharRotation::None,
-                            mirror: CharMirror::MirrorX,
-                        },
+                    GgBunnyChar {
+                        index: 0x13F,
+                        foreground: Color::new(0.0, 0.0, 0.75, 1.0),
+                        background: None,
+                        rotation: CharRotation::None,
+                        mirror: CharMirror::MirrorX,
                     },
-                    DiggChar {
-                        inner: BunnyChar {
-                            index: 0x009,
-                            foreground: DiggColor {
-                                inner: Color::new(0.0, 0.0, 0.75, 1.0),
-                            },
-                            background: None,
-                            rotation: CharRotation::None,
-                            mirror: CharMirror::MirrorX,
-                        },
+                    GgBunnyChar {
+                        index: 0x009,
+                        foreground: Color::new(0.0, 0.0, 0.75, 1.0),
+                        background: None,
+                        rotation: CharRotation::None,
+                        mirror: CharMirror::MirrorX,
                     },
                 ];
 
                 splash_anim[*lifetime]
-            },
-            Self::Leaf => {
-                DiggChar {
-                    inner: BunnyChar {
-                        index: 0x060,
-                        foreground: DiggColor {
-                            inner: Color::new(0.0, 0.75, 0.0, 1.0),
-                        },
-                        background: None,
-                        rotation: CharRotation::Rotation90,
-                        mirror: if thread_rng().gen::<bool>() { CharMirror::None } else { CharMirror::MirrorX },
-                    }
-                }
             }
+            Self::Leaf => GgBunnyChar {
+                index: 0x060,
+                foreground: Color::new(0.0, 0.75, 0.0, 1.0),
+                background: None,
+                rotation: CharRotation::Rotation90,
+                mirror: if thread_rng().gen::<bool>() {
+                    CharMirror::None
+                } else {
+                    CharMirror::MirrorX
+                },
+            },
             _ => todo!(),
         }
     }

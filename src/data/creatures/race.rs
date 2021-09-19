@@ -1,7 +1,5 @@
 use ggez::graphics::Color;
 
-use crate::prelude::*;
-
 #[derive(Clone, Copy)]
 pub enum Race {
     Human,
@@ -20,20 +18,12 @@ impl Race {
         }
     }
 
-    pub fn get_color(&self) -> DiggColor {
+    pub fn get_color(&self) -> Color {
         match self {
-            Self::Human => DiggColor {
-                inner: Color::new(0.75, 0.0, 0.0, 1.0),
-            },
-            Self::Elf => DiggColor {
-                inner: Color::new(0.0, 0.75, 0.0, 1.0),
-            },
-            Self::Kobold => DiggColor {
-                inner: Color::new(0.75, 0.75, 0.75, 1.0),
-            },
-            Self::Goblin => DiggColor {
-                inner: Color::new(0.75, 0.75, 0.0, 1.0),
-            },
+            Self::Human => Color::new(0.75, 0.0, 0.0, 1.0),
+            Self::Elf => Color::new(0.0, 0.75, 0.0, 1.0),
+            Self::Kobold => Color::new(0.75, 0.75, 0.75, 1.0),
+            Self::Goblin => Color::new(0.75, 0.75, 0.0, 1.0),
         }
     }
 

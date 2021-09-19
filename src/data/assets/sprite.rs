@@ -1,23 +1,19 @@
-use bunnyfont::font::BunnyFont;
-use ggez::graphics::spritebatch::SpriteBatch;
+use bunnyfont::ggez::{GgBunnyChar, GgBunnyFontBatch};
 use ndarray::prelude::*;
-
-use crate::prelude::*;
 
 //TODO: in future make this a model, in 3d instead of 2d
 //Then flatten into a 2d representation
 pub struct Sprite {
     pub origin_x: i32,
     pub origin_y: i32,
-    pub contents: Array2<DiggChar>,
+    pub contents: Array2<GgBunnyChar>,
 }
 
 impl Sprite {
-    pub fn draw_to_spritebatch(
+    pub fn draw_to_font_batch(
         &self,
+        font_batch: &mut GgBunnyFontBatch,
         (x, y): (i32, i32),
-        font: &BunnyFont<DiggTexture>,
-        sprite_batch: &mut SpriteBatch,
         render_scale: f32,
     ) {
         let (width, height) = self.contents.dim();
@@ -30,7 +26,7 @@ impl Sprite {
                     sprite_x as i32 + y - self.origin_y,
                 );
 
-                draw_char.draw_to_spritebatch((dest_x, dest_y), font, sprite_batch, render_scale);
+                draw_char.draw_to_font_batch(font_batch, (dest_x, dest_y), render_scale);
             }
         }
     }

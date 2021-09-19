@@ -1,7 +1,7 @@
-use bunnyfont::font::BunnyFont;
+use bunnyfont::ggez::{GgBunnyFont, GgBunnyFontBatch};
 use ggez::{
     event::{self, KeyCode},
-    graphics::{self, spritebatch::SpriteBatch, DrawParam, FilterMode, Image},
+    graphics::{self, DrawParam, FilterMode, Image},
     input::keyboard,
     Context, GameResult,
 };
@@ -22,7 +22,7 @@ pub mod util;
 
 struct MainState {
     //Assets
-    font: BunnyFont<DiggTexture>,
+    font_batch: GgBunnyFontBatch,
 
     //World architecture
     ecs_world: ECSWorld,
@@ -88,6 +88,9 @@ impl MainState {
 
         let particle_map = ParticleMapResource::default();
 
+        // TODO
+        //let ui = UiResource { terminal: };
+
         //Insert pertinent data into resources
         let player = CreatureBuilder::Humanoid { race: Race::Human }.build(&mut ecs_world, true);
         entity_map.spawn_entity(player, (16, 16), &mut ecs_world.system_data());
@@ -106,11 +109,13 @@ impl MainState {
         ecs_world.insert(tile_map);
         ecs_world.insert(entity_map);
         ecs_world.insert(particle_map);
+        // TODO
+        //ecs_world.insert(ui);
 
         //Construct game state
         let s = MainState {
             //Assets
-            font: BunnyFont::new(DiggTexture { inner: texture }, (8, 8)),
+            font_batch: GgBunnyFontBatch::new(GgBunnyFont::new(texture, (8, 8))).unwrap(),
 
             //World architecture
             ecs_world,
@@ -142,8 +147,7 @@ impl event::EventHandler<ggez::GameError> for MainState {
             self.symbolic_view = false;
         }
 
-        &self
-            .ecs_world
+        self.ecs_world
             .create_entity()
             .with(ParticleComponent {
                 position: (
@@ -196,8 +200,6 @@ impl event::EventHandler<ggez::GameError> for MainState {
     fn draw(&mut self, ctx: &mut Context) -> GameResult {
         graphics::clear(ctx, [0.05, 0.05, 0.05, 1.0].into());
 
-        let sprite_batch = &mut SpriteBatch::new(self.font.texture().inner.clone());
-
         let (tile_map, entity_map, particle_map, particle_component, draw_component): (
             Read<TileMapResource>,
             Read<EntityMapResource>,
@@ -216,37 +218,36 @@ impl event::EventHandler<ggez::GameError> for MainState {
                 let tile = &tiles[[x, y]];
 
                 if self.symbolic_view {
-                    &tile.get_symbolbuilder().get_symbol().draw_to_spritebatch(
+                    tile.get_symbolbuilder().get_symbol().draw_to_font_batch(
+                        &mut self.font_batch,
                         (ix, iy),
-                        &self.font,
-                        sprite_batch,
                         RENDER_SCALE,
                     );
                 } else {
-                    &tile.get_spritebuilder().get_sprite().draw_to_spritebatch(
+                    tile.get_spritebuilder().get_sprite().draw_to_font_batch(
+                        &mut self.font_batch,
                         (ix, iy),
-                        &self.font,
-                        sprite_batch,
                         RENDER_SCALE,
                     );
                 }
 
                 for entity in entity_map.contents[[x, y]].iter() {
-                    let dc = &draw_component
-                        .get(*entity)
-                        .unwrap();
-                    
+                    let dc = &draw_component.get(*entity).unwrap();
+
                     if self.symbolic_view {
                         if let Some(sym_build) = &dc.symbol_builder {
-                            sym_build
-                            .get_symbol()
-                            .draw_to_spritebatch((ix, iy), &self.font, sprite_batch, RENDER_SCALE);
+                            sym_build.get_symbol().draw_to_font_batch(
+                                &mut self.font_batch,
+                                (ix, iy),
+                                RENDER_SCALE,
+                            );
                         }
                     } else {
-                        dc
-                            .sprite_builder
-                            .get_sprite()
-                            .draw_to_spritebatch((ix, iy), &self.font, sprite_batch, RENDER_SCALE);
+                        dc.sprite_builder.get_sprite().draw_to_font_batch(
+                            &mut self.font_batch,
+                            (ix, iy),
+                            RENDER_SCALE,
+                        );
                     }
                 }
             }
@@ -256,16 +257,15 @@ impl event::EventHandler<ggez::GameError> for MainState {
                 let (x, y, z) = pac.position;
                 let (ix, iy) = (x, y - z);
 
-                pac.particle_type.get_char().draw_to_spritebatch(
+                pac.particle_type.get_char().draw_to_font_batch(
+                    &mut self.font_batch,
                     (ix, iy),
-                    &self.font,
-                    sprite_batch,
                     RENDER_SCALE,
                 );
             }
         }
 
-        ggez::graphics::draw(ctx, sprite_batch, DrawParam::default())?;
+        ggez::graphics::draw(ctx, &mut self.font_batch, DrawParam::default())?;
 
         graphics::present(ctx)?;
         Ok(())

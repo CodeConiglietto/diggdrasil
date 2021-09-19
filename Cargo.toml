@@ -8,8 +8,9 @@ edition = "2018"
 
 [dependencies]
 ggez = "0.6.0"
-glam = { version = "0.18.0", features=["mint"] }
+glam = { version = "0.18.0", features = ["mint"] }
 ndarray = "0.15.3"
 rand = "0.8.4"
-bunnyfont = { git="https://github.com/CodeConiglietto/bunnyfont.git", branch="master" }
-specs = { version="0.17.0", features=["shred-derive", "specs-derive"] }
+bunnyfont = { git = "https://github.com/CodeConiglietto/bunnyfont.git", branch = "master", features = ["ggez"] }
+specs = { version = "0.17.0", features = ["shred-derive", "specs-derive"] }
+tui = "0.16.0"
