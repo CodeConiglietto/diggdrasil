@@ -29,7 +29,7 @@ impl ParticleType {
             Self::Leaf => (
                 x + thread_rng().gen_range(-1..=1),
                 y + thread_rng().gen_range(-1..=1),
-                z - 1,
+                z - thread_rng().gen_range(0..=1),
             ),
             _ => todo!(),
         }
@@ -122,7 +122,7 @@ impl ParticleType {
                 index: 0x060,
                 foreground: Color::new(0.0, 0.75, 0.0, 1.0),
                 background: None,
-                rotation: CharRotation::Rotation90,
+                rotation: CharRotation::Rotation270,
                 mirror: if thread_rng().gen::<bool>() {
                     CharMirror::None
                 } else {

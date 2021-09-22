@@ -10,14 +10,18 @@ impl<'a> System<'a> for GoalResolutionSystem {
         Read<'a, EntityMapResource>,
         ReadStorage<'a, PositionComponent>,
         ReadStorage<'a, HealthComponent>,
+        ReadStorage<'a, InventoryComponent>,
         WriteStorage<'a, AIGoalComponent>,
         WriteStorage<'a, AIActionComponent>,
+        WriteStorage<'a, InputComponent>,
     );
 
     fn run(&mut self, data: Self::SystemData) {
-        let (tmap, emap, pos, hpc, mut gol, mut act) = data;
+        let (tmap, emap, pos, hpc, inv, mut gol, mut act, mut inp) = data;
 
-        for (pos, gol, act) in (&pos, &mut gol, &mut act).join() {
+        for (pos, inv, gol, act, inp) in
+            (&pos, (&inv).maybe(), &mut gol, &mut act, (&mut inp).maybe()).join()
+        {
             let current_goal = &gol.current_goal;
 
             if let Some(goal) = current_goal {
@@ -137,13 +141,101 @@ impl<'a> System<'a> for GoalResolutionSystem {
                                 }
                             }
                         }
-                    },
-                    AIGoal::PickUpItem{item} => {
-                        act.current_action = Some(AIAction::PickUpItem{item: *item});
-                    },
-                    AIGoal::DropItem{item} => {
-                        act.current_action = Some(AIAction::DropItem{item: *item});
-                    },
+                    }
+                    AIGoal::PickUpItem { item } => {
+                        act.current_action = Some(AIAction::PickUpItem { item: *item });
+                    }
+                    AIGoal::DropItem { item } => {
+                        act.current_action = Some(AIAction::DropItem { item: *item });
+                    }
+                    AIGoal::Build {
+                        x,
+                        y,
+                        tile_type,
+                        consumed_entity,
+                    } => {
+                        if let Some(tile_type) = tile_type {
+                            if let Some(consumed_entity) = consumed_entity {
+                                act.current_action = Some(AIAction::BuildAtLocation {
+                                    x: *x,
+                                    y: *y,
+                                    tile_type: *tile_type,
+                                    consumed_entity: *consumed_entity,
+                                });
+                            } else {
+                                if let Some(inp) = inp {
+                                    if let Some(inv) = inv {
+                                        let item_goals = inv
+                                            .items
+                                            .iter()
+                                            .enumerate()
+                                            .filter_map(|(i, slot)| {
+                                                slot.map(|item| {
+                                                    (
+                                                        i,
+                                                        AIGoal::Build {
+                                                            x: *x,
+                                                            y: *y,
+                                                            tile_type: Some(*tile_type),
+                                                            consumed_entity: Some(item),
+                                                        },
+                                                    )
+                                                })
+                                            })
+                                            .map(PopupListItem::from)
+                                            .collect();
+
+                                        inp.popup = Some(Popup::list(
+                                            format!(
+                                                "Build with what?",
+                                            ),
+                                            item_goals,
+                                        ));
+                                    } else {
+                                        println!("Entity trying to find building material doesn't have inventory component");
+                                    }
+                                } else {
+                                    println!("Entity trying to find building material doesn't have input component");
+                                }
+                            }
+                        } else {
+                            if let Some(inp) = inp {
+                                let tile_goals = tmap.contents[[*x as usize, *y as usize]]
+                                    .tile_type
+                                    .available_buildings()
+                                    .iter()
+                                    .map(|tile_type| AIGoal::Build {
+                                        x: *x,
+                                        y: *y,
+                                        tile_type: Some(*tile_type),
+                                        consumed_entity: consumed_entity.clone(),
+                                    })
+                                    .enumerate()
+                                    .map(PopupListItem::from)
+                                    .collect();
+
+                                inp.popup = Some(Popup::list(
+                                    format!("Build what?"),
+                                    tile_goals,
+                                ));
+                            } else {
+                                println!(
+                                    "Entity trying to decide building doesn't have input component"
+                                );
+                            }
+                        }
+
+                        //Check that x, y is adjacent to entity position
+                        //Look at tile that is at x, y location
+                        //Check that the tile that is there can transition to the desired tile_type
+
+                        //Check that the consumed entity is one of:
+                        //-Adjacent
+                        //-Held
+                        //-In inventory
+
+                        //act.current_action{x, y, tile_type, comsumed_entities }
+                    }
                 }
             }
             //Assume goal is resolved for now

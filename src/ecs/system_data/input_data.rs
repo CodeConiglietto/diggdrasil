@@ -1,5 +1,5 @@
-use specs::prelude::*;
 use crate::prelude::*;
+use specs::prelude::*;
 
 #[derive(SystemData)]
 pub struct InputData<'a> {

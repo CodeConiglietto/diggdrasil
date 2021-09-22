@@ -1,8 +1,25 @@
 use specs::Entity;
 
+use crate::prelude::*;
+
 pub enum AIAction {
-    MoveInDirection { x: i32, y: i32 },
-    AttackEntity { target: Entity },
-    PickUpItem { item: Entity },
-    DropItem { item: Entity },
+    MoveInDirection {
+        x: i32,
+        y: i32,
+    },
+    AttackEntity {
+        target: Entity,
+    },
+    PickUpItem {
+        item: Entity,
+    },
+    DropItem {
+        item: Entity,
+    },
+    BuildAtLocation {
+        x: i32,
+        y: i32,
+        tile_type: TileType,
+        consumed_entity: Entity,
+    },
 }

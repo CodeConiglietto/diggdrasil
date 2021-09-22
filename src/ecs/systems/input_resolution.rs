@@ -1,5 +1,6 @@
 use ggez::event::KeyCode;
 use specs::{Join, System};
+use strum::IntoEnumIterator;
 
 use crate::prelude::*;
 
@@ -50,28 +51,28 @@ impl<'a> System<'a> for InputResolutionSystem {
                     match key {
                         //TODO: move these to use direction enum
                         KeyCode::Numpad1 => {
-                            gol.current_goal = Some(AIGoal::MoveInDirection { x: -1, y: 1 })
+                            gol.current_goal = Some(AIGoal::MoveInDirection { x: -1, y: 1 });
                         }
                         KeyCode::Numpad2 | KeyCode::Down => {
-                            gol.current_goal = Some(AIGoal::MoveInDirection { x: 0, y: 1 })
+                            gol.current_goal = Some(AIGoal::MoveInDirection { x: 0, y: 1 });
                         }
                         KeyCode::Numpad3 => {
-                            gol.current_goal = Some(AIGoal::MoveInDirection { x: 1, y: 1 })
+                            gol.current_goal = Some(AIGoal::MoveInDirection { x: 1, y: 1 });
                         }
                         KeyCode::Numpad4 | KeyCode::Left => {
-                            gol.current_goal = Some(AIGoal::MoveInDirection { x: -1, y: 0 })
+                            gol.current_goal = Some(AIGoal::MoveInDirection { x: -1, y: 0 });
                         }
                         KeyCode::Numpad6 | KeyCode::Right => {
-                            gol.current_goal = Some(AIGoal::MoveInDirection { x: 1, y: 0 })
+                            gol.current_goal = Some(AIGoal::MoveInDirection { x: 1, y: 0 });
                         }
                         KeyCode::Numpad7 => {
-                            gol.current_goal = Some(AIGoal::MoveInDirection { x: -1, y: -1 })
+                            gol.current_goal = Some(AIGoal::MoveInDirection { x: -1, y: -1 });
                         }
                         KeyCode::Numpad8 | KeyCode::Up => {
-                            gol.current_goal = Some(AIGoal::MoveInDirection { x: 0, y: -1 })
+                            gol.current_goal = Some(AIGoal::MoveInDirection { x: 0, y: -1 });
                         }
                         KeyCode::Numpad9 => {
-                            gol.current_goal = Some(AIGoal::MoveInDirection { x: 1, y: -1 })
+                            gol.current_goal = Some(AIGoal::MoveInDirection { x: 1, y: -1 });
                         }
                         //TODO: add modifier check to see if player presses G or g.
                         //G picks up an entity in a manipulator
@@ -83,21 +84,25 @@ impl<'a> System<'a> for InputResolutionSystem {
                                     let PositionComponent { x, y } = pos;
                                     let mut pickup_goals: Vec<_> = emap.contents
                                         [[*x as usize, *y as usize]]
-                                        .iter()
-                                        .filter(|entity| itc.get(**entity).is_some())
-                                        .enumerate()
-                                        .map(|(index, item)| (index, AIGoal::PickUpItem { item: *item }))
-                                        .collect();
+                                    .iter()
+                                    .filter(|entity| itc.get(**entity).is_some())
+                                    .enumerate()
+                                    .map(|(index, item)| {
+                                        PopupListItem::new(
+                                            index,
+                                            AIGoal::PickUpItem { item: *item },
+                                        )
+                                    })
+                                    .collect();
 
                                     match pickup_goals.len() {
                                         0 => {}
-                                        1 => gol.current_goal = Some(pickup_goals.remove(0).1),
+                                        1 => gol.current_goal = Some(pickup_goals.remove(0).goal),
                                         _ => {
-                                            inc.popup = Some(Popup {
-                                                heading: String::from("Pick up what?"),
-                                                available_goals: pickup_goals,
-                                                state: PopupState::Waiting,
-                                            })
+                                            inc.popup = Some(Popup::list(
+                                                String::from("Pick up what?"),
+                                                pickup_goals,
+                                            ));
                                         }
                                     }
                                 } else {
@@ -108,33 +113,54 @@ impl<'a> System<'a> for InputResolutionSystem {
                             }
                         }
                         KeyCode::D => {
-                            let drop_goals: Vec<_> = inv.get_mut(eid).unwrap().items
+                            let drop_goals: Vec<_> = inv
+                                .get_mut(eid)
+                                .unwrap()
+                                .items
                                 .iter()
                                 .enumerate()
-                                .filter_map(|(index, inventory_slot)|{
-                                        //Check that the inventory slot has something in it, and also that it is an item
-                                        if let Some(item) = inventory_slot {
-                                            if itc.get(*item).is_some() {
-                                                return Some((index, AIGoal::DropItem { item: *item }));
-                                            }
+                                .filter_map(|(index, inventory_slot)| {
+                                    //Check that the inventory slot has something in it, and also that it is an item
+                                    if let Some(item) = inventory_slot {
+                                        if itc.get(*item).is_some() {
+                                            return Some(PopupListItem::new(
+                                                index,
+                                                AIGoal::DropItem { item: *item },
+                                            ));
                                         }
-                                        
-                                        None
                                     }
-                                )
+
+                                    None
+                                })
                                 .collect();
 
                             match drop_goals.len() {
                                 0 => {}
                                 _ => {
-                                    inc.popup = Some(Popup {
-                                        heading: String::from("Drop what?"),
-                                        available_goals: drop_goals,
-                                        state: PopupState::Waiting,
-                                    })
+                                    inc.popup =
+                                        Some(Popup::list(String::from("Drop what?"), drop_goals));
                                 }
                             }
+                        }
+                        KeyCode::B => {
+                            //TODO: ensure player has some way to manipulate objects, otherwise they can't build :(
+                            let pos_x = pos.x;
+                            let pos_y = pos.y;
 
+                            inc.popup = Some(Popup::directions(
+                                String::from("Build where?"),
+                                Directions::all(),
+                                move |dir| {
+                                    let (dx, dy) = dir.get_offset();
+
+                                    AIGoal::Build {
+                                        x: pos_x + dx,
+                                        y: pos_y + dy,
+                                        tile_type: None,
+                                        consumed_entity: None,
+                                    }
+                                },
+                            ));
                         }
                         _ => (),
                     }

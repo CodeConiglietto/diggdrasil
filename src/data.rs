@@ -1,5 +1,6 @@
 pub mod ai;
 pub mod assets;
+pub mod crafting;
 pub mod creatures;
 pub mod effects;
 pub mod geometry;

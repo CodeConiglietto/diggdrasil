@@ -29,6 +29,8 @@ impl CreatureBuilder {
                 })
                 .with(AIGoalComponent { current_goal: None })
                 .with(HealthComponent {
+                    hit_particle: None, //TODO: Make this blood
+                    turn_damage: 0,
                     value: 10,
                     max_value: 10,
                 })
@@ -51,6 +53,8 @@ impl CreatureBuilder {
                     })
                     .with(ColliderComponent)
                     .with(HealthComponent {
+                        hit_particle: Some(ParticleType::Leaf),
+                        turn_damage: 0,
                         value: 10,
                         max_value: 10,
                     })
@@ -63,6 +67,10 @@ impl CreatureBuilder {
                     symbol_builder: Some(SymbolBuilder::Log),
                 })
                 .with(ItemComponent)
+                .with(MaterialComponent {
+                    material: Material::Wood,
+                    amount: 5,
+                })
                 .with(NameComponent {
                     name: String::from("log"),
                 }),

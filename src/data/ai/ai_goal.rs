@@ -4,9 +4,22 @@ use specs::prelude::*;
 #[derive(Clone)]
 pub enum AIGoal {
     // Wander,
-    MoveInDirection { x: i32, y: i32 },
-    PickUpItem { item: Entity },
-    DropItem { item: Entity },
+    MoveInDirection {
+        x: i32,
+        y: i32,
+    },
+    PickUpItem {
+        item: Entity,
+    },
+    DropItem {
+        item: Entity,
+    },
+    Build {
+        x: i32,
+        y: i32,
+        tile_type: Option<TileType>,
+        consumed_entity: Option<Entity>,
+    },
     // MoveToTile{x: i32, y: i32},
     // KillEntity { target: Entity },
     // AttackEntity { target: Entity },
@@ -25,6 +38,31 @@ impl AIGoal {
             }
             Self::DropItem { item } => {
                 format!("Drop {}", data.name.get(*item).unwrap().name)
+            }
+            Self::Build {
+                x,
+                y,
+                tile_type,
+                consumed_entity,
+            } => {
+                let tile_name = if let Some(tile_type_known) = tile_type {
+                    tile_type_known.get_name()
+                } else {
+                    String::from("something")
+                };
+
+                let consumed_entity_name = if let Some(name_component) =
+                    consumed_entity.map(|e| data.name.get(e).unwrap())
+                {
+                    &name_component.name
+                } else {
+                    "something"
+                };
+
+                format!(
+                    "Build {} at ({}, {}) from {}",
+                    tile_name, x, y, consumed_entity_name
+                )
             }
         }
     }

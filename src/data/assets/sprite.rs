@@ -6,7 +6,7 @@ use ndarray::prelude::*;
 pub struct Sprite {
     pub origin_x: i32,
     pub origin_y: i32,
-    pub contents: Array2<GgBunnyChar>,
+    pub contents: Array2<Vec<GgBunnyChar>>,
 }
 
 impl Sprite {
@@ -20,13 +20,15 @@ impl Sprite {
 
         for sprite_x in 0..width {
             for sprite_y in 0..height {
-                let draw_char = &self.contents[[sprite_x, sprite_y]];
+                let draw_chars = &self.contents[[sprite_x, sprite_y]];
                 let (dest_x, dest_y) = (
                     sprite_y as i32 + x - self.origin_x,
                     sprite_x as i32 + y - self.origin_y,
                 );
 
-                draw_char.draw_to_font_batch(font_batch, (dest_x, dest_y), render_scale);
+                for draw_char in draw_chars {
+                    draw_char.draw_to_font_batch(font_batch, (dest_x, dest_y), render_scale);
+                }
             }
         }
     }

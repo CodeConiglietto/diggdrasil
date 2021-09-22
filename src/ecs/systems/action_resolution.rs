@@ -1,3 +1,4 @@
+use rand::prelude::*;
 use specs::{Entities, Join, System, Write, WriteStorage};
 
 use crate::prelude::*;
@@ -7,6 +8,7 @@ pub struct ActionResolutionSystem;
 impl<'a> System<'a> for ActionResolutionSystem {
     type SystemData = (
         Entities<'a>,
+        Write<'a, TileMapResource>,
         Write<'a, EntityMapResource>,
         WriteStorage<'a, PositionComponent>,
         WriteStorage<'a, AIActionComponent>,
@@ -16,7 +18,7 @@ impl<'a> System<'a> for ActionResolutionSystem {
     );
 
     fn run(&mut self, data: Self::SystemData) {
-        let (eids, mut emap, mut pos, mut act, mut imc, mut inv, mut hpc) = data;
+        let (eids, mut tmap, mut emap, mut pos, mut act, mut imc, mut inv, mut hpc) = data;
 
         for (eid, act, imc) in (&eids, &mut act, &mut imc).join() {
             let current_action = &act.current_action;
@@ -37,10 +39,12 @@ impl<'a> System<'a> for ActionResolutionSystem {
                             //Will crash if attempting to attack a target that has no health component
                             if let Some(target_hp) = &mut hpc.get_mut(*target) {
                                 if target_hp.value > 0 {
-                                    target_hp.value -= 1;
+                                    target_hp.turn_damage += 1;
                                 }
                             } else {
-                                println!("Entity attempted to attack target that has no HP component!");
+                                println!(
+                                    "Entity attempted to attack target that has no HP component!"
+                                );
                             }
                         } else {
                             println!("Entity attempted to attack target that it cannot reach!");
@@ -60,10 +64,14 @@ impl<'a> System<'a> for ActionResolutionSystem {
                                         println!("Entity attempted to pick up item that it cannot reach!");
                                     }
                                 } else {
-                                    println!("Entity attempting to pick up item that has no position!");
+                                    println!(
+                                        "Entity attempting to pick up item that has no position!"
+                                    );
                                 }
                             } else {
-                                println!("Entity attempting to pick up item despite having no position!");
+                                println!(
+                                    "Entity attempting to pick up item despite having no position!"
+                                );
                             }
                         } else {
                             println!("No inventory to store item in!");
@@ -73,13 +81,91 @@ impl<'a> System<'a> for ActionResolutionSystem {
                         if let Some(inventory) = inv.get_mut(eid) {
                             if let Some(entity_position) = pos.get(eid) {
                                 inventory.remove(*item);
-                                emap.spawn_entity(*item, (entity_position.x, entity_position.y), &mut pos);
+                                emap.spawn_entity(
+                                    *item,
+                                    (entity_position.x, entity_position.y),
+                                    &mut pos,
+                                );
                             } else {
-                                println!("Entity attempting to drop an item despite having no position!");
+                                println!(
+                                    "Entity attempting to drop an item despite having no position!"
+                                );
                             }
                         } else {
-                            println!("Entity attempting to drop an item despite having no inventory!");
+                            println!(
+                                "Entity attempting to drop an item despite having no inventory!"
+                            );
                         }
+                    }
+                    AIAction::BuildAtLocation {
+                        x,
+                        y,
+                        tile_type,
+                        consumed_entity,
+                    } => {
+                        if let Some(pos) = pos.get(eid) {
+                            if pos_is_adjacent((*x, *y), (pos.x, pos.y)) {
+                                let tile_neighbour_types =
+                                    tmap.get_neighbours(*x as usize, *y as usize);
+                                let tile = &mut tmap.contents[[*x as usize, *y as usize]];
+
+                                if tile.tile_type.available_buildings().contains(tile_type) {
+                                    if let Some(inv) = inv.get_mut(eid) {
+                                        if let Some((item_index, _item)) = inv
+                                            .items
+                                            .iter()
+                                            .enumerate()
+                                            .find(|(_, slot)| **slot == Some(*consumed_entity))
+                                        {
+                                            // Actually do it
+                                            *tile = Tile {
+                                                seed: thread_rng().gen::<usize>(),
+                                                tile_type: *tile_type,
+                                                tile_variant: TileVariant::get_from_neighbours(
+                                                    tile_neighbour_types,
+                                                ),
+                                            };
+
+                                            tmap.refresh_tile_and_adjacent_variants(
+                                                *x as usize,
+                                                *y as usize,
+                                            );
+
+                                            // tile.tile_type = *tile_type;
+                                            inv.items[item_index] = None;
+
+                                            eids.delete(*consumed_entity).unwrap();
+                                            // If entity is adjacent, despawn from entity map
+                                        } else {
+                                            println!("Entity attempting to build with items it doesn't have");
+                                        }
+                                    } else {
+                                        println!("Entity attempting to build despite having no inventory");
+                                    }
+                                } else {
+                                    println!(
+                                        "Entity attempting to build on an inappropriate tile!"
+                                    );
+                                }
+                            } else {
+                                println!("Entity attempting to build on a tile it cannot reach!");
+                            }
+                        } else {
+                            println!("Entity attempting to build despite having no position!");
+                        }
+
+                        //Check that x, y is adjacent to entity position
+                        //Look at tile that is at x, y location
+                        //Check that the tile that is there can transition to the desired tile_type
+
+                        //Check that the consumed entity is one of:
+                        //-Adjacent
+                        //-Held
+                        //-In inventory
+                        //And mark this somehow
+
+                        //Remove the entity from where it's stored
+                        //Place the tile
                     }
                 }
             }

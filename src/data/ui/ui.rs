@@ -43,6 +43,16 @@ impl Backend for Ui {
             let tui_char = cell.symbol.chars().next().unwrap();
 
             let (index, mirror, rotation) = match tui_char {
+                '←' => (0x16B, CharMirror::None, CharRotation::None),
+                '→' => (0x16C, CharMirror::None, CharRotation::None),
+                '↓' => (0x16D, CharMirror::None, CharRotation::None),
+                '↑' => (0x16E, CharMirror::None, CharRotation::None),
+
+                // TODO Add when we have chars for them
+                // '↖' => todo!(),
+                // '↗' => todo!(),
+                // '↘' => todo!(),
+                // '↙' => todo!(),
                 '┌' => (0x0DA, CharMirror::None, CharRotation::None),
                 '─' => (0x0C4, CharMirror::None, CharRotation::None),
                 '┐' => (0x0BF, CharMirror::None, CharRotation::None),

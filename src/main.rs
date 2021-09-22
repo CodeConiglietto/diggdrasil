@@ -9,7 +9,7 @@ use glam::*;
 use ndarray::prelude::*;
 use rand::prelude::*;
 use specs::{Builder, Join, RunNow, World as ECSWorld, WorldExt as ECSWorldExt};
-use std::{env, path::PathBuf};
+use std::{env, path::PathBuf, time::Duration};
 use tui::{
     widgets::{Block, Borders, List, ListItem},
     Terminal,
@@ -68,6 +68,7 @@ impl MainState {
         ecs_world.register::<InventoryComponent>();
         ecs_world.register::<ItemComponent>();
         ecs_world.register::<ManipulatorComponent>();
+        ecs_world.register::<MaterialComponent>();
         ecs_world.register::<NameComponent>();
         ecs_world.register::<ParticleComponent>();
         ecs_world.register::<PositionComponent>();
@@ -79,16 +80,48 @@ impl MainState {
             modifiers: KeyMods::default(),
         };
 
-        let tile_map = TileMapResource {
+        let mut tile_map = TileMapResource {
             contents: Array2::from_shape_fn((MAP_X_SIZE, MAP_Y_SIZE), |(_x, _y)| Tile {
                 seed: thread_rng().gen::<usize>(),
                 tile_type: if thread_rng().gen_range(0.0..1.0) > 0.75 {
-                    TileType::Wall
+                    if thread_rng().gen_range(0.0..1.0) > 0.5 {
+                        TileType::Wall {
+                            material: Material::Stone,
+                        }
+                    } else {
+                        TileType::ConstructedWall {
+                            material: Material::Wood,
+                            material_shape: MaterialShape::Plank,
+                            wall_feature: None,
+                        }
+                    }
                 } else {
                     TileType::Ground
                 },
+                tile_variant: TileVariant::default(),
             }),
         };
+
+        for x in 10..=20 {
+            for y in 10..=20 {
+                    tile_map.contents[[x, y]] = Tile {
+                        seed: thread_rng().gen::<usize>(),
+                        tile_type: 
+                        if x == 10 || x == 20 || y == 10 || y == 20 {
+                            TileType::ConstructedWall {
+                                material: Material::Wood,
+                                material_shape: MaterialShape::Plank,
+                                wall_feature: None,
+                            }
+                        } else {
+                            TileType::Ground
+                        },
+                        tile_variant: TileVariant::default(),
+                    }
+            }
+        }
+
+        tile_map.refresh_all_tile_variants();
 
         let mut entity_map = EntityMapResource {
             contents: Array2::from_shape_fn((MAP_X_SIZE, MAP_Y_SIZE), |(_x, _y)| Vec::new()),
@@ -195,12 +228,7 @@ impl event::EventHandler<ggez::GameError> for MainState {
 
         self.ecs_world
             .write_resource::<KeyboardResource>()
-            .last_pressed_key = 
-            if self.current_tic % 5 == 0 {
-                keyboard::pressed_keys(ctx).iter().next().copied()
-            } else {
-                None
-            };
+            .last_pressed_key = keyboard::pressed_keys(ctx).iter().next().copied();
 
         self.ecs_world
             .write_resource::<KeyboardResource>()
@@ -223,6 +251,8 @@ impl event::EventHandler<ggez::GameError> for MainState {
         self.ecs_world.maintain();
 
         self.current_tic += 1;
+
+        std::thread::sleep(Duration::from_millis(50));
 
         Ok(())
     }

@@ -11,6 +11,7 @@ pub mod intended_movement;
 pub mod inventory;
 pub mod item;
 pub mod manipulator;
+pub mod material;
 pub mod name;
 pub mod particle;
 pub mod position;

@@ -12,6 +12,10 @@ pub use crate::{
             sprite_builder::SpriteBuilder,
             symbol_builder::SymbolBuilder
         },
+        crafting::{
+            material::Material,
+            material_shape::MaterialShape,
+        },
         creatures::{
             creature_builder::CreatureBuilder,
             race::Race
@@ -21,16 +25,25 @@ pub use crate::{
         },
         geometry::{
             axis::Axis,
-            direction::Direction
+            direction::Direction,
+            directions::Directions,
+            mirror::Mirror,
+            rotation::Rotation,
         },
         ui::{
+            directions_widget::DirectionsWidget,
             popup_state::PopupState,
+            popup_type::PopupType,
+            popup_list_item::PopupListItem,
             popup::Popup,
             ui::Ui,
         },
         world::{
+            tile_layout::TileLayout,
             tile_type::TileType,
+            tile_variant::TileVariant,
             tile::Tile,
+            wall_feature::WallFeature,
         },
     },
     ecs::{
@@ -47,6 +60,7 @@ pub use crate::{
             intended_movement::IntendedMovementComponent,
             inventory::InventoryComponent,
             item::ItemComponent,
+            material::MaterialComponent,
             manipulator::ManipulatorComponent,
             name::NameComponent,
             particle::ParticleComponent,

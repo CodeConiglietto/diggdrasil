@@ -16,7 +16,7 @@ impl InventoryComponent {
 
         false
     }
-    
+
     pub fn insert(&mut self, item: Entity) -> bool {
         for i in 0..self.items.len() {
             if self.items[i].is_none() {
