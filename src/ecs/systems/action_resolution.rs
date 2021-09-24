@@ -15,10 +15,11 @@ impl<'a> System<'a> for ActionResolutionSystem {
         WriteStorage<'a, IntendedMovementComponent>,
         WriteStorage<'a, InventoryComponent>,
         WriteStorage<'a, HealthComponent>,
+        WriteStorage<'a, DigestionComponent>,
     );
 
     fn run(&mut self, data: Self::SystemData) {
-        let (eids, mut tmap, mut emap, mut pos, mut act, mut imc, mut inv, mut hpc) = data;
+        let (eids, mut tmap, mut emap, mut pos, mut act, mut imc, mut inv, mut hpc, mut dig) = data;
 
         for (eid, act, imc) in (&eids, &mut act, &mut imc).join() {
             let current_action = &act.current_action;
@@ -95,6 +96,14 @@ impl<'a> System<'a> for ActionResolutionSystem {
                             println!(
                                 "Entity attempting to drop an item despite having no inventory!"
                             );
+                        }
+                    }
+                    AIAction::EatItem { item } => {
+                        if let Some(dig) = dig.get_mut(eid) {
+                            if let Some(inv) = inv.get_mut(eid) {
+                                inv.remove(*item);
+                                dig.insert(*item);
+                            }
                         }
                     }
                     AIAction::BuildAtLocation {

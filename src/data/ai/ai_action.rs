@@ -16,6 +16,9 @@ pub enum AIAction {
     DropItem {
         item: Entity,
     },
+    EatItem {
+        item: Entity,
+    },
     BuildAtLocation {
         x: i32,
         y: i32,

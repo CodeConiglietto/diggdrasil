@@ -8,11 +8,8 @@ use ggez::graphics::Color;
 use crate::prelude::*;
 
 pub enum SymbolBuilder {
-    Ground {
-        seed: usize,
-    },
+    Ground,
     Wall {
-        seed: usize,
         material: Material,
     },
     ConstructedWall {
@@ -26,62 +23,183 @@ pub enum SymbolBuilder {
     },
     Tree,
     Log,
+    BerryBush,
+    Berry,
 }
 
 impl SymbolBuilder {
-    pub fn get_symbol(&self) -> GgBunnyChar {
+    pub fn get_symbol(&self, seed: usize) -> Symbol {
         match self {
-            Self::Ground { seed } => GgBunnyChar {
-                index: 0x2B1 + (seed) % 6,
-                foreground: Color::new(0.2, 0.25, 0.2, 1.0),
+            Self::Ground => Symbol {
+                draw_chars: vec![GgBunnyChar {
+                    index: 0x2B1 + (seed) % 6,
+                    foreground: Color::new(0.2, 0.25, 0.2, 1.0),
 
-                background: Some(Color::new(0.25, 0.2, 0.2, 1.0)),
-                rotation: CharRotation::None,
-                mirror: CharMirror::None,
+                    background: Some(Color::new(0.25, 0.2, 0.2, 1.0)),
+                    rotation: CharRotation::None,
+                    mirror: CharMirror::None,
+                }],
             },
-            Self::Wall { material, .. } => GgBunnyChar {
-                index: 0x321,
-                foreground: material.get_color(), //Color::new(0.25, 0.25, 0.25, 1.0),
-                background: Some(Color::new(0.0, 0.0, 0.0, 1.0)),
-                rotation: CharRotation::None,
-                mirror: CharMirror::None,
+            Self::Wall { material, .. } => Symbol {
+                draw_chars: vec![GgBunnyChar {
+                    index: 0x321,
+                    foreground: material.get_color(), //Color::new(0.25, 0.25, 0.25, 1.0),
+                    background: Some(Color::new(0.0, 0.0, 0.0, 1.0)),
+                    rotation: CharRotation::None,
+                    mirror: CharMirror::None,
+                }],
             },
             Self::ConstructedWall {
                 tile_variant,
                 material,
                 ..
-            } => {
-                //If variant, draw that
-                //If not, draw based on tile variant
-                GgBunnyChar {
-                    index: tile_variant.layout.get_char_index(),
-                    foreground: material.get_color(), //Color::new(0.25, 0.25, 0.25, 1.0),
+            } => Symbol {
+                draw_chars: vec![
+                    GgBunnyChar {
+                        index: 0x2B4,
+                        foreground: Color::new(0.2, 0.25, 0.2, 1.0),
+
+                        background: Some(Color::new(0.25, 0.2, 0.2, 1.0)),
+                        rotation: CharRotation::None,
+                        mirror: CharMirror::None,
+                    },
+                    GgBunnyChar {
+                        index: tile_variant.layout.get_char_index(),
+                        foreground: material.get_color(), //Color::new(0.25, 0.25, 0.25, 1.0),
+                        background: None,
+                        rotation: tile_variant.rotation,
+                        mirror: CharMirror::None,
+                    },
+                ],
+            },
+            Self::Humanoid { race } => Symbol {
+                draw_chars: vec![GgBunnyChar {
+                    index: race.get_symbol(),
+                    foreground: Color::new(1.0, 0.0, 0.0, 1.0),
                     background: None,
-                    rotation: tile_variant.rotation,
+                    rotation: CharRotation::None,
                     mirror: CharMirror::None,
+                }],
+            },
+            Self::Tree => Symbol {
+                draw_chars: vec![GgBunnyChar {
+                    index: 0x005,
+                    foreground: Color::new(0.0, 1.0, 0.0, 1.0),
+                    background: None,
+                    rotation: CharRotation::None,
+                    mirror: CharMirror::None,
+                }],
+            },
+            Self::Log => Symbol {
+                draw_chars: vec![GgBunnyChar {
+                    index: 0x357,
+                    foreground: Color::new(0.75, 0.75, 0.0, 1.0),
+                    background: None,
+                    rotation: CharRotation::None,
+                    mirror: CharMirror::None,
+                }],
+            },
+            Self::BerryBush => {
+                let x_mirror = if (seed / 4) % 2 == 0 {
+                    CharMirror::None
+                } else {
+                    CharMirror::MirrorX
+                };
+                let x_berries_mirror = if (seed / 8) % 2 == 0 {
+                    CharMirror::None
+                } else {
+                    CharMirror::MirrorX
+                };
+
+                //TODO: make this a lazy static
+                let stem_variations = [
+                    GgBunnyChar {
+                        index: 0x245,
+                        foreground: Color::new(0.5, 0.5, 0.0, 1.0),
+                        background: None,
+                        rotation: CharRotation::Rotation90,
+                        mirror: CharMirror::None,
+                    },
+                    GgBunnyChar {
+                        index: 0x24A,
+                        foreground: Color::new(0.5, 0.5, 0.0, 1.0),
+                        background: None,
+                        rotation: CharRotation::None,
+                        mirror: CharMirror::None,
+                    },
+                    GgBunnyChar {
+                        index: 0x25B,
+                        foreground: Color::new(0.75, 0.75, 0.0, 1.0),
+                        background: None,
+                        rotation: CharRotation::Rotation180,
+                        mirror: x_mirror,
+                    },
+                    GgBunnyChar {
+                        index: 0x23A,
+                        foreground: Color::new(0.75, 0.75, 0.0, 1.0),
+                        background: None,
+                        rotation: CharRotation::Rotation180,
+                        mirror: x_mirror,
+                    },
+                    GgBunnyChar {
+                        index: 0x223,
+                        foreground: Color::new(0.75, 0.75, 0.0, 1.0),
+                        background: None,
+                        rotation: CharRotation::Rotation90,
+                        mirror: x_mirror,
+                    },
+                    GgBunnyChar {
+                        index: 0x23C,
+                        foreground: Color::new(0.75, 0.75, 0.0, 1.0),
+                        background: None,
+                        rotation: CharRotation::Rotation90,
+                        mirror: x_mirror,
+                    },
+                    GgBunnyChar {
+                        index: 0x24C,
+                        foreground: Color::new(0.75, 0.75, 0.0, 1.0),
+                        background: None,
+                        rotation: CharRotation::Rotation90,
+                        mirror: x_mirror,
+                    },
+                    GgBunnyChar {
+                        index: 0x228,
+                        foreground: Color::new(0.75, 0.75, 0.0, 1.0),
+                        background: None,
+                        rotation: CharRotation::Rotation90,
+                        mirror: x_mirror,
+                    },
+                    //TODO: Add a million more of these
+                ];
+
+                Symbol {
+                    draw_chars: vec![
+                        stem_variations[seed % stem_variations.len()],
+                        GgBunnyChar {
+                            index: 0x311,
+                            foreground: Color::new(0.0, 0.75, 0.0, 1.0),
+                            background: None,
+                            rotation: CharRotation::Rotation180,
+                            mirror: CharMirror::None,
+                        },
+                        GgBunnyChar {
+                            index: 0x03A,
+                            foreground: Color::new(1.0, 0.0, 0.0, 1.0),
+                            background: None,
+                            rotation: CharRotation::Rotation90,
+                            mirror: x_berries_mirror,
+                        },
+                    ],
                 }
             }
-            Self::Humanoid { race } => GgBunnyChar {
-                index: race.get_symbol(),
-                foreground: Color::new(1.0, 0.0, 0.0, 1.0),
-                background: None,
-                rotation: CharRotation::None,
-                mirror: CharMirror::None,
-            },
-            Self::Tree => GgBunnyChar {
-                index: 0x005,
-                foreground: Color::new(0.0, 1.0, 0.0, 1.0),
-                background: None,
-                rotation: CharRotation::None,
-                mirror: CharMirror::None,
-            },
-            Self::Log => GgBunnyChar {
-                index: 0x357,
-                foreground: Color::new(0.75, 0.75, 0.0, 1.0),
-
-                background: None,
-                rotation: CharRotation::None,
-                mirror: CharMirror::None,
+            Self::Berry => Symbol {
+                draw_chars: vec![GgBunnyChar {
+                    index: 0x189,
+                    foreground: Color::new(1.0, 0.0, 0.0, 1.0),
+                    background: None,
+                    rotation: CharRotation::None,
+                    mirror: CharMirror::None,
+                }],
             },
         }
     }

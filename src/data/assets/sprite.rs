@@ -1,12 +1,14 @@
-use bunnyfont::ggez::{GgBunnyChar, GgBunnyFontBatch};
+use bunnyfont::ggez::GgBunnyFontBatch;
 use ndarray::prelude::*;
+
+use crate::prelude::*;
 
 //TODO: in future make this a model, in 3d instead of 2d
 //Then flatten into a 2d representation
 pub struct Sprite {
     pub origin_x: i32,
     pub origin_y: i32,
-    pub contents: Array2<Vec<GgBunnyChar>>,
+    pub contents: Array2<Symbol>,
 }
 
 impl Sprite {
@@ -20,15 +22,13 @@ impl Sprite {
 
         for sprite_x in 0..width {
             for sprite_y in 0..height {
-                let draw_chars = &self.contents[[sprite_x, sprite_y]];
+                let draw_symbol = &self.contents[[sprite_x, sprite_y]];
                 let (dest_x, dest_y) = (
                     sprite_y as i32 + x - self.origin_x,
                     sprite_x as i32 + y - self.origin_y,
                 );
 
-                for draw_char in draw_chars {
-                    draw_char.draw_to_font_batch(font_batch, (dest_x, dest_y), render_scale);
-                }
+                draw_symbol.draw_to_font_batch(font_batch, (dest_x, dest_y), render_scale);
             }
         }
     }

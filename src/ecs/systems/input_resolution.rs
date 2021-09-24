@@ -1,6 +1,5 @@
 use ggez::event::KeyCode;
 use specs::{Join, System};
-use strum::IntoEnumIterator;
 
 use crate::prelude::*;
 
@@ -90,6 +89,7 @@ impl<'a> System<'a> for InputResolutionSystem {
                                     .map(|(index, item)| {
                                         PopupListItem::new(
                                             index,
+                                            None,
                                             AIGoal::PickUpItem { item: *item },
                                         )
                                     })
@@ -125,6 +125,7 @@ impl<'a> System<'a> for InputResolutionSystem {
                                         if itc.get(*item).is_some() {
                                             return Some(PopupListItem::new(
                                                 index,
+                                                None,
                                                 AIGoal::DropItem { item: *item },
                                             ));
                                         }
@@ -141,6 +142,9 @@ impl<'a> System<'a> for InputResolutionSystem {
                                         Some(Popup::list(String::from("Drop what?"), drop_goals));
                                 }
                             }
+                        }
+                        KeyCode::E => {
+                            gol.current_goal = Some(AIGoal::EatItem { item: None });
                         }
                         KeyCode::B => {
                             //TODO: ensure player has some way to manipulate objects, otherwise they can't build :(

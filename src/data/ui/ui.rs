@@ -60,6 +60,15 @@ impl Backend for Ui {
                 '└' => (0x0C0, CharMirror::None, CharRotation::None),
                 '┘' => (0x0D9, CharMirror::None, CharRotation::None),
 
+                '█' => (0x2B7, CharMirror::None, CharRotation::None),
+                '▉' => (0x2B6, CharMirror::None, CharRotation::None),
+                '▊' => (0x2B5, CharMirror::None, CharRotation::None),
+                '▋' => (0x2B4, CharMirror::None, CharRotation::None),
+                '▌' => (0x2B3, CharMirror::None, CharRotation::None),
+                '▍' => (0x2B2, CharMirror::None, CharRotation::None),
+                '▎' => (0x2B1, CharMirror::None, CharRotation::None),
+                '▏' => (0x2B0, CharMirror::None, CharRotation::None),
+
                 ' ' => (0x000, CharMirror::None, CharRotation::None),
 
                 _ => {

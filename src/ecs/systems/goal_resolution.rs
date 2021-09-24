@@ -11,13 +11,14 @@ impl<'a> System<'a> for GoalResolutionSystem {
         ReadStorage<'a, PositionComponent>,
         ReadStorage<'a, HealthComponent>,
         ReadStorage<'a, InventoryComponent>,
+        ReadStorage<'a, MaterialComponent>,
         WriteStorage<'a, AIGoalComponent>,
         WriteStorage<'a, AIActionComponent>,
         WriteStorage<'a, InputComponent>,
     );
 
     fn run(&mut self, data: Self::SystemData) {
-        let (tmap, emap, pos, hpc, inv, mut gol, mut act, mut inp) = data;
+        let (tmap, emap, pos, hpc, inv, mat, mut gol, mut act, mut inp) = data;
 
         for (pos, inv, gol, act, inp) in
             (&pos, (&inv).maybe(), &mut gol, &mut act, (&mut inp).maybe()).join()
@@ -148,23 +149,63 @@ impl<'a> System<'a> for GoalResolutionSystem {
                     AIGoal::DropItem { item } => {
                         act.current_action = Some(AIAction::DropItem { item: *item });
                     }
+                    AIGoal::EatItem { item } => {
+                        if let Some(item) = item {
+                            act.current_action = Some(AIAction::EatItem { item: *item });
+                        } else {
+                            if let Some(inp) = inp {
+                                if let Some(inv) = inv {
+                                    let item_goals = inv
+                                        .items
+                                        .iter()
+                                        .enumerate()
+                                        .filter_map(|(i, slot)| {
+                                            slot.map(|item| {
+                                                (i, None, AIGoal::EatItem { item: Some(item) })
+                                            })
+                                        })
+                                        .map(PopupListItem::from)
+                                        .collect();
+
+                                    inp.popup =
+                                        Some(Popup::list(format!("Eat what?",), item_goals));
+                                }
+                            }
+                        }
+                    }
                     AIGoal::Build {
                         x,
                         y,
                         tile_type,
                         consumed_entity,
                     } => {
-                        if let Some(tile_type) = tile_type {
-                            if let Some(consumed_entity) = consumed_entity {
-                                act.current_action = Some(AIAction::BuildAtLocation {
-                                    x: *x,
-                                    y: *y,
-                                    tile_type: *tile_type,
-                                    consumed_entity: *consumed_entity,
-                                });
-                            } else {
-                                if let Some(inp) = inp {
-                                    if let Some(inv) = inv {
+                        if let Some(inv) = inv {
+                            let available_materials: Vec<_> = inv
+                                .items
+                                .iter()
+                                .filter_map(|slot| {
+                                    if let Some(item) = slot {
+                                        if let Some(material) = mat.get(*item) {
+                                            Some((material.material, material.shape))
+                                        } else {
+                                            None
+                                        }
+                                    } else {
+                                        None
+                                    }
+                                })
+                                .collect();
+
+                            if let Some(tile_type) = tile_type {
+                                if let Some(consumed_entity) = consumed_entity {
+                                    act.current_action = Some(AIAction::BuildAtLocation {
+                                        x: *x,
+                                        y: *y,
+                                        tile_type: *tile_type,
+                                        consumed_entity: *consumed_entity,
+                                    });
+                                } else {
+                                    if let Some(inp) = inp {
                                         let item_goals = inv
                                             .items
                                             .iter()
@@ -173,6 +214,7 @@ impl<'a> System<'a> for GoalResolutionSystem {
                                                 slot.map(|item| {
                                                     (
                                                         i,
+                                                        None,
                                                         AIGoal::Build {
                                                             x: *x,
                                                             y: *y,
@@ -186,55 +228,46 @@ impl<'a> System<'a> for GoalResolutionSystem {
                                             .collect();
 
                                         inp.popup = Some(Popup::list(
-                                            format!(
-                                                "Build with what?",
-                                            ),
+                                            format!("Build with what?",),
                                             item_goals,
                                         ));
                                     } else {
-                                        println!("Entity trying to find building material doesn't have inventory component");
+                                        println!("Entity trying to find building material doesn't have input component");
                                     }
+                                }
+                            } else {
+                                if let Some(inp) = inp {
+                                    let tile_goals = tmap.contents[[*x as usize, *y as usize]]
+                                        .tile_type
+                                        .available_buildings()
+                                        .iter()
+                                        .enumerate()
+                                        .map(|(i, tile_type)| {
+                                            (
+                                                i,
+                                                Some(String::from(tile_type.get_name())),
+                                                AIGoal::Build {
+                                                    x: *x,
+                                                    y: *y,
+                                                    tile_type: Some(*tile_type),
+                                                    consumed_entity: consumed_entity.clone(),
+                                                },
+                                            )
+                                        })
+                                        .map(PopupListItem::from)
+                                        .collect();
+
+                                    inp.popup =
+                                        Some(Popup::list(format!("Build what?"), tile_goals));
                                 } else {
-                                    println!("Entity trying to find building material doesn't have input component");
+                                    println!(
+                                        "Entity trying to decide building doesn't have input component"
+                                    );
                                 }
                             }
                         } else {
-                            if let Some(inp) = inp {
-                                let tile_goals = tmap.contents[[*x as usize, *y as usize]]
-                                    .tile_type
-                                    .available_buildings()
-                                    .iter()
-                                    .map(|tile_type| AIGoal::Build {
-                                        x: *x,
-                                        y: *y,
-                                        tile_type: Some(*tile_type),
-                                        consumed_entity: consumed_entity.clone(),
-                                    })
-                                    .enumerate()
-                                    .map(PopupListItem::from)
-                                    .collect();
-
-                                inp.popup = Some(Popup::list(
-                                    format!("Build what?"),
-                                    tile_goals,
-                                ));
-                            } else {
-                                println!(
-                                    "Entity trying to decide building doesn't have input component"
-                                );
-                            }
+                            println!("Entity trying to find building material doesn't have inventory component");
                         }
-
-                        //Check that x, y is adjacent to entity position
-                        //Look at tile that is at x, y location
-                        //Check that the tile that is there can transition to the desired tile_type
-
-                        //Check that the consumed entity is one of:
-                        //-Adjacent
-                        //-Held
-                        //-In inventory
-
-                        //act.current_action{x, y, tile_type, comsumed_entities }
                     }
                 }
             }

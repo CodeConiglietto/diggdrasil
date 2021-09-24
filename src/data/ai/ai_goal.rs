@@ -14,6 +14,9 @@ pub enum AIGoal {
     DropItem {
         item: Entity,
     },
+    EatItem {
+        item: Option<Entity>,
+    },
     Build {
         x: i32,
         y: i32,
@@ -38,6 +41,16 @@ impl AIGoal {
             }
             Self::DropItem { item } => {
                 format!("Drop {}", data.name.get(*item).unwrap().name)
+            }
+            Self::EatItem { item } => {
+                let consumed_entity_name =
+                    if let Some(name_component) = item.map(|e| data.name.get(e).unwrap()) {
+                        &name_component.name
+                    } else {
+                        "something"
+                    };
+
+                format!("Eat {}", consumed_entity_name)
             }
             Self::Build {
                 x,

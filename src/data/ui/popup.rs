@@ -76,7 +76,11 @@ impl Popup {
                         .iter()
                         .map(|item| {
                             let c = index_to_letter(item.index).unwrap();
-                            let text = item.goal.get_textual_representation(data);
+                            let text = if let Some(display_string) = &item.display_string {
+                                display_string.clone()
+                            } else {
+                                item.goal.get_textual_representation(data)
+                            };
 
                             ListItem::new(format!("{}) {}", c, text))
                         })

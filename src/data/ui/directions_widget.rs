@@ -34,7 +34,7 @@ impl<'a> Widget for DirectionsWidget<'a> {
         };
 
         let left = area.width.saturating_sub(5) / 2;
-        let top = area.height.saturating_sub(5) /2;
+        let top = area.height.saturating_sub(5) / 2;
 
         if self.directions.contains(Directions::UP_LEFT) {
             buf.get_mut(left + 1, top + 1).set_symbol("7");

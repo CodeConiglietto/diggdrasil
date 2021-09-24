@@ -10,7 +10,8 @@ pub use crate::{
         assets::{
             sprite::Sprite,
             sprite_builder::SpriteBuilder,
-            symbol_builder::SymbolBuilder
+            symbol::Symbol,
+            symbol_builder::SymbolBuilder,
         },
         crafting::{
             material::Material,
@@ -54,7 +55,9 @@ pub use crate::{
             collider::ColliderComponent,
             collision::CollisionComponent,
             death::DeathComponent,
+            digestion::DigestionComponent,
             draw::DrawComponent,
+            edible::EdibleComponent,
             health::HealthComponent,
             input::InputComponent,
             intended_movement::IntendedMovementComponent,
@@ -81,6 +84,7 @@ pub use crate::{
             action_resolution::ActionResolutionSystem,
             collision_calculation::CollisionCalculationSystem,
             collision_resolution::CollisionResolutionSystem,
+            digestion_resolution::DigestionResolutionSystem,
             goal_resolution::GoalResolutionSystem,
             health_resolution::HealthResolutionSystem,
             input_resolution::InputResolutionSystem,
