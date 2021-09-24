@@ -1,5 +1,3 @@
-use strum::IntoEnumIterator;
-
 use crate::prelude::*;
 
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -54,24 +52,36 @@ impl TileType {
         }
     }
 
-    pub fn get_materials(&self) -> (Material, usize) {
+    pub fn get_build_requirements(&self) -> (Option<Material>, Option<MaterialShape>) {
         match self {
-            TileType::Ground => (Material::Dirt, 10),
-            TileType::Wall { material } => (*material, 10),
-            TileType::ConstructedWall { material, .. } => (*material, 5),
+            TileType::Ground => (Some(Material::Dirt), None),
+            TileType::Wall { material } => (Some(*material), None),
+            TileType::ConstructedWall {
+                material,
+                material_shape,
+                ..
+            } => (Some(*material), Some(*material_shape)),
         }
     }
 
     pub fn available_buildings(&self) -> Vec<Self> {
         match self {
             //TODO: get all possible material, shape and wall feature combinations for constructing a contructed wall
-            TileType::Ground => Material::iter()
-                .map(|material| TileType::ConstructedWall {
-                    material,
-                    material_shape: MaterialShape::Log,
-                    wall_feature: None,
-                })
-                .collect(),
+            TileType::Ground => {
+                let available_material_combinations = vec![
+                    (Material::Wood, MaterialShape::Log),
+                    (Material::Wood, MaterialShape::Plank),
+                ];
+
+                available_material_combinations
+                    .iter()
+                    .map(|(material, shape)| TileType::ConstructedWall {
+                        material: *material,
+                        material_shape: *shape,
+                        wall_feature: None,
+                    })
+                    .collect()
+            }
             TileType::Wall { .. } => Vec::new(),
             TileType::ConstructedWall { .. } => Vec::new(),
         }

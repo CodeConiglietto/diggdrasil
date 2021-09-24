@@ -1,5 +1,5 @@
 use rand::prelude::*;
-use specs::{Entities, Join, System, Write, WriteStorage};
+use specs::{Entities, Join, ReadStorage, System, Write, WriteStorage};
 
 use crate::prelude::*;
 
@@ -10,6 +10,7 @@ impl<'a> System<'a> for ActionResolutionSystem {
         Entities<'a>,
         Write<'a, TileMapResource>,
         Write<'a, EntityMapResource>,
+        ReadStorage<'a, MaterialComponent>,
         WriteStorage<'a, PositionComponent>,
         WriteStorage<'a, AIActionComponent>,
         WriteStorage<'a, IntendedMovementComponent>,
@@ -19,7 +20,8 @@ impl<'a> System<'a> for ActionResolutionSystem {
     );
 
     fn run(&mut self, data: Self::SystemData) {
-        let (eids, mut tmap, mut emap, mut pos, mut act, mut imc, mut inv, mut hpc, mut dig) = data;
+        let (eids, mut tmap, mut emap, mat, mut pos, mut act, mut imc, mut inv, mut hpc, mut dig) =
+            data;
 
         for (eid, act, imc) in (&eids, &mut act, &mut imc).join() {
             let current_action = &act.current_action;
@@ -120,31 +122,45 @@ impl<'a> System<'a> for ActionResolutionSystem {
 
                                 if tile.tile_type.available_buildings().contains(tile_type) {
                                     if let Some(inv) = inv.get_mut(eid) {
-                                        if let Some((item_index, _item)) = inv
+                                        if let Some((item_index, item)) = inv
                                             .items
                                             .iter()
                                             .enumerate()
                                             .find(|(_, slot)| **slot == Some(*consumed_entity))
                                         {
-                                            // Actually do it
-                                            *tile = Tile {
-                                                seed: thread_rng().gen::<usize>(),
-                                                tile_type: *tile_type,
-                                                tile_variant: TileVariant::get_from_neighbours(
-                                                    tile_neighbour_types,
-                                                ),
-                                            };
+                                            if let Some(item_material) = mat.get(item.unwrap())
+                                            //This may cause issues
+                                            {
+                                                if fulfills_material_requirements(
+                                                    item_material,
+                                                    tile_type.get_build_requirements(),
+                                                ) {
+                                                    // Actually do it
+                                                    *tile = Tile {
+                                                        seed: thread_rng().gen::<usize>(),
+                                                        tile_type: *tile_type,
+                                                        tile_variant:
+                                                            TileVariant::get_from_neighbours(
+                                                                tile_neighbour_types,
+                                                            ),
+                                                    };
 
-                                            tmap.refresh_tile_and_adjacent_variants(
-                                                *x as usize,
-                                                *y as usize,
-                                            );
+                                                    tmap.refresh_tile_and_adjacent_variants(
+                                                        *x as usize,
+                                                        *y as usize,
+                                                    );
 
-                                            // tile.tile_type = *tile_type;
-                                            inv.items[item_index] = None;
+                                                    // tile.tile_type = *tile_type;
+                                                    inv.items[item_index] = None;
 
-                                            eids.delete(*consumed_entity).unwrap();
-                                            // If entity is adjacent, despawn from entity map
+                                                    eids.delete(*consumed_entity).unwrap();
+                                                    // If entity is adjacent, despawn from entity map
+                                                } else {
+                                                    println!("Entity attempting to build with items that do not fulfill the material requirements");
+                                                }
+                                            } else {
+                                                println!("Entity attempting to build with items that do not have material components");
+                                            }
                                         } else {
                                             println!("Entity attempting to build with items it doesn't have");
                                         }

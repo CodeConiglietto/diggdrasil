@@ -12,13 +12,14 @@ impl<'a> System<'a> for GoalResolutionSystem {
         ReadStorage<'a, HealthComponent>,
         ReadStorage<'a, InventoryComponent>,
         ReadStorage<'a, MaterialComponent>,
+        ReadStorage<'a, NameComponent>,
         WriteStorage<'a, AIGoalComponent>,
         WriteStorage<'a, AIActionComponent>,
         WriteStorage<'a, InputComponent>,
     );
 
     fn run(&mut self, data: Self::SystemData) {
-        let (tmap, emap, pos, hpc, inv, mat, mut gol, mut act, mut inp) = data;
+        let (tmap, emap, pos, hpc, inv, mat, nam, mut gol, mut act, mut inp) = data;
 
         for (pos, inv, gol, act, inp) in
             (&pos, (&inv).maybe(), &mut gol, &mut act, (&mut inp).maybe()).join()
@@ -180,22 +181,6 @@ impl<'a> System<'a> for GoalResolutionSystem {
                         consumed_entity,
                     } => {
                         if let Some(inv) = inv {
-                            let available_materials: Vec<_> = inv
-                                .items
-                                .iter()
-                                .filter_map(|slot| {
-                                    if let Some(item) = slot {
-                                        if let Some(material) = mat.get(*item) {
-                                            Some((material.material, material.shape))
-                                        } else {
-                                            None
-                                        }
-                                    } else {
-                                        None
-                                    }
-                                })
-                                .collect();
-
                             if let Some(tile_type) = tile_type {
                                 if let Some(consumed_entity) = consumed_entity {
                                     act.current_action = Some(AIAction::BuildAtLocation {
@@ -211,20 +196,32 @@ impl<'a> System<'a> for GoalResolutionSystem {
                                             .iter()
                                             .enumerate()
                                             .filter_map(|(i, slot)| {
-                                                slot.map(|item| {
-                                                    (
-                                                        i,
-                                                        None,
-                                                        AIGoal::Build {
-                                                            x: *x,
-                                                            y: *y,
-                                                            tile_type: Some(*tile_type),
-                                                            consumed_entity: Some(item),
-                                                        },
-                                                    )
+                                                slot.and_then(|item| {
+                                                    if let Some(material) = mat.get(item) {
+                                                        if fulfills_material_requirements(material, tile_type.get_build_requirements())
+                                                        {
+                                                            Some(PopupListItem::from((
+                                                                i,
+                                                                if let Some(item_name) = nam.get(item) {
+                                                                    Some(item_name.name.clone())
+                                                                } else {
+                                                                    None
+                                                                },
+                                                                AIGoal::Build {
+                                                                    x: *x,
+                                                                    y: *y,
+                                                                    tile_type: Some(*tile_type),
+                                                                    consumed_entity: Some(item),
+                                                                },
+                                                            )))
+                                                        } else {
+                                                            None
+                                                        }
+                                                    } else {
+                                                        None
+                                                    }
                                                 })
                                             })
-                                            .map(PopupListItem::from)
                                             .collect();
 
                                         inp.popup = Some(Popup::list(
@@ -237,10 +234,41 @@ impl<'a> System<'a> for GoalResolutionSystem {
                                 }
                             } else {
                                 if let Some(inp) = inp {
+                                    let available_materials: Vec<_> = inv
+                                        .items
+                                        .iter()
+                                        .filter_map(|slot| {
+                                            if let Some(item) = slot {
+                                                if let Some(material) = mat.get(*item) {
+                                                    Some(material)
+                                                } else {
+                                                    None
+                                                }
+                                            } else {
+                                                None
+                                            }
+                                        })
+                                        .collect();
+
                                     let tile_goals = tmap.contents[[*x as usize, *y as usize]]
                                         .tile_type
                                         .available_buildings()
                                         .iter()
+                                        .filter(|building| {
+                                            let build_requirements =
+                                                building.get_build_requirements();
+
+                                            for available_material in &available_materials {
+                                                if fulfills_material_requirements(
+                                                    available_material,
+                                                    build_requirements,
+                                                ) {
+                                                    return true;
+                                                }
+                                            }
+
+                                            false
+                                        })
                                         .enumerate()
                                         .map(|(i, tile_type)| {
                                             (

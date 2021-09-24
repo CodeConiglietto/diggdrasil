@@ -212,6 +212,16 @@ impl MainState {
 }
 
 impl event::EventHandler<ggez::GameError> for MainState {
+    fn key_down_event(
+        &mut self,
+        _ctx: &mut Context,
+        _keycode: KeyCode,
+        _keymods: KeyMods,
+        _repeat: bool
+    ) {
+
+    }
+
     fn update(&mut self, ctx: &mut Context) -> GameResult {
         //Process input
         if keyboard::is_key_pressed(ctx, KeyCode::LAlt) {

@@ -1,7 +1,27 @@
+use crate::prelude::*;
 use ggez::event::{KeyCode, KeyMods};
 
 pub fn pos_is_adjacent((ax, ay): (i32, i32), (bx, by): (i32, i32)) -> bool {
     (ax - bx).abs() == 1 || (ay - by).abs() == 1
+}
+
+pub fn fulfills_material_requirements(
+    material: &MaterialComponent,
+    (required_material, required_shape): (Option<Material>, Option<MaterialShape>),
+) -> bool {
+    if let Some(required_material) = required_material {
+        if material.material != required_material {
+            return false;
+        }
+    }
+
+    if let Some(required_shape) = required_shape {
+        if material.shape != required_shape {
+            return false;
+        }
+    }
+
+    true
 }
 
 pub fn key_to_index(keycode: KeyCode, keymods: KeyMods) -> Option<usize> {
