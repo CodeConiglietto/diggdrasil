@@ -1,5 +1,5 @@
 use rand::prelude::*;
-use specs::{Builder, Entity, World as ECSWorld, WorldExt as ECSWorldExt};
+use specs::{world::EntitiesRes, Builder, Entity, LazyUpdate};
 
 use crate::prelude::*;
 
@@ -11,10 +11,10 @@ pub enum ItemBuilder {
 }
 
 impl ItemBuilder {
-    pub fn build(&self, ecs_world: &mut ECSWorld) -> Entity {
-        let builder = match self {
-            Self::Stick => ecs_world
-                .create_entity()
+    pub fn build(&self, lazy: &LazyUpdate, entities: &EntitiesRes) -> Entity {
+        match self {
+            Self::Stick => lazy
+                .create_entity(entities)
                 .with(DrawComponent {
                     seed: thread_rng().gen::<usize>(),
                     sprite_builder: SpriteBuilder::Stick,
@@ -28,9 +28,10 @@ impl ItemBuilder {
                 })
                 .with(NameComponent {
                     name: String::from("stick"),
-                }),
-            Self::Log => ecs_world
-                .create_entity()
+                })
+                .build(),
+            Self::Log => lazy
+                .create_entity(entities)
                 .with(DrawComponent {
                     seed: thread_rng().gen::<usize>(),
                     sprite_builder: SpriteBuilder::Log,
@@ -44,9 +45,10 @@ impl ItemBuilder {
                 })
                 .with(NameComponent {
                     name: String::from("log"),
-                }),
-            Self::Stone => ecs_world
-                .create_entity()
+                })
+                .build(),
+            Self::Stone => lazy
+                .create_entity(entities)
                 .with(DrawComponent {
                     seed: thread_rng().gen::<usize>(),
                     sprite_builder: SpriteBuilder::Stone,
@@ -60,9 +62,10 @@ impl ItemBuilder {
                 })
                 .with(NameComponent {
                     name: String::from("stone"),
-                }),
-            Self::Berry => ecs_world
-                .create_entity()
+                })
+                .build(),
+            Self::Berry => lazy
+                .create_entity(entities)
                 .with(DrawComponent {
                     seed: thread_rng().gen::<usize>(),
                     sprite_builder: SpriteBuilder::Berry,
@@ -74,9 +77,8 @@ impl ItemBuilder {
                 })
                 .with(NameComponent {
                     name: String::from("berry"),
-                }),
-        };
-
-        builder.build()
+                })
+                .build(),
+        }
     }
 }

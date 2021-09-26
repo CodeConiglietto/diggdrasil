@@ -42,13 +42,19 @@ impl ParticleType {
     }
 
     //change this to use an option with none if there are no changes
-    pub fn get_new_state(&self, (x, y, z): (i32, i32, i32)) -> ParticleType {
-        if x < 0
-            || x >= MAP_X_SIZE as i32
-            || y < 0
-            || y >= MAP_Y_SIZE as i32
-            || z < 0
-            || z > MAX_PARTICLE_HEIGHT
+    pub fn get_new_state(
+        &self,
+        (x, y, z): (i32, i32, i32),
+        (player_x, player_y): (i32, i32),
+    ) -> ParticleType {
+        let left = player_x - MAP_X_SIZE as i32 / 2;
+        let right = left + MAP_X_SIZE as i32;
+        let top = player_y - MAP_Y_SIZE as i32 / 2;
+        let bottom = top + MAP_Y_SIZE as i32;
+
+        if !(left..right).contains(&x)
+            || !(top..bottom).contains(&y)
+            || !(0..=MAX_PARTICLE_HEIGHT).contains(&z)
         {
             return Self::Finished;
         }

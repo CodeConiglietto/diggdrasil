@@ -4,10 +4,9 @@ use specs::prelude::*;
 #[derive(SystemData)]
 pub struct RenderData<'a> {
     //Resources
-    pub keyboard: Read<'a, KeyboardResource>,
-    pub tile_map: Read<'a, TileMapResource>,
-    pub entity_map: Read<'a, EntityMapResource>,
-    pub particle_map: Read<'a, ParticleMapResource>,
+    pub keyboard: ReadExpect<'a, KeyboardResource>,
+    pub tile_world: ReadExpect<'a, TileWorldResource>,
+    pub particle_map: ReadExpect<'a, ParticleMapResource>,
 
     //Read components
     pub butcherable: ReadStorage<'a, ButcherableComponent>,

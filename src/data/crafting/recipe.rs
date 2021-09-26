@@ -1,7 +1,7 @@
-use crate::prelude::*;
 use specs::prelude::*;
-use specs::World as ECSWorld;
 use strum::EnumIter;
+
+use crate::prelude::*;
 
 #[derive(Clone, Copy, EnumIter)]
 pub enum Recipe {
@@ -146,9 +146,9 @@ impl Recipe {
 
     pub fn craft(
         &self,
-        ecs_world: &mut ECSWorld,
-        _entity_map: EntityMapResource,
         ingredients: Vec<Entity>,
+        lazy: &LazyUpdate,
+        entities: &Entities,
         data: &CraftingData,
     ) -> Result<Entity, String> {
         let requirements = self.get_ingredient_requirements();
@@ -171,11 +171,22 @@ impl Recipe {
         }
 
         let entity = match self {
-            Self::CampFire => FurnitureBuilder::CampFire.build(ecs_world),
-            Self::Spear => EquipmentBuilder::Spear{head_material: Material::Stone, handle_material: Material::Wood}.build(ecs_world),
-            Self::Pick => EquipmentBuilder::Pick{head_material: Material::Stone, handle_material: Material::Wood}.build(ecs_world),
-            Self::Axe => EquipmentBuilder::Axe{head_material: Material::Stone, handle_material: Material::Wood}.build(ecs_world),
-            _ => todo!(),
+            Self::CampFire => FurnitureBuilder::CampFire.build(lazy, entities),
+            Self::Spear => EquipmentBuilder::Spear {
+                head_material: Material::Stone,
+                handle_material: Material::Wood,
+            }
+            .build(lazy, entities),
+            Self::Pick => EquipmentBuilder::Pick {
+                head_material: Material::Stone,
+                handle_material: Material::Wood,
+            }
+            .build(lazy, entities),
+            Self::Axe => EquipmentBuilder::Axe {
+                head_material: Material::Stone,
+                handle_material: Material::Wood,
+            }
+            .build(lazy, entities),
         };
 
         return Ok(entity);

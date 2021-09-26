@@ -1,5 +1,5 @@
 use rand::prelude::*;
-use specs::{Entities, Join, ReadStorage, System, Write, WriteStorage};
+use specs::{Entities, Join, ReadStorage, System, WriteExpect, WriteStorage};
 
 use crate::prelude::*;
 
@@ -8,8 +8,7 @@ pub struct ActionResolutionSystem;
 impl<'a> System<'a> for ActionResolutionSystem {
     type SystemData = (
         Entities<'a>,
-        Write<'a, TileMapResource>,
-        Write<'a, EntityMapResource>,
+        WriteExpect<'a, TileWorldResource>,
         ReadStorage<'a, MaterialComponent>,
         WriteStorage<'a, PositionComponent>,
         WriteStorage<'a, AIActionComponent>,
@@ -20,8 +19,7 @@ impl<'a> System<'a> for ActionResolutionSystem {
     );
 
     fn run(&mut self, data: Self::SystemData) {
-        let (eids, mut tmap, mut emap, mat, mut pos, mut act, mut imc, mut inv, mut hpc, mut dig) =
-            data;
+        let (eids, mut twld, mat, mut pos, mut act, mut imc, mut inv, mut hpc, mut dig) = data;
 
         for (eid, act, imc) in (&eids, &mut act, &mut imc).join() {
             let current_action = &act.current_action;
@@ -61,7 +59,7 @@ impl<'a> System<'a> for ActionResolutionSystem {
                                         && entity_position.y == item_position.y
                                     {
                                         if inventory.insert(*item) {
-                                            emap.despawn_entity(*item, &mut pos);
+                                            twld.despawn_entity(*item, &mut pos);
                                         }
                                     } else {
                                         println!("Entity attempted to pick up item that it cannot reach!");
@@ -84,7 +82,7 @@ impl<'a> System<'a> for ActionResolutionSystem {
                         if let Some(inventory) = inv.get_mut(eid) {
                             if let Some(entity_position) = pos.get(eid) {
                                 inventory.remove(*item);
-                                emap.spawn_entity(
+                                twld.spawn_entity(
                                     *item,
                                     (entity_position.x, entity_position.y),
                                     &mut pos,
@@ -114,69 +112,77 @@ impl<'a> System<'a> for ActionResolutionSystem {
                         tile_type,
                         consumed_entity,
                     } => {
-                        if let Some(pos) = pos.get(eid) {
-                            if pos_is_adjacent((*x, *y), (pos.x, pos.y)) {
-                                let tile_neighbour_types =
-                                    tmap.get_neighbours(*x as usize, *y as usize);
-                                let tile = &mut tmap.contents[[*x as usize, *y as usize]];
-
-                                if tile.tile_type.available_buildings().contains(tile_type) {
-                                    if let Some(inv) = inv.get_mut(eid) {
-                                        if let Some((item_index, item)) = inv
-                                            .items
-                                            .iter()
-                                            .enumerate()
-                                            .find(|(_, slot)| **slot == Some(*consumed_entity))
-                                        {
-                                            if let Some(item_material) = mat.get(item.unwrap())
-                                            //This may cause issues
+                        if let Some(chunk_tile) = twld.get((*x, *y)) {
+                            if let Some(pos) = pos.get(eid) {
+                                if pos_is_adjacent((*x, *y), (pos.x, pos.y)) {
+                                    if chunk_tile
+                                        .tile
+                                        .tile_type
+                                        .available_buildings()
+                                        .contains(tile_type)
+                                    {
+                                        if let Some(inv) = inv.get_mut(eid) {
+                                            if let Some((item_index, item)) =
+                                                inv.items.iter().enumerate().find(|(_, slot)| {
+                                                    **slot == Some(*consumed_entity)
+                                                })
                                             {
-                                                if fulfills_material_requirements(
-                                                    item_material,
-                                                    tile_type.get_build_requirements(),
-                                                ) {
-                                                    // Actually do it
-                                                    *tile = Tile {
-                                                        seed: thread_rng().gen::<usize>(),
-                                                        tile_type: *tile_type,
-                                                        tile_variant:
-                                                            TileVariant::get_from_neighbours(
-                                                                tile_neighbour_types,
-                                                            ),
-                                                    };
+                                                if let Some(item_material) = mat.get(item.unwrap())
+                                                //This may cause issues
+                                                {
+                                                    if fulfills_material_requirements(
+                                                        item_material,
+                                                        tile_type.get_build_requirements(),
+                                                    ) {
+                                                        // Actually do it
+                                                        twld.get_mut((*x, *y)).unwrap().tile =
+                                                            Tile {
+                                                                seed: thread_rng().gen::<usize>(),
+                                                                tile_type: *tile_type,
+                                                                tile_variant:
+                                                                    TileVariant::get_from_neighbours(
+                                                                        twld.get_neighbours((
+                                                                            *x, *y,
+                                                                        )),
+                                                                    ),
+                                                            };
 
-                                                    tmap.refresh_tile_and_adjacent_variants(
-                                                        *x as usize,
-                                                        *y as usize,
-                                                    );
+                                                        twld.refresh_tile_and_adjacent_variants((
+                                                            *x, *y,
+                                                        ));
 
-                                                    // tile.tile_type = *tile_type;
-                                                    inv.items[item_index] = None;
+                                                        // tile.tile_type = *tile_type;
+                                                        inv.items[item_index] = None;
 
-                                                    eids.delete(*consumed_entity).unwrap();
-                                                    // If entity is adjacent, despawn from entity map
+                                                        eids.delete(*consumed_entity).unwrap();
+                                                        // If entity is adjacent, despawn from entity map
+                                                    } else {
+                                                        println!("Entity attempting to build with items that do not fulfill the material requirements");
+                                                    }
                                                 } else {
-                                                    println!("Entity attempting to build with items that do not fulfill the material requirements");
+                                                    println!("Entity attempting to build with items that do not have material components");
                                                 }
                                             } else {
-                                                println!("Entity attempting to build with items that do not have material components");
+                                                println!("Entity attempting to build despite having no inventory");
                                             }
                                         } else {
-                                            println!("Entity attempting to build with items it doesn't have");
+                                            println!(
+                                            "Entity attempting to build on an inappropriate tile!"
+                                        );
                                         }
                                     } else {
-                                        println!("Entity attempting to build despite having no inventory");
+                                        println!("Entity attempting to build on an unloaded tile!");
                                     }
                                 } else {
                                     println!(
-                                        "Entity attempting to build on an inappropriate tile!"
+                                        "Entity attempting to build on a tile it cannot reach!"
                                     );
                                 }
                             } else {
-                                println!("Entity attempting to build on a tile it cannot reach!");
+                                println!("Entity attempting to build despite having no position!");
                             }
                         } else {
-                            println!("Entity attempting to build despite having no position!");
+                            println!("Entity attempting to build in unloaded tile");
                         }
 
                         //TODO:

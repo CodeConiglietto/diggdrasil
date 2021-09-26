@@ -5,11 +5,11 @@ use specs::prelude::*;
 pub struct InputData<'a> {
     //Entities
     pub entities: Entities<'a>,
+    pub lazy: Read<'a, LazyUpdate>,
 
     //Resources
-    pub keyboard: Read<'a, KeyboardResource>,
-    pub tile_map: Read<'a, TileMapResource>,
-    pub entity_map: Read<'a, EntityMapResource>,
+    pub keyboard: ReadExpect<'a, KeyboardResource>,
+    pub tile_world: ReadExpect<'a, TileWorldResource>,
 
     //Read components
     pub butcherable: ReadStorage<'a, ButcherableComponent>,

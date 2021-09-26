@@ -1,6 +1,6 @@
 use crate::prelude::*;
 
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum TileType {
     Ground,
     Wall {
@@ -98,6 +98,6 @@ impl TileType {
 
 impl Default for TileType {
     fn default() -> TileType {
-        unreachable!();
+        TileType::Ground
     }
 }

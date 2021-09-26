@@ -1,5 +1,5 @@
 use rand::prelude::*;
-use specs::{Builder, Entity, World as ECSWorld, WorldExt as ECSWorldExt};
+use specs::{world::EntitiesRes, Builder, Entity, LazyUpdate};
 
 use crate::prelude::*;
 
@@ -9,16 +9,15 @@ pub enum CreatureBuilder {
 
 //To be refactored to either be split into multiple specialised builders or one very generic entity builder
 impl CreatureBuilder {
-    pub fn build(&self, ecs_world: &mut ECSWorld, under_player_control: bool) -> Entity {
-        let mut builder = match self {
+    pub fn build(&self, lazy: &LazyUpdate, entities: &EntitiesRes) -> Entity {
+        match self {
             Self::Humanoid { race } => {
                 //TODO: create stomach contents from something representative of the race
                 let stomach_contents = vec![
-                    ItemBuilder::Berry.build(ecs_world),
-                    ItemBuilder::Berry.build(ecs_world),
+                    ItemBuilder::Berry.build(lazy, entities),
+                    ItemBuilder::Berry.build(lazy, entities),
                 ];
-                ecs_world
-                    .create_entity()
+                lazy.create_entity(entities)
                     .with(VelocityComponent { x: 0, y: 0 })
                     .with(IntendedMovementComponent {
                         x_delta: 0,
@@ -52,13 +51,8 @@ impl CreatureBuilder {
                     .with(DeathComponent {
                         contained_entities: Vec::new(),
                     })
+                    .build()
             }
-        };
-
-        if under_player_control {
-            builder = builder.with(InputComponent { popup: None });
         }
-
-        builder.build()
     }
 }
