@@ -1,6 +1,6 @@
 use rand::prelude::*;
 
-pub struct DiceRoll{
+pub struct DiceRoll {
     pub rolls: usize,
     pub dice: usize,
     pub bonus: usize,
@@ -11,9 +11,13 @@ impl DiceRoll {
         //We assume if there's no plus, the string has no bonus
         let (dice_string, bonus) = string.split_once("+").unwrap_or((string, "0"));
         let (rolls, dice) = dice_string.split_once("d").unwrap();
-        let (rolls, dice, bonus) = (rolls.parse::<usize>().unwrap(), dice.parse::<usize>().unwrap(), bonus.parse::<usize>().unwrap());
+        let (rolls, dice, bonus) = (
+            rolls.parse::<usize>().unwrap(),
+            dice.parse::<usize>().unwrap(),
+            bonus.parse::<usize>().unwrap(),
+        );
 
-        DiceRoll {rolls, dice, bonus}
+        DiceRoll { rolls, dice, bonus }
     }
 
     pub fn to_string(&self) -> String {

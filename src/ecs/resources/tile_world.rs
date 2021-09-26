@@ -9,7 +9,7 @@ pub struct TileWorldResource {
 }
 
 impl TileWorldResource {
-    pub fn new(gen_data: &mut GenData) -> Self {
+    pub fn new(world_data: &mut WorldData) -> Self {
         let (offset_x, offset_y) = (-1i32, -1i32);
         let mut buffer = [
             Chunk::default(),
@@ -26,7 +26,7 @@ impl TileWorldResource {
         for buffer_x in 0..3usize {
             for buffer_y in 0..3usize {
                 let (chunk_x, chunk_y) = (buffer_x as i32 + offset_x, buffer_y as i32 + offset_y);
-                buffer[buffer_idx(buffer_x, buffer_y)].generate((chunk_x, chunk_y), gen_data);
+                buffer[buffer_idx(buffer_x, buffer_y)].generate((chunk_x, chunk_y), world_data);
             }
         }
 
@@ -114,7 +114,7 @@ impl TileWorldResource {
         )
     }
 
-    pub fn update_center(&mut self, center_pos: (i32, i32), gen_data: &mut GenData) {
+    pub fn update_center(&mut self, center_pos: (i32, i32), world_data: &mut WorldData) {
         let (offset_x, offset_y) = self.offset;
 
         let ((center_chunk_x, center_chunk_y), _) = global_to_local_position(center_pos);
@@ -155,7 +155,7 @@ impl TileWorldResource {
                         // TODO Unload chunk here
 
                         self.buffer[buffer_idx(buffer_x as usize, buffer_y as usize)]
-                            .unload(gen_data);
+                            .unload(world_data);
                     }
 
                     if generate {
@@ -165,7 +165,7 @@ impl TileWorldResource {
                         );
 
                         self.buffer[buffer_idx(buffer_x as usize, buffer_y as usize)]
-                            .generate((new_chunk_x, new_chunk_y), gen_data);
+                            .generate((new_chunk_x, new_chunk_y), world_data);
                     } else {
                         trace!(
                             "Moving chunk ({},{}) from buffer index ({},{}) to ({}, {})",

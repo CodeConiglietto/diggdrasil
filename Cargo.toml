@@ -18,6 +18,7 @@ itertools = "0.10.1"
 lazy_static = "1.4.0"
 log = "0.4.14"
 ndarray = "0.15.3"
+noise = "0.7.0"
 rand = "0.8.4"
 specs = { version = "0.17.0", features = ["shred-derive", "specs-derive"] }
 strum = { version = "0.21.0", features = ["derive"] }

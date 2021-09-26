@@ -1,3 +1,4 @@
+use rand::prelude::*;
 use specs::{world::EntitiesRes, Builder, Entity, LazyUpdate};
 
 use crate::prelude::*;
@@ -23,6 +24,11 @@ impl EquipmentBuilder {
             Self::Spear { head_material, .. } => lazy
                 .create_entity(entities)
                 .with(ItemComponent)
+                .with(DrawComponent {
+                    seed: thread_rng().gen::<usize>(),
+                    sprite_builder: SpriteBuilder::Spear,
+                    symbol_builder: Some(SymbolBuilder::Spear),
+                })
                 .with(NameComponent {
                     name: format!("{} spear", head_material.get_name()),
                 })

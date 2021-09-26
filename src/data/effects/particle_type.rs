@@ -33,9 +33,9 @@ impl ParticleType {
                 z - thread_rng().gen_range(0..=1),
             ),
             Self::Smoke { .. } => (
-                x + thread_rng().gen_range(-1..=1),
-                y + thread_rng().gen_range(-1..=1),
-                z + thread_rng().gen_range(0..=1),
+                x + if thread_rng().gen_range(0..=4) == 0 { thread_rng().gen_range(-1..=1) } else { 0 },
+                y + if thread_rng().gen_range(0..=4) == 0 { thread_rng().gen_range(-1..=1) } else { 0 },
+                z + if thread_rng().gen_range(0..=3) != 0 { 1 } else { 0 },
             ),
             _ => todo!(),
         }
@@ -84,10 +84,12 @@ impl ParticleType {
                 }
             }
             Self::Smoke { lifetime } => {
-                if z == MAX_PARTICLE_HEIGHT || *lifetime >= 24 {
+                if z == MAX_PARTICLE_HEIGHT || *lifetime >= 23 {
                     ParticleType::Finished
                 } else {
-                    *self
+                    ParticleType::Smoke {
+                        lifetime: lifetime + 1,
+                    }
                 }
             }
             _ => *self,

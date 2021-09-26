@@ -6,5 +6,6 @@ pub mod goal_resolution;
 pub mod health_resolution;
 pub mod input_resolution;
 pub mod movement_resolution;
+pub mod particle_emitter;
 pub mod particle;
-pub mod world_generation;
+pub mod world_maintenance;

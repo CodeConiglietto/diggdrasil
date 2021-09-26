@@ -32,6 +32,8 @@ pub enum SpriteBuilder {
     Stone,
     BerryBush,
     Berry,
+    CampFire,
+    Spear,
 }
 
 impl SpriteBuilder {
@@ -292,6 +294,16 @@ impl SpriteBuilder {
                 origin_x: 0,
                 origin_y: 0,
                 contents: array![[SymbolBuilder::Berry.get_symbol(seed)]],
+            },
+            Self::CampFire => Sprite {
+                origin_x: 0,
+                origin_y: 0,
+                contents: array![[SymbolBuilder::CampFire.get_symbol(seed)]],
+            },
+            Self::Spear => Sprite {
+                origin_x: 0,
+                origin_y: 0,
+                contents: array![[SymbolBuilder::Spear.get_symbol(seed)]],
             },
         }
     }

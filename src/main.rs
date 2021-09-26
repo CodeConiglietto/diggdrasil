@@ -48,8 +48,9 @@ struct MainState {
     collision_resolution_system: CollisionResolutionSystem,
     digestion_resolution_system: DigestionResolutionSystem,
     health_resolution_system: HealthResolutionSystem,
+    particle_emitter_system: ParticleEmitterSystem,
     particle_system: ParticleSystem,
-    world_generation_system: WorldGenerationSystem,
+    world_maintenance_system: WorldMaintenanceSystem,
 
     //Player and UI variables
     symbolic_view: bool,
@@ -82,6 +83,7 @@ impl MainState {
         ecs_world.register::<MaterialComponent>();
         ecs_world.register::<NameComponent>();
         ecs_world.register::<ParticleComponent>();
+        ecs_world.register::<ParticleEmitterComponent>();
         ecs_world.register::<PositionComponent>();
         ecs_world.register::<VelocityComponent>();
 
@@ -152,8 +154,9 @@ impl MainState {
             collision_resolution_system: CollisionResolutionSystem,
             digestion_resolution_system: DigestionResolutionSystem,
             health_resolution_system: HealthResolutionSystem,
+            particle_emitter_system: ParticleEmitterSystem,
             particle_system: ParticleSystem,
-            world_generation_system: WorldGenerationSystem,
+            world_maintenance_system: WorldMaintenanceSystem,
 
             //Player and UI variables
             symbolic_view: false,
@@ -244,8 +247,9 @@ impl event::EventHandler<ggez::GameError> for MainState {
         self.collision_resolution_system.run_now(&self.ecs_world);
         self.digestion_resolution_system.run_now(&self.ecs_world);
         self.health_resolution_system.run_now(&self.ecs_world);
+        self.particle_emitter_system.run_now(&self.ecs_world);
         self.particle_system.run_now(&self.ecs_world);
-        self.world_generation_system.run_now(&self.ecs_world);
+        self.world_maintenance_system.run_now(&self.ecs_world);
 
         self.ecs_world.maintain();
 

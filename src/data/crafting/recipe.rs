@@ -146,7 +146,7 @@ impl Recipe {
 
     pub fn craft(
         &self,
-        ingredients: Vec<Entity>,
+        ingredients: &[Entity],
         lazy: &LazyUpdate,
         entities: &Entities,
         data: &CraftingData,

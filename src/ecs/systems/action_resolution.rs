@@ -1,5 +1,5 @@
 use rand::prelude::*;
-use specs::{Entities, Join, ReadStorage, System, WriteExpect, WriteStorage};
+use specs::{Entities, Join, LazyUpdate, Read, ReadStorage, System, WriteExpect, WriteStorage};
 
 use crate::prelude::*;
 
@@ -8,8 +8,9 @@ pub struct ActionResolutionSystem;
 impl<'a> System<'a> for ActionResolutionSystem {
     type SystemData = (
         Entities<'a>,
+        Read<'a, LazyUpdate>,
+        CraftingData<'a>,
         WriteExpect<'a, TileWorldResource>,
-        ReadStorage<'a, MaterialComponent>,
         WriteStorage<'a, PositionComponent>,
         WriteStorage<'a, AIActionComponent>,
         WriteStorage<'a, IntendedMovementComponent>,
@@ -19,7 +20,7 @@ impl<'a> System<'a> for ActionResolutionSystem {
     );
 
     fn run(&mut self, data: Self::SystemData) {
-        let (eids, mut twld, mat, mut pos, mut act, mut imc, mut inv, mut hpc, mut dig) = data;
+        let (eids, lup, crd, mut twld, mut pos, mut act, mut imc, mut inv, mut hpc, mut dig) = data;
 
         for (eid, act, imc) in (&eids, &mut act, &mut imc).join() {
             let current_action = &act.current_action;
@@ -127,7 +128,8 @@ impl<'a> System<'a> for ActionResolutionSystem {
                                                     **slot == Some(*consumed_entity)
                                                 })
                                             {
-                                                if let Some(item_material) = mat.get(item.unwrap())
+                                                if let Some(item_material) =
+                                                    crd.material.get(item.unwrap())
                                                 //This may cause issues
                                                 {
                                                     if fulfills_material_requirements(
@@ -200,7 +202,21 @@ impl<'a> System<'a> for ActionResolutionSystem {
                         recipe,
                         ingredients,
                     } => {
-                        todo!();
+                        if let Some(ent_pos) = pos.get(eid) {
+                            match recipe.craft(ingredients, &lup, &eids, &crd) {
+                                Ok(crafted_entity) => {
+                                    twld.spawn_entity(
+                                        crafted_entity,
+                                        (ent_pos.x, ent_pos.y),
+                                        &mut pos,
+                                    );
+                                }
+
+                                Err(err) => println!("Crafting error: {}", err),
+                            }
+                        } else {
+                            println!("Entity tried to craft without position");
+                        }
                     }
                 }
             }

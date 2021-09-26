@@ -28,6 +28,7 @@ pub enum SymbolBuilder {
     BerryBush,
     Berry,
     CampFire,
+    Spear,
 }
 
 impl SymbolBuilder {
@@ -229,20 +230,39 @@ impl SymbolBuilder {
                 draw_chars: vec![
                     GgBunnyChar {
                         index: 0x05E,
-                        foreground: Color::new(0.5, 0.5, 0.5, 1.0),
+                        foreground: Color::new(0.5, 0.5, 0.0, 1.0),
                         background: None,
                         rotation: CharRotation::None,
                         mirror: CharMirror::None,
                     },
                     GgBunnyChar {
                         index: 0x07C,
-                        foreground: Color::new(0.5, 0.5, 0.0, 1.0),
+                        foreground: Color::new(0.5, 0.5, 0.5, 1.0),
                         background: None,
                         rotation: CharRotation::Rotation90,
                         mirror: CharMirror::None,
                     },
                 ],
             },
+            //TODO: find a way to pass material colours to symbols/sprites
+            Self::Spear => Symbol {
+                draw_chars: vec![
+                    GgBunnyChar {
+                        index: 0x111,
+                        foreground: Color::new(0.5, 0.5, 0.0, 1.0),
+                        background: None,
+                        rotation: CharRotation::Rotation180,
+                        mirror: CharMirror::MirrorX,
+                    },
+                    GgBunnyChar {
+                        index: 0x24F,
+                        foreground: Color::new(0.5, 0.5, 0.5, 1.0),
+                        background: None,
+                        rotation: CharRotation::None,
+                        mirror: CharMirror::None,
+                    },
+                ]
+            }
         }
     }
 }

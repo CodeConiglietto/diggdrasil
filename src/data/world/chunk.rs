@@ -1,5 +1,6 @@
 use log::warn;
 use ndarray::Array2;
+use noise::{NoiseFn, Perlin};
 use rand::prelude::*;
 use specs::{Entity, WriteStorage};
 
@@ -10,7 +11,7 @@ pub struct Chunk {
 }
 
 impl Chunk {
-    pub fn generate(&mut self, (chunk_x, chunk_y): (i32, i32), gen_data: &mut GenData) {
+    pub fn generate(&mut self, (chunk_x, chunk_y): (i32, i32), world_data: &mut WorldData) {
         for chunk_tile in self.tiles.iter_mut() {
             chunk_tile.tile = Tile {
                 seed: thread_rng().gen::<usize>(),
@@ -60,45 +61,45 @@ impl Chunk {
         }
 
         for _ in 0..16 {
-            let lazy = &gen_data.lazy;
-            let entities = &gen_data.entities;
+            let lazy = &world_data.lazy;
+            let entities = &world_data.entities;
 
             self.spawn_somewhere_free(
                 || VegetationBuilder::Tree.build(lazy, entities),
                 (chunk_x, chunk_y),
-                &mut gen_data.position,
+                &mut world_data.position,
             );
 
             self.spawn_somewhere_free(
                 || VegetationBuilder::BerryBush.build(lazy, entities),
                 (chunk_x, chunk_y),
-                &mut gen_data.position,
+                &mut world_data.position,
             );
 
             self.spawn_somewhere_free(
                 || ItemBuilder::Stick.build(lazy, entities),
                 (chunk_x, chunk_y),
-                &mut gen_data.position,
+                &mut world_data.position,
             );
 
             self.spawn_somewhere_free(
                 || ItemBuilder::Log.build(lazy, entities),
                 (chunk_x, chunk_y),
-                &mut gen_data.position,
+                &mut world_data.position,
             );
 
             self.spawn_somewhere_free(
                 || ItemBuilder::Stone.build(lazy, entities),
                 (chunk_x, chunk_y),
-                &mut gen_data.position,
+                &mut world_data.position,
             );
         }
     }
 
-    pub fn unload(&mut self, gen_data: &mut GenData) {
+    pub fn unload(&mut self, world_data: &mut WorldData) {
         for chunk_tile in self.tiles.iter_mut() {
             for entity in chunk_tile.entities.drain(..) {
-                gen_data.entities.delete(entity).unwrap();
+                world_data.entities.delete(entity).unwrap();
             }
         }
     }

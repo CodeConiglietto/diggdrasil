@@ -1,20 +1,21 @@
 use std::convert::TryFrom;
 
-use specs::{Entities, Join, System, Read, ReadStorage};
+use specs::{Builder, Entities, Join, LazyUpdate, System, Read, ReadStorage};
 
 use crate::prelude::*;
 
-pub struct ParticleSystem;
+pub struct ParticleEmitterSystem;
 
 impl<'a> System<'a> for ParticleEmitterSystem {
     type SystemData = (
+        Entities<'a>,
         Read<'a, LazyUpdate>,
         ReadStorage<'a, PositionComponent>,
         ReadStorage<'a, ParticleEmitterComponent>,
     );
 
     fn run(&mut self, data: Self::SystemData) {
-        let (pos, pec) = data;
+        let (eids, lup, pos, pec) = data;
 
         for (pos, pec) in (&pos, &pec).join() {
             let PositionComponent{x, y} = pos;
@@ -22,8 +23,8 @@ impl<'a> System<'a> for ParticleEmitterSystem {
             lup.create_entity(&eids)
                 .with(ParticleComponent {
                     position: (
-                        x,
-                        y, 
+                        *x,
+                        *y, 
                         1,
                     ),
                     particle_type: pec.particle_type,
