@@ -203,19 +203,28 @@ impl<'a> System<'a> for ActionResolutionSystem {
                         ingredients,
                     } => {
                         if let Some(ent_pos) = pos.get(eid) {
-                            match recipe.craft(ingredients, &lup, &eids, &crd) {
-                                Ok(crafted_entity) => {
-                                    twld.spawn_entity(
-                                        crafted_entity,
-                                        (ent_pos.x, ent_pos.y),
-                                        &mut pos,
-                                    );
-                                }
+                            if let Some(inv) = inv.get_mut(eid) {
+                                match recipe.craft(ingredients, &lup, &eids, &crd) {
+                                    Ok(crafted_entity) => {
+                                        for item in ingredients {
+                                            inv.remove(*item);
+                                            eids.delete(*item).unwrap();
+                                        }
 
-                                Err(err) => println!("Crafting error: {}", err),
+                                        twld.spawn_entity(
+                                            crafted_entity,
+                                            (ent_pos.x, ent_pos.y),
+                                            &mut pos,
+                                        );
+                                    }
+
+                                    Err(err) => println!("Crafting error: {}", err),
+                                }
+                            } else {
+                                println!("Entity attempted to craft without inventory");
                             }
                         } else {
-                            println!("Entity tried to craft without position");
+                            println!("Entity attempted to craft without position");
                         }
                     }
                 }

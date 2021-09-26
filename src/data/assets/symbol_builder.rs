@@ -29,6 +29,8 @@ pub enum SymbolBuilder {
     Berry,
     CampFire,
     Spear,
+    Pick,
+    Axe
 }
 
 impl SymbolBuilder {
@@ -259,6 +261,42 @@ impl SymbolBuilder {
                         foreground: Color::new(0.5, 0.5, 0.5, 1.0),
                         background: None,
                         rotation: CharRotation::None,
+                        mirror: CharMirror::None,
+                    },
+                ]
+            },
+            Self::Pick => Symbol {
+                draw_chars: vec![
+                    GgBunnyChar {
+                        index: 0x111,
+                        foreground: Color::new(0.5, 0.5, 0.0, 1.0),
+                        background: None,
+                        rotation: CharRotation::Rotation180,
+                        mirror: CharMirror::None,
+                    },
+                    GgBunnyChar {
+                        index: 0x028,
+                        foreground: Color::new(0.5, 0.5, 0.5, 1.0),
+                        background: None,
+                        rotation: CharRotation::Rotation90,
+                        mirror: CharMirror::None,
+                    },
+                ]
+            },
+            Self::Axe => Symbol {
+                draw_chars: vec![
+                    GgBunnyChar {
+                        index: 0x15C,
+                        foreground: Color::new(0.5, 0.5, 0.0, 1.0),
+                        background: None,
+                        rotation: CharRotation::None,
+                        mirror: CharMirror::MirrorX,
+                    },
+                    GgBunnyChar {
+                        index: 0x373,
+                        foreground: Color::new(0.5, 0.5, 0.5, 1.0),
+                        background: None,
+                        rotation: CharRotation::Rotation270,
                         mirror: CharMirror::None,
                     },
                 ]
