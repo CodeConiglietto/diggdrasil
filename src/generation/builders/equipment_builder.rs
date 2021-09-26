@@ -1,4 +1,4 @@
-use specs::{Builder, Entity, World as ECSWorld, WorldExt as ECSWorldExt};
+use specs::{world::EntitiesRes, Builder, Entity, LazyUpdate};
 
 use crate::prelude::*;
 
@@ -18,31 +18,29 @@ pub enum EquipmentBuilder {
 }
 
 impl EquipmentBuilder {
-    pub fn build(&self, ecs_world: &mut ECSWorld) -> Entity {
-        let builder = match self {
-            Self::Spear {
-                head_material,
-                ..
-            } => 
-                ecs_world.create_entity()
-                    .with(ItemComponent)
-                    .with(NameComponent {name: format!("{} spear", head_material.get_name())}),
-            Self::Pick {
-                head_material,
-                ..
-            } => 
-                ecs_world.create_entity()
-                    .with(ItemComponent)
-                    .with(NameComponent {name: format!("{} pick", head_material.get_name())}),
-            Self::Axe {
-                head_material,
-                ..
-            } => 
-                ecs_world.create_entity()
-                    .with(ItemComponent)
-                    .with(NameComponent {name: format!("{} axe", head_material.get_name())}),
-        };
-
-        builder.build()
+    pub fn build(&self, lazy: &LazyUpdate, entities: &EntitiesRes) -> Entity {
+        match self {
+            Self::Spear { head_material, .. } => lazy
+                .create_entity(entities)
+                .with(ItemComponent)
+                .with(NameComponent {
+                    name: format!("{} spear", head_material.get_name()),
+                })
+                .build(),
+            Self::Pick { head_material, .. } => lazy
+                .create_entity(entities)
+                .with(ItemComponent)
+                .with(NameComponent {
+                    name: format!("{} pick", head_material.get_name()),
+                })
+                .build(),
+            Self::Axe { head_material, .. } => lazy
+                .create_entity(entities)
+                .with(ItemComponent)
+                .with(NameComponent {
+                    name: format!("{} axe", head_material.get_name()),
+                })
+                .build(),
+        }
     }
 }

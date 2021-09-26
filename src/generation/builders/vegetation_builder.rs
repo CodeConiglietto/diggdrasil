@@ -1,5 +1,5 @@
 use rand::prelude::*;
-use specs::{Builder, Entity, World as ECSWorld, WorldExt as ECSWorldExt};
+use specs::{world::EntitiesRes, Builder, Entity, LazyUpdate};
 
 use crate::prelude::*;
 
@@ -10,16 +10,15 @@ pub enum VegetationBuilder {
 
 //To be refactored to either be split into multiple specialised builders or one very generic entity builder
 impl VegetationBuilder {
-    pub fn build(&self, ecs_world: &mut ECSWorld) -> Entity {
-        let builder = match self {
+    pub fn build(&self, lazy: &LazyUpdate, entities: &EntitiesRes) -> Entity {
+        match self {
             Self::Tree => {
                 let contained_entities = vec![
-                    ItemBuilder::Log.build(ecs_world),
-                    ItemBuilder::Log.build(ecs_world),
+                    ItemBuilder::Log.build(lazy, entities),
+                    ItemBuilder::Log.build(lazy, entities),
                 ];
 
-                ecs_world
-                    .create_entity()
+                lazy.create_entity(entities)
                     .with(DrawComponent {
                         seed: thread_rng().gen::<usize>(),
                         sprite_builder: SpriteBuilder::Tree,
@@ -33,15 +32,15 @@ impl VegetationBuilder {
                         max_value: 10,
                     })
                     .with(DeathComponent { contained_entities })
+                    .build()
             }
             Self::BerryBush => {
                 let contained_entities = vec![
-                    ItemBuilder::Berry.build(ecs_world),
-                    ItemBuilder::Berry.build(ecs_world),
+                    ItemBuilder::Berry.build(lazy, entities),
+                    ItemBuilder::Berry.build(lazy, entities),
                 ];
 
-                ecs_world
-                    .create_entity()
+                lazy.create_entity(entities)
                     .with(DrawComponent {
                         seed: thread_rng().gen::<usize>(),
                         sprite_builder: SpriteBuilder::BerryBush,
@@ -58,9 +57,8 @@ impl VegetationBuilder {
                         max_value: 10,
                     })
                     .with(DeathComponent { contained_entities })
+                    .build()
             }
-        };
-
-        builder.build()
+        }
     }
 }

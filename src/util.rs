@@ -144,3 +144,26 @@ pub fn index_to_letter(index: usize) -> Option<char> {
 
     Some(c)
 }
+
+pub fn global_to_local_position((x, y): (i32, i32)) -> ((i32, i32), (usize, usize)) {
+    (
+        (
+            x.div_euclid(CHUNK_SIZE as i32),
+            y.div_euclid(CHUNK_SIZE as i32),
+        ),
+        (
+            x.rem_euclid(CHUNK_SIZE as i32) as usize,
+            y.rem_euclid(CHUNK_SIZE as i32) as usize,
+        ),
+    )
+}
+
+pub fn local_to_global_position(
+    (chunk_x, chunk_y): (i32, i32),
+    (local_x, local_y): (usize, usize),
+) -> (i32, i32) {
+    (
+        chunk_x * CHUNK_SIZE as i32 + local_x as i32,
+        chunk_y * CHUNK_SIZE as i32 + local_y as i32,
+    )
+}

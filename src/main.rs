@@ -8,9 +8,11 @@ use ggez::{
 };
 use glam::*;
 use itertools::Itertools;
-use ndarray::prelude::*;
 use rand::prelude::*;
-use specs::{Builder, Join, RunNow, World as ECSWorld, WorldExt as ECSWorldExt};
+use specs::{
+    Builder, Entities, Join, LazyUpdate, Read, RunNow, World as ECSWorld, WorldExt as ECSWorldExt,
+    WriteStorage,
+};
 use std::{env, path::PathBuf, time::Duration};
 use tui::{
     layout::{Constraint, Direction as LayoutDirection, Layout},
@@ -47,6 +49,7 @@ struct MainState {
     digestion_resolution_system: DigestionResolutionSystem,
     health_resolution_system: HealthResolutionSystem,
     particle_system: ParticleSystem,
+    world_generation_system: WorldGenerationSystem,
 
     //Player and UI variables
     symbolic_view: bool,
@@ -88,107 +91,38 @@ impl MainState {
             modifiers: KeyMods::default(),
         };
 
-        let mut tile_map = TileMapResource {
-            contents: Array2::from_shape_fn((MAP_X_SIZE, MAP_Y_SIZE), |(_x, _y)| Tile {
-                seed: thread_rng().gen::<usize>(),
-                tile_type: if thread_rng().gen_range(0.0..1.0) > 0.75 {
-                    if thread_rng().gen_range(0.0..1.0) > 0.5 {
-                        TileType::Wall {
-                            material: Material::Stone,
-                        }
-                    } else {
-                        TileType::ConstructedWall {
-                            material: Material::Wood,
-                            material_shape: MaterialShape::Plank,
-                            wall_feature: None,
-                        }
-                    }
-                } else {
-                    TileType::Ground
-                },
-                tile_variant: TileVariant::default(),
-            }),
-        };
-
-        for x in 12..=20 {
-            for y in 12..=20 {
-                tile_map.contents[[x, y]] = Tile {
-                    seed: thread_rng().gen::<usize>(),
-                    tile_type: if y != 16 && (x == 12 || x == 20 || y == 12 || y == 20) {
-                        TileType::ConstructedWall {
-                            material: Material::Wood,
-                            material_shape: MaterialShape::Plank,
-                            wall_feature: None,
-                        }
-                    } else {
-                        TileType::Ground
-                    },
-                    tile_variant: TileVariant::default(),
-                }
-            }
-        }
-
-        tile_map.refresh_all_tile_variants();
-
-        let mut entity_map = EntityMapResource {
-            contents: Array2::from_shape_fn((MAP_X_SIZE, MAP_Y_SIZE), |(_x, _y)| Vec::new()),
-        };
-
+        let mut tile_world = TileWorldResource::new(&mut ecs_world.system_data());
         let particle_map = ParticleMapResource::default();
 
         // TODO
         //let ui = UiResource { terminal: };
 
         //Insert pertinent data into resources
-        let player = CreatureBuilder::Humanoid { race: Race::Human }.build(&mut ecs_world, true);
-        entity_map.spawn_entity(player, (16, 16), &mut ecs_world.system_data());
+        {
+            let (lazy, entities, mut position, mut input): (
+                Read<LazyUpdate>,
+                Entities,
+                WriteStorage<PositionComponent>,
+                WriteStorage<InputComponent>,
+            ) = ecs_world.system_data();
 
-        for _ in 0..16 {
-            let tree = VegetationBuilder::Tree.build(&mut ecs_world);
-            entity_map.spawn_entity(
-                tree,
-                (thread_rng().gen_range(0..32), thread_rng().gen_range(0..32)),
-                &mut ecs_world.system_data(),
-            );
-            let bush = VegetationBuilder::BerryBush.build(&mut ecs_world);
-            entity_map.spawn_entity(
-                bush,
-                (thread_rng().gen_range(0..32), thread_rng().gen_range(0..32)),
-                &mut ecs_world.system_data(),
-            );
-            let stick = ItemBuilder::Stick.build(&mut ecs_world);
-            entity_map.spawn_entity(
-                stick,
-                (thread_rng().gen_range(0..32), thread_rng().gen_range(0..32)),
-                &mut ecs_world.system_data(),
-            );
-            let log = ItemBuilder::Log.build(&mut ecs_world);
-            entity_map.spawn_entity(
-                log,
-                (thread_rng().gen_range(0..32), thread_rng().gen_range(0..32)),
-                &mut ecs_world.system_data(),
-            );
-            let stone = ItemBuilder::Stone.build(&mut ecs_world);
-            entity_map.spawn_entity(
-                stone,
-                (thread_rng().gen_range(0..32), thread_rng().gen_range(0..32)),
-                &mut ecs_world.system_data(),
-            );
+            let player = CreatureBuilder::Humanoid { race: Race::Human }.build(&lazy, &entities);
+            input.insert(player, InputComponent::default()).unwrap();
+            tile_world.spawn_entity(player, (16, 16), &mut position);
         }
 
         //Assign resources to ecs world
         ecs_world.insert(keyboard);
-        ecs_world.insert(tile_map);
-        ecs_world.insert(entity_map);
+        ecs_world.insert(tile_world);
         ecs_world.insert(particle_map);
-        // TODO
-        //ecs_world.insert(ui);
 
         let (char_width, char_height) = (8, 8);
         let (ui_width, ui_height) = (
             (WINDOW_WIDTH as f32 / (char_width as f32 * RENDER_SCALE)).floor() as usize,
             (WINDOW_HEIGHT as f32 / (char_height as f32 * RENDER_SCALE)).floor() as usize,
         );
+
+        ecs_world.maintain();
 
         //Construct game state
         let s = MainState {
@@ -219,6 +153,7 @@ impl MainState {
             digestion_resolution_system: DigestionResolutionSystem,
             health_resolution_system: HealthResolutionSystem,
             particle_system: ParticleSystem,
+            world_generation_system: WorldGenerationSystem,
 
             //Player and UI variables
             symbolic_view: false,
@@ -248,19 +183,29 @@ impl event::EventHandler<ggez::GameError> for MainState {
             self.symbolic_view = false;
         }
 
-        self.ecs_world
-            .create_entity()
-            .with(ParticleComponent {
-                position: (
-                    thread_rng().gen_range(0..MAP_X_SIZE) as i32,
-                    thread_rng().gen_range(0..MAP_Y_SIZE) as i32,
-                    thread_rng().gen_range(0..MAX_PARTICLE_HEIGHT),
-                ),
-                particle_type: ParticleType::Rain {
-                    initial_angle: Direction::Left,
-                },
-            })
-            .build();
+        {
+            let data: InputData = self.ecs_world.system_data();
+            if let Some((_input, position)) = (&data.input, &data.position).join().next() {
+                let left = position.x - MAP_X_SIZE as i32 / 2;
+                let right = left + MAP_X_SIZE as i32;
+                let top = position.y - MAP_Y_SIZE as i32 / 2;
+                let bottom = top + MAP_Y_SIZE as i32;
+
+                data.lazy
+                    .create_entity(&data.entities)
+                    .with(ParticleComponent {
+                        position: (
+                            thread_rng().gen_range(left..right) as i32,
+                            thread_rng().gen_range(top..bottom) as i32,
+                            thread_rng().gen_range(0..MAX_PARTICLE_HEIGHT),
+                        ),
+                        particle_type: ParticleType::Rain {
+                            initial_angle: Direction::Left,
+                        },
+                    })
+                    .build();
+            }
+        }
 
         //Write resources
 
@@ -300,6 +245,7 @@ impl event::EventHandler<ggez::GameError> for MainState {
         self.digestion_resolution_system.run_now(&self.ecs_world);
         self.health_resolution_system.run_now(&self.ecs_world);
         self.particle_system.run_now(&self.ecs_world);
+        self.world_generation_system.run_now(&self.ecs_world);
 
         self.ecs_world.maintain();
 
@@ -316,85 +262,105 @@ impl event::EventHandler<ggez::GameError> for MainState {
         self.font_batch.clear();
 
         let data: RenderData = self.ecs_world.system_data();
+        if let Some((input, position, inventory, digestion, health)) = (
+            &data.input,
+            &data.position,
+            (&data.inventory).maybe(),
+            (&data.digestion).maybe(),
+            (&data.health).maybe(),
+        )
+            .join()
+            .next()
+        {
+            let left = position.x - MAP_X_SIZE as i32 / 2;
+            let top = position.y - MAP_Y_SIZE as i32 / 2;
 
-        let tiles = &data.tile_map.contents;
+            for (screen_y, particles) in
+                (0..(MAP_Y_SIZE as i32)).zip_eq(data.particle_map.contents.iter())
+            {
+                for screen_x in 0..(MAP_X_SIZE as i32) {
+                    let world_x = left + screen_x;
+                    let world_y = top + screen_y;
 
-        for y in 0..MAP_Y_SIZE {
-            for x in 0..MAP_X_SIZE {
-                let ix = x as i32;
-                let iy = y as i32;
-
-                let tile = &tiles[[x, y]];
-
-                if self.symbolic_view {
-                    tile.get_symbolbuilder()
-                        .get_symbol(tile.seed)
-                        .draw_to_font_batch(&mut self.font_batch, (ix, iy), RENDER_SCALE);
-                } else {
-                    tile.get_spritebuilder()
-                        .get_sprite(tile.seed)
-                        .draw_to_font_batch(&mut self.font_batch, (ix, iy), RENDER_SCALE);
-                }
-
-                for entity in data.entity_map.contents[[x, y]].iter() {
-                    let dc = data.draw.get(*entity).unwrap();
-
-                    if self.symbolic_view {
-                        if let Some(sym_build) = &dc.symbol_builder {
-                            sym_build
-                                .get_symbol(entity.id() as usize)
-                                .draw_to_font_batch(&mut self.font_batch, (ix, iy), RENDER_SCALE);
+                    if let Some(tile) = data.tile_world.get((world_x, world_y)) {
+                        if self.symbolic_view {
+                            tile.tile
+                                .get_symbolbuilder()
+                                .get_symbol(tile.tile.seed)
+                                .draw_to_font_batch(
+                                    &mut self.font_batch,
+                                    (screen_x, screen_y),
+                                    RENDER_SCALE,
+                                );
+                        } else {
+                            tile.tile
+                                .get_spritebuilder()
+                                .get_sprite(tile.tile.seed)
+                                .draw_to_font_batch(
+                                    &mut self.font_batch,
+                                    (screen_x, screen_y),
+                                    RENDER_SCALE,
+                                );
                         }
-                    } else {
-                        dc.sprite_builder
-                            .get_sprite(entity.id() as usize)
-                            .draw_to_font_batch(&mut self.font_batch, (ix, iy), RENDER_SCALE);
+
+                        for entity in tile.entities.iter() {
+                            let dc = data.draw.get(*entity).unwrap();
+
+                            if self.symbolic_view {
+                                if let Some(sym_build) = &dc.symbol_builder {
+                                    sym_build
+                                        .get_symbol(entity.id() as usize)
+                                        .draw_to_font_batch(
+                                            &mut self.font_batch,
+                                            (screen_x, screen_y),
+                                            RENDER_SCALE,
+                                        );
+                                }
+                            } else {
+                                dc.sprite_builder
+                                    .get_sprite(entity.id() as usize)
+                                    .draw_to_font_batch(
+                                        &mut self.font_batch,
+                                        (screen_x, screen_y),
+                                        RENDER_SCALE,
+                                    );
+                            }
+                        }
                     }
                 }
+
+                for particle in particles.iter() {
+                    let pac = data.particle.get(*particle).unwrap();
+                    let (x, y, z) = pac.position;
+
+                    pac.particle_type.get_char().draw_to_font_batch(
+                        &mut self.font_batch,
+                        (x - left, y - z - top),
+                        RENDER_SCALE,
+                    );
+                }
             }
 
-            for particle in data.particle_map.contents[y].iter() {
-                let pac = data.particle.get(*particle).unwrap();
-                let (x, y, z) = pac.position;
-                let (ix, iy) = (x, y - z);
+            self.tui
+                .draw(|f| {
+                    let (left_pane, mut right_pane) = Layout::default()
+                        .direction(LayoutDirection::Horizontal)
+                        .constraints([Constraint::Length(MAP_X_SIZE as u16), Constraint::Min(0)])
+                        .split(f.size())
+                        .into_iter()
+                        .collect_tuple()
+                        .unwrap();
+                    let (map_pane, bottom_pane) = Layout::default()
+                        .direction(LayoutDirection::Vertical)
+                        .constraints([
+                            Constraint::Length(MAP_Y_SIZE as u16 + 1),
+                            Constraint::Min(0),
+                        ])
+                        .split(left_pane)
+                        .into_iter()
+                        .collect_tuple()
+                        .unwrap();
 
-                pac.particle_type.get_char().draw_to_font_batch(
-                    &mut self.font_batch,
-                    (ix, iy),
-                    RENDER_SCALE,
-                );
-            }
-        }
-
-        self.tui
-            .draw(|f| {
-                let (left_pane, mut right_pane) = Layout::default()
-                    .direction(LayoutDirection::Horizontal)
-                    .constraints([Constraint::Length(MAP_X_SIZE as u16), Constraint::Min(0)])
-                    .split(f.size())
-                    .into_iter()
-                    .collect_tuple()
-                    .unwrap();
-                let (map_pane, bottom_pane) = Layout::default()
-                    .direction(LayoutDirection::Vertical)
-                    .constraints([
-                        Constraint::Length(MAP_Y_SIZE as u16 + 1),
-                        Constraint::Min(0),
-                    ])
-                    .split(left_pane)
-                    .into_iter()
-                    .collect_tuple()
-                    .unwrap();
-
-                if let Some((input, inventory, digestion, health)) = (
-                    &data.input,
-                    (&data.inventory).maybe(),
-                    (&data.digestion).maybe(),
-                    (&data.health).maybe(),
-                )
-                    .join()
-                    .next()
-                {
                     if let Some(inventory) = inventory {
                         let (inventory_pane, rest) = Layout::default()
                             .direction(LayoutDirection::Vertical)
@@ -517,11 +483,11 @@ impl event::EventHandler<ggez::GameError> for MainState {
                     if let Some(popup) = &input.popup {
                         popup.render(f, map_pane, &data);
                     }
-                }
-            })
-            .unwrap();
+                })
+                .unwrap();
+        }
 
-        ggez::graphics::draw(ctx, &mut self.font_batch, DrawParam::default())?;
+        ggez::graphics::draw(ctx, &self.font_batch, DrawParam::default())?;
         ggez::graphics::draw(ctx, self.tui.backend_mut(), DrawParam::default())?;
 
         graphics::present(ctx)?;

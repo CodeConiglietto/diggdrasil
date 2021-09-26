@@ -1,4 +1,5 @@
 use ggez::event::KeyCode;
+use log::debug;
 use specs::{Join, System};
 
 use crate::prelude::*;
@@ -13,7 +14,7 @@ impl<'a> System<'a> for InputResolutionSystem {
         let eids = data.entities;
 
         //Resources
-        let emap = data.entity_map;
+        let twld = data.tile_world;
         let kb = data.keyboard;
 
         //Readable components
@@ -26,7 +27,7 @@ impl<'a> System<'a> for InputResolutionSystem {
         let mut inv = data.inventory;
 
         for (eid, pos, inc, gol) in (&eids, &pos, &mut inc, &mut gol).join() {
-            println!("Key pressed: {:?}", kb.last_pressed_key);
+            debug!("Key pressed: {:?}", kb.last_pressed_key);
             //skip input if player already has goal that they are completing.
             //Add keypress to interrupt player goal (space?)
 
@@ -81,19 +82,21 @@ impl<'a> System<'a> for InputResolutionSystem {
                             if let Some(inv) = inv.get(eid) {
                                 if inv.any_slot_free() {
                                     let PositionComponent { x, y } = pos;
-                                    let mut pickup_goals: Vec<_> = emap.contents
-                                        [[*x as usize, *y as usize]]
-                                    .iter()
-                                    .filter(|entity| itc.get(**entity).is_some())
-                                    .enumerate()
-                                    .map(|(index, item)| {
-                                        PopupListItem::new(
-                                            index,
-                                            None,
-                                            AIGoal::PickUpItem { item: *item },
-                                        )
-                                    })
-                                    .collect();
+                                    let mut pickup_goals: Vec<_> = twld
+                                        .get((*x, *y))
+                                        .unwrap()
+                                        .entities
+                                        .iter()
+                                        .filter(|entity| itc.get(**entity).is_some())
+                                        .enumerate()
+                                        .map(|(index, item)| {
+                                            PopupListItem::new(
+                                                index,
+                                                None,
+                                                AIGoal::PickUpItem { item: *item },
+                                            )
+                                        })
+                                        .collect();
 
                                     match pickup_goals.len() {
                                         0 => {}
@@ -106,7 +109,7 @@ impl<'a> System<'a> for InputResolutionSystem {
                                         }
                                     }
                                 } else {
-                                    println!("No room in inventory!");
+                                    debug!("No room in inventory!");
                                 }
                             } else {
                                 println!("No inventory to store item in!");

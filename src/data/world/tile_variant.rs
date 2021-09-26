@@ -8,9 +8,19 @@ pub struct TileVariant {
 
 impl TileVariant {
     pub fn get_from_neighbours(
-        (u, d, l, r): (TileType, TileType, TileType, TileType),
+        (u, d, l, r): (
+            Option<TileType>,
+            Option<TileType>,
+            Option<TileType>,
+            Option<TileType>,
+        ),
     ) -> TileVariant {
-        let neighbours = (u.connects(), d.connects(), l.connects(), r.connects());
+        let neighbours = (
+            if let Some(u) = u { u.connects() } else { false },
+            if let Some(d) = d { d.connects() } else { false },
+            if let Some(l) = l { l.connects() } else { false },
+            if let Some(r) = r { r.connects() } else { false },
+        );
 
         //This makes me sad
         //TODO: find a more elegant way to do this, if that's even possible
