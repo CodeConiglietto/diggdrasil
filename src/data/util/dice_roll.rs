@@ -7,8 +7,17 @@ pub struct DiceRoll{
 }
 
 impl DiceRoll {
-    pub fn new_from_string(_string: String) -> DiceRoll {
-        todo!();
+    pub fn new_from_string(string: &str) -> DiceRoll {
+        //We assume if there's no plus, the string has no bonus
+        let (dice_string, bonus) = string.split_once("+").unwrap_or((string, "0"));
+        let (rolls, dice) = dice_string.split_once("d").unwrap();
+        let (rolls, dice, bonus) = (rolls.parse::<usize>().unwrap(), dice.parse::<usize>().unwrap(), bonus.parse::<usize>().unwrap());
+
+        DiceRoll {rolls, dice, bonus}
+    }
+
+    pub fn to_string(&self) -> String {
+        String::from(format!("{}d{}+{}", self.rolls, self.dice, self.bonus))
     }
 
     pub fn roll(&self) -> usize {
