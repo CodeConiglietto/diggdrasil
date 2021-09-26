@@ -76,6 +76,7 @@ pub use crate::{
             velocity::VelocityComponent,
         },
         resources::{
+            gen_package::GenPackageResource,
             keyboard::KeyboardResource,
             particle_map::ParticleMapResource,
             tile_world::TileWorldResource,

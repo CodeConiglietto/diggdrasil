@@ -8,7 +8,7 @@ use ggez::graphics::Color;
 use crate::prelude::*;
 
 pub enum SymbolBuilder {
-    Ground,
+    Ground {fertility: u8},
     Wall {
         material: Material,
     },
@@ -36,15 +36,26 @@ pub enum SymbolBuilder {
 impl SymbolBuilder {
     pub fn get_symbol(&self, seed: usize) -> Symbol {
         match self {
-            Self::Ground => Symbol {
-                draw_chars: vec![GgBunnyChar {
-                    index: 0x2B1 + (seed) % 6,
-                    foreground: Color::new(0.2, 0.25, 0.2, 1.0),
+            Self::Ground {fertility} => {
+                let grass_index = if *fertility < 8 {
+                    0x000
+                } else if *fertility >= 248 {
+                    0x2C7
+                } else {
+                    0x2B0 + (*fertility as usize - 8) / 30
+                };
 
-                    background: Some(Color::new(0.25, 0.2, 0.2, 1.0)),
-                    rotation: CharRotation::None,
-                    mirror: CharMirror::None,
-                }],
+                let (rotation, mirror) = get_random_transforms_from_seed(seed);
+                
+                Symbol {
+                    draw_chars: vec![GgBunnyChar {
+                        index: grass_index,
+                        foreground: Color::new(0.2, 0.25, 0.2, 1.0),
+                        background: Some(Color::new(0.25, 0.2, 0.2, 1.0)),
+                        rotation,
+                        mirror,
+                    }],
+                }
             },
             Self::Wall { material, .. } => Symbol {
                 draw_chars: vec![GgBunnyChar {

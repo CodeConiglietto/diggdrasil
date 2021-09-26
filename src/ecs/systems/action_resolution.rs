@@ -1,5 +1,5 @@
 use rand::prelude::*;
-use specs::{Entities, Join, LazyUpdate, Read, ReadStorage, System, WriteExpect, WriteStorage};
+use specs::{Entities, Join, LazyUpdate, Read, System, WriteExpect, WriteStorage};
 
 use crate::prelude::*;
 
@@ -140,6 +140,7 @@ impl<'a> System<'a> for ActionResolutionSystem {
                                                         twld.get_mut((*x, *y)).unwrap().tile =
                                                             Tile {
                                                                 seed: thread_rng().gen::<usize>(),
+                                                                fertility: chunk_tile.tile.fertility,
                                                                 tile_type: *tile_type,
                                                                 tile_variant:
                                                                     TileVariant::get_from_neighbours(

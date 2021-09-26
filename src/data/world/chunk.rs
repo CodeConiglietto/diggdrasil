@@ -1,6 +1,6 @@
 use log::warn;
 use ndarray::Array2;
-use noise::{NoiseFn, Perlin};
+use noise::NoiseFn;
 use rand::prelude::*;
 use specs::{Entity, WriteStorage};
 
@@ -11,22 +11,25 @@ pub struct Chunk {
 }
 
 impl Chunk {
-    pub fn generate(&mut self, (chunk_x, chunk_y): (i32, i32), world_data: &mut WorldData) {
-        for chunk_tile in self.tiles.iter_mut() {
+    pub fn generate(&mut self, (chunk_x, chunk_y): (i32, i32), gen_package: &GenPackageResource, world_data: &mut WorldData) {
+        for ((local_x, local_y), chunk_tile) in self.tiles.indexed_iter_mut() {
+            let (x, y) = local_to_global_position((chunk_x, chunk_y), (local_x, local_y));
+
             chunk_tile.tile = Tile {
                 seed: thread_rng().gen::<usize>(),
-                tile_type: if thread_rng().gen_range(0.0..1.0) > 0.75 {
-                    if thread_rng().gen_range(0.0..1.0) > 0.5 {
+                fertility: (gen_package.fertility_noise.get([x as f64 * 0.05, y as f64 * 0.05]).abs() * 256 as f64) as u8,
+                tile_type: if gen_package.elevation_noise.get([x as f64 * 0.05, y as f64 * 0.05]) > 0.25 {
+                    // if thread_rng().gen_range(0.0..1.0) > 0.5 {
                         TileType::Wall {
                             material: Material::Stone,
                         }
-                    } else {
-                        TileType::ConstructedWall {
-                            material: Material::Wood,
-                            material_shape: MaterialShape::Plank,
-                            wall_feature: None,
-                        }
-                    }
+                    // } else {
+                    //     TileType::ConstructedWall {
+                    //         material: Material::Wood,
+                    //         material_shape: MaterialShape::Plank,
+                    //         wall_feature: None,
+                    //     }
+                    // }
                 } else {
                     TileType::Ground
                 },
@@ -46,6 +49,7 @@ impl Chunk {
             for y in 12..=20 {
                 self.tiles[[x, y]].tile = Tile {
                     seed: thread_rng().gen::<usize>(),
+                    fertility: 0,
                     tile_type: if y != 16 && (x == 12 || x == 20 || y == 12 || y == 20) {
                         TileType::ConstructedWall {
                             material: Material::Wood,

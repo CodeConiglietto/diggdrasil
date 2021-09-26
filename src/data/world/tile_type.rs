@@ -16,7 +16,7 @@ pub enum TileType {
 impl TileType {
     pub fn collides(&self) -> bool {
         match self {
-            TileType::Ground => false,
+            TileType::Ground { .. } => false,
             TileType::Wall { .. } => true,
             TileType::ConstructedWall { wall_feature, .. } => {
                 if let Some(wall_feature) = wall_feature {
@@ -33,7 +33,7 @@ impl TileType {
 
     pub fn get_name(&self) -> String {
         match self {
-            TileType::Ground => String::from("ground"),
+            TileType::Ground { .. } => String::from("ground"),
             TileType::Wall { material } => format!("{} wall", material.get_name()),
             TileType::ConstructedWall {
                 material,
@@ -54,7 +54,7 @@ impl TileType {
 
     pub fn get_build_requirements(&self) -> (Option<Material>, Option<MaterialShape>) {
         match self {
-            TileType::Ground => (Some(Material::Dirt), None),
+            TileType::Ground { .. } => (Some(Material::Dirt), None),
             TileType::Wall { material } => (Some(*material), None),
             TileType::ConstructedWall {
                 material,
@@ -67,7 +67,7 @@ impl TileType {
     pub fn available_buildings(&self) -> Vec<Self> {
         match self {
             //TODO: get all possible material, shape and wall feature combinations for constructing a contructed wall
-            TileType::Ground => {
+            TileType::Ground { .. } => {
                 let available_material_combinations = vec![
                     (Material::Wood, MaterialShape::Log),
                     (Material::Wood, MaterialShape::Plank),
@@ -89,7 +89,7 @@ impl TileType {
 
     pub fn connects(&self) -> bool {
         match self {
-            TileType::Ground => false,
+            TileType::Ground { .. } => false,
             TileType::Wall { .. } => true,
             TileType::ConstructedWall { .. } => true,
         }

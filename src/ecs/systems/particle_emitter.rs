@@ -1,5 +1,3 @@
-use std::convert::TryFrom;
-
 use specs::{Builder, Entities, Join, LazyUpdate, System, Read, ReadStorage};
 
 use crate::prelude::*;

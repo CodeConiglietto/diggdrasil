@@ -8,6 +8,7 @@ use ggez::{
 };
 use glam::*;
 use itertools::Itertools;
+use noise::{Perlin, Seedable};
 use rand::prelude::*;
 use specs::{
     Builder, Entities, Join, LazyUpdate, Read, RunNow, World as ECSWorld, WorldExt as ECSWorldExt,
@@ -93,13 +94,18 @@ impl MainState {
             modifiers: KeyMods::default(),
         };
 
-        let mut tile_world = TileWorldResource::new(&mut ecs_world.system_data());
+        let gen_package = GenPackageResource{
+            elevation_noise: Perlin::new().set_seed(thread_rng().gen()),
+            fertility_noise: Perlin::new().set_seed(thread_rng().gen()),
+        };
+        let mut tile_world = TileWorldResource::new(&gen_package, &mut ecs_world.system_data());
         let particle_map = ParticleMapResource::default();
 
         // TODO
         //let ui = UiResource { terminal: };
 
         //Insert pertinent data into resources
+        //Needs braces to manually restrict scope of some data
         {
             let (lazy, entities, mut position, mut input): (
                 Read<LazyUpdate>,
@@ -114,6 +120,7 @@ impl MainState {
         }
 
         //Assign resources to ecs world
+        ecs_world.insert(gen_package);
         ecs_world.insert(keyboard);
         ecs_world.insert(tile_world);
         ecs_world.insert(particle_map);

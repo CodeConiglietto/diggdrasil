@@ -12,7 +12,7 @@ pub enum SpriteBuilder {
     Text {
         contents: String,
     },
-    Ground,
+    Ground {fertility: u8},
     Wall {
         material: Material,
     },
@@ -61,6 +61,22 @@ impl SpriteBuilder {
                     contents: Array2::from_shape_vec((1, char_vec.len()), char_vec).unwrap(),
                 }
             }
+            Self::Ground { fertility } => Sprite {
+                origin_x: 0,
+                origin_y: 0,
+                contents: array![
+                    [SymbolBuilder::Ground{fertility: *fertility}.get_symbol(seed)],
+                    [Symbol {
+                        draw_chars: vec![GgBunnyChar {
+                            index: 0x2B4 + (seed) % 4,
+                            foreground: Color::new(0.2, 0.15, 0.15, 1.0),
+                            background: Some(Color::new(0.15, 0.1, 0.1, 1.0)),
+                            rotation: CharRotation::None,
+                            mirror: CharMirror::None,
+                        }]
+                    }]
+                ],
+            },
             Self::Wall { material } => {
                 let mat_color = material.get_color();
                 Sprite {
@@ -182,30 +198,6 @@ impl SpriteBuilder {
                     ],
                 }
             }
-            Self::Ground => Sprite {
-                origin_x: 0,
-                origin_y: 0,
-                contents: array![
-                    [Symbol {
-                        draw_chars: vec![GgBunnyChar {
-                            index: 0x2B1 + (seed) % 6,
-                            foreground: Color::new(0.2, 0.25, 0.2, 1.0),
-                            background: Some(Color::new(0.25, 0.2, 0.2, 1.0)),
-                            rotation: CharRotation::None,
-                            mirror: CharMirror::None,
-                        }]
-                    }],
-                    [Symbol {
-                        draw_chars: vec![GgBunnyChar {
-                            index: 0x2B4 + (seed) % 4,
-                            foreground: Color::new(0.2, 0.15, 0.15, 1.0),
-                            background: Some(Color::new(0.15, 0.1, 0.1, 1.0)),
-                            rotation: CharRotation::None,
-                            mirror: CharMirror::None,
-                        }]
-                    }]
-                ],
-            },
             Self::Humanoid { race } => Sprite {
                 origin_x: 0,
                 origin_y: 1,

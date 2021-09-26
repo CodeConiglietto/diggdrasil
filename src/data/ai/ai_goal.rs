@@ -83,7 +83,7 @@ impl AIGoal {
             }
             Self::Craft {
                 recipe,
-                ingredients,
+                ..
             } => {
                 let recipe_name = if let Some(recipe) = recipe {
                     recipe.get_resulting_object_name()
