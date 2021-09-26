@@ -26,6 +26,7 @@ pub mod prelude;
 pub mod constants;
 pub mod data;
 pub mod ecs;
+pub mod generation;
 pub mod util;
 
 struct MainState {
@@ -143,15 +144,33 @@ impl MainState {
         entity_map.spawn_entity(player, (16, 16), &mut ecs_world.system_data());
 
         for _ in 0..16 {
-            let tree = CreatureBuilder::Tree.build(&mut ecs_world, true);
+            let tree = VegetationBuilder::Tree.build(&mut ecs_world);
             entity_map.spawn_entity(
                 tree,
                 (thread_rng().gen_range(0..32), thread_rng().gen_range(0..32)),
                 &mut ecs_world.system_data(),
             );
-            let bush = CreatureBuilder::BerryBush.build(&mut ecs_world, true);
+            let bush = VegetationBuilder::BerryBush.build(&mut ecs_world);
             entity_map.spawn_entity(
                 bush,
+                (thread_rng().gen_range(0..32), thread_rng().gen_range(0..32)),
+                &mut ecs_world.system_data(),
+            );
+            let stick = ItemBuilder::Stick.build(&mut ecs_world);
+            entity_map.spawn_entity(
+                stick,
+                (thread_rng().gen_range(0..32), thread_rng().gen_range(0..32)),
+                &mut ecs_world.system_data(),
+            );
+            let log = ItemBuilder::Log.build(&mut ecs_world);
+            entity_map.spawn_entity(
+                log,
+                (thread_rng().gen_range(0..32), thread_rng().gen_range(0..32)),
+                &mut ecs_world.system_data(),
+            );
+            let stone = ItemBuilder::Stone.build(&mut ecs_world);
+            entity_map.spawn_entity(
+                stone,
                 (thread_rng().gen_range(0..32), thread_rng().gen_range(0..32)),
                 &mut ecs_world.system_data(),
             );
@@ -217,9 +236,8 @@ impl event::EventHandler<ggez::GameError> for MainState {
         _ctx: &mut Context,
         _keycode: KeyCode,
         _keymods: KeyMods,
-        _repeat: bool
+        _repeat: bool,
     ) {
-
     }
 
     fn update(&mut self, ctx: &mut Context) -> GameResult {

@@ -23,6 +23,10 @@ pub enum AIGoal {
         tile_type: Option<TileType>,
         consumed_entity: Option<Entity>,
     },
+    Craft {
+        recipe: Option<Recipe>,
+        ingredients: Vec<Entity>,
+    },
     // MoveToTile{x: i32, y: i32},
     // KillEntity { target: Entity },
     // AttackEntity { target: Entity },
@@ -76,6 +80,20 @@ impl AIGoal {
                     "Build {} at ({}, {}) from {}",
                     tile_name, x, y, consumed_entity_name
                 )
+            }
+            Self::Craft {
+                recipe,
+                ingredients,
+            } => {
+                let recipe_name = if let Some(recipe) = recipe {
+                    recipe.get_resulting_object_name()
+                } else {
+                    "something"
+                };
+
+                //TODO: have the string print the ingredients if they exist
+
+                format!("Craft a {}", recipe_name)
             }
         }
     }

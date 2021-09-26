@@ -16,9 +16,11 @@ pub use crate::{
         crafting::{
             material::Material,
             material_shape::MaterialShape,
+            recipe::Recipe,
+            recipe_ingredient::RecipeIngredient,
+            recipe_requirement::RecipeRequirement,
         },
         creatures::{
-            creature_builder::CreatureBuilder,
             race::Race
         },
         effects::{
@@ -67,6 +69,7 @@ pub use crate::{
             manipulator::ManipulatorComponent,
             name::NameComponent,
             particle::ParticleComponent,
+            particle_emitter::ParticleEmitterComponent,
             position::PositionComponent,
             velocity::VelocityComponent,
         },
@@ -77,6 +80,7 @@ pub use crate::{
             tile_map::TileMapResource,
         },
         system_data::{
+            crafting_data::CraftingData,
             input_data::InputData,
             render_data::RenderData,
         },
@@ -91,6 +95,15 @@ pub use crate::{
             movement_resolution::MovementResolutionSystem,
             particle::ParticleSystem,
         },
+    },
+    generation::{
+        builders::{
+            creature_builder::CreatureBuilder,
+            equipment_builder::EquipmentBuilder,
+            furniture_builder::FurnitureBuilder,
+            item_builder::ItemBuilder,
+            vegetation_builder::VegetationBuilder,
+        }
     },
     util::*,
 };

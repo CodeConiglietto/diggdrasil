@@ -16,5 +16,6 @@ pub mod manipulator;
 pub mod material;
 pub mod name;
 pub mod particle;
+pub mod particle_emitter;
 pub mod position;
 pub mod velocity;

@@ -26,7 +26,10 @@ pub enum SpriteBuilder {
         race: Race,
     },
     Tree,
+    //TODO: Make single tile sprites into something more generic
+    Stick,
     Log,
+    Stone,
     BerryBush,
     Berry,
 }
@@ -265,18 +268,20 @@ impl SpriteBuilder {
                     }]
                 ],
             },
+            Self::Stick => Sprite {
+                origin_x: 0,
+                origin_y: 0,
+                contents: array![[SymbolBuilder::Stick.get_symbol(seed)]],
+            },
             Self::Log => Sprite {
                 origin_x: 0,
                 origin_y: 0,
-                contents: array![[Symbol {
-                    draw_chars: vec![GgBunnyChar {
-                        index: 0x357,
-                        foreground: Color::new(0.75, 0.75, 0.0, 1.0),
-                        background: None,
-                        rotation: CharRotation::None,
-                        mirror: CharMirror::None,
-                    }]
-                }]],
+                contents: array![[SymbolBuilder::Log.get_symbol(seed)]],
+            },
+            Self::Stone => Sprite {
+                origin_x: 0,
+                origin_y: 0,
+                contents: array![[SymbolBuilder::Stone.get_symbol(seed)]],
             },
             Self::BerryBush => Sprite {
                 origin_x: 0,

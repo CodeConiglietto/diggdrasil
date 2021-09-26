@@ -7,7 +7,8 @@ use rand::prelude::*;
 
 use crate::prelude::*;
 
-//Maybe change these to be more generic if there's too much code repetition
+//TODO: Maybe change these to be more generic if there's too much code repetition
+//TODO: Create some method to instantiate these to remove potential for creating malformed particles
 #[derive(Clone, Copy)]
 pub enum ParticleType {
     Finished,
@@ -18,7 +19,7 @@ pub enum ParticleType {
     // Blood { direction: Direction },
     // Splinter { direction: Direction },
     // Debris { direction: Direction },
-    // Smoke {lifetime: usize, color: DiggColor},
+    Smoke { lifetime: usize },
 }
 
 impl ParticleType {
@@ -30,6 +31,11 @@ impl ParticleType {
                 x + thread_rng().gen_range(-1..=1),
                 y + thread_rng().gen_range(-1..=1),
                 z - thread_rng().gen_range(0..=1),
+            ),
+            Self::Smoke { .. } => (
+                x + thread_rng().gen_range(-1..=1),
+                y + thread_rng().gen_range(-1..=1),
+                z + thread_rng().gen_range(0..=1),
             ),
             _ => todo!(),
         }
@@ -66,6 +72,13 @@ impl ParticleType {
             }
             Self::Leaf => {
                 if z == 1 {
+                    ParticleType::Finished
+                } else {
+                    *self
+                }
+            }
+            Self::Smoke { lifetime } => {
+                if z == MAX_PARTICLE_HEIGHT || *lifetime >= 24 {
                     ParticleType::Finished
                 } else {
                     *self
@@ -129,6 +142,21 @@ impl ParticleType {
                     CharMirror::MirrorX
                 },
             },
+            Self::Smoke { lifetime } => {
+                let index = if *lifetime < 16 {
+                    0x390 + lifetime
+                } else {
+                    0x2B7 - (lifetime - 16)
+                };
+
+                GgBunnyChar {
+                    index,
+                    foreground: Color::new(0.5, 0.5, 0.5, 1.0),
+                    background: None,
+                    rotation: CharRotation::None,
+                    mirror: CharMirror::None,
+                }
+            }
             _ => todo!(),
         }
     }

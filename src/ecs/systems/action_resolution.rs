@@ -179,18 +179,22 @@ impl<'a> System<'a> for ActionResolutionSystem {
                             println!("Entity attempting to build despite having no position!");
                         }
 
-                        //Check that x, y is adjacent to entity position
-                        //Look at tile that is at x, y location
-                        //Check that the tile that is there can transition to the desired tile_type
-
+                        //TODO:
                         //Check that the consumed entity is one of:
                         //-Adjacent
                         //-Held
                         //-In inventory
                         //And mark this somehow
-
+                        //Then when crafting:
                         //Remove the entity from where it's stored
                         //Place the tile
+                    }
+
+                    AIAction::Craft {
+                        recipe,
+                        ingredients,
+                    } => {
+                        todo!();
                     }
                 }
             }

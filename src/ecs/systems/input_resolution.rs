@@ -166,6 +166,12 @@ impl<'a> System<'a> for InputResolutionSystem {
                                 },
                             ));
                         }
+                        KeyCode::C => {
+                            gol.current_goal = Some(AIGoal::Craft {
+                                recipe: None,
+                                ingredients: Vec::new(),
+                            })
+                        }
                         _ => (),
                     }
                 }

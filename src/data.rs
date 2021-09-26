@@ -5,4 +5,5 @@ pub mod creatures;
 pub mod effects;
 pub mod geometry;
 pub mod ui;
+pub mod util;
 pub mod world;

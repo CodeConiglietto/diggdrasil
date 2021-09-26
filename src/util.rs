@@ -5,6 +5,26 @@ pub fn pos_is_adjacent((ax, ay): (i32, i32), (bx, by): (i32, i32)) -> bool {
     (ax - bx).abs() == 1 || (ay - by).abs() == 1
 }
 
+//TODO: find a good way to do this better
+pub fn get_random_transforms_from_seed(seed: usize) -> (Rotation, Mirror) {
+    (
+        match (seed / 4) % 4 {
+            0 => Rotation::None,
+            1 => Rotation::Rotation90,
+            2 => Rotation::Rotation180,
+            3 => Rotation::Rotation270,
+            _ => unreachable!(),
+        },
+        match ((seed + 100) / 4) % 4 {
+            0 => Mirror::None,
+            1 => Mirror::MirrorX,
+            2 => Mirror::MirrorY,
+            3 => Mirror::MirrorBoth,
+            _ => unreachable!(),
+        },
+    )
+}
+
 pub fn fulfills_material_requirements(
     material: &MaterialComponent,
     (required_material, required_shape): (Option<Material>, Option<MaterialShape>),

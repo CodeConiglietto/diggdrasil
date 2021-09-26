@@ -1,17 +1,18 @@
 use crate::prelude::*;
 use rand::prelude::*;
 use specs::{Join, Read, ReadStorage, System, WriteStorage};
+use strum::IntoEnumIterator;
 
 pub struct GoalResolutionSystem;
 
 impl<'a> System<'a> for GoalResolutionSystem {
     type SystemData = (
+        CraftingData<'a>,
         Read<'a, TileMapResource>,
         Read<'a, EntityMapResource>,
         ReadStorage<'a, PositionComponent>,
         ReadStorage<'a, HealthComponent>,
         ReadStorage<'a, InventoryComponent>,
-        ReadStorage<'a, MaterialComponent>,
         ReadStorage<'a, NameComponent>,
         WriteStorage<'a, AIGoalComponent>,
         WriteStorage<'a, AIActionComponent>,
@@ -19,7 +20,7 @@ impl<'a> System<'a> for GoalResolutionSystem {
     );
 
     fn run(&mut self, data: Self::SystemData) {
-        let (tmap, emap, pos, hpc, inv, mat, nam, mut gol, mut act, mut inp) = data;
+        let (crd, tmap, emap, pos, hpc, inv, nam, mut gol, mut act, mut inp) = data;
 
         for (pos, inv, gol, act, inp) in
             (&pos, (&inv).maybe(), &mut gol, &mut act, (&mut inp).maybe()).join()
@@ -197,12 +198,16 @@ impl<'a> System<'a> for GoalResolutionSystem {
                                             .enumerate()
                                             .filter_map(|(i, slot)| {
                                                 slot.and_then(|item| {
-                                                    if let Some(material) = mat.get(item) {
-                                                        if fulfills_material_requirements(material, tile_type.get_build_requirements())
-                                                        {
+                                                    if let Some(material) = crd.material.get(item) {
+                                                        if fulfills_material_requirements(
+                                                            material,
+                                                            tile_type.get_build_requirements(),
+                                                        ) {
                                                             Some(PopupListItem::from((
                                                                 i,
-                                                                if let Some(item_name) = nam.get(item) {
+                                                                if let Some(item_name) =
+                                                                    nam.get(item)
+                                                                {
                                                                     Some(item_name.name.clone())
                                                                 } else {
                                                                     None
@@ -239,7 +244,7 @@ impl<'a> System<'a> for GoalResolutionSystem {
                                         .iter()
                                         .filter_map(|slot| {
                                             if let Some(item) = slot {
-                                                if let Some(material) = mat.get(*item) {
+                                                if let Some(material) = crd.material.get(*item) {
                                                     Some(material)
                                                 } else {
                                                     None
@@ -295,6 +300,98 @@ impl<'a> System<'a> for GoalResolutionSystem {
                             }
                         } else {
                             println!("Entity trying to find building material doesn't have inventory component");
+                        }
+                    }
+                    AIGoal::Craft {
+                        recipe,
+                        ingredients,
+                    } => {
+                        if let Some(inp) = inp {
+                            if let Some(inv) = inv {
+                                if let Some(recipe) = recipe {
+                                    let requirements = recipe.get_ingredient_requirements();
+                                    let ing_len = ingredients.len();
+                                    let req_len = requirements.len();
+
+                                    if ing_len == req_len {
+                                        //Check that all ingredients fulfill their respective requirements
+                                        act.current_action = Some(AIAction::Craft {
+                                            recipe: *recipe,
+                                            ingredients: ingredients.clone(),
+                                        });
+                                    } else if ing_len < req_len {
+                                        //Ask for next ingredient
+                                        let requirement = &requirements[ing_len];
+
+                                        let ingredient_goals = inv
+                                            .items
+                                            .iter()
+                                            .enumerate()
+                                            .filter_map(|(i, slot)| {
+                                                slot.and_then(|item| {
+                                                    if requirement
+                                                        .requirement
+                                                        .requirement_fulfilled(item, &crd)
+                                                    {
+                                                        let mut appended_ingredients =
+                                                            ingredients.clone();
+                                                        appended_ingredients.push(item);
+
+                                                        Some(PopupListItem::from((
+                                                            i,
+                                                            if let Some(item_name) = nam.get(item) {
+                                                                Some(item_name.name.clone())
+                                                            } else {
+                                                                None
+                                                            },
+                                                            AIGoal::Craft {
+                                                                recipe: Some(*recipe),
+                                                                ingredients: appended_ingredients,
+                                                            },
+                                                        )))
+                                                    } else {
+                                                        None
+                                                    }
+                                                })
+                                            })
+                                            .collect();
+
+                                        inp.popup = Some(Popup::list(
+                                            format!("Use what for {}?", requirement.part_name),
+                                            ingredient_goals,
+                                        ));
+                                    } else {
+                                        //Something is very, very wrong
+                                        println!("Entity attempting to pass too many ingredients to recipe!");
+                                    }
+                                } else {
+                                    //TODO: allow this to take from surrounding tiles
+                                    //Maybe add a utility function to return all surrounding entities
+                                    let craft_goals = Recipe::iter()
+                                        .filter(|recipe| {
+                                            recipe.fulfillable_with_inventory_contents(inv, &crd)
+                                        })
+                                        .enumerate()
+                                        .map(|(i, recipe)| {
+                                            PopupListItem::from((
+                                                i,
+                                                None,
+                                                AIGoal::Craft {
+                                                    recipe: Some(recipe),
+                                                    ingredients: Vec::new(),
+                                                },
+                                            ))
+                                        })
+                                        .collect();
+
+                                    inp.popup =
+                                        Some(Popup::list(format!("Craft what?"), craft_goals));
+                                }
+                            } else {
+                                println!("Entity attempting to find recipe ingredients without an inventory!");
+                            }
+                        } else {
+                            println!("Entity attempting to find recipe to craft without an input component!");
                         }
                     }
                 }

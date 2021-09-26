@@ -25,4 +25,8 @@ pub enum AIAction {
         tile_type: TileType,
         consumed_entity: Entity,
     },
+    Craft {
+        recipe: Recipe,
+        ingredients: Vec<Entity>,
+    },
 }
