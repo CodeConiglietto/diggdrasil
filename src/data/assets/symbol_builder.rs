@@ -50,7 +50,7 @@ impl SymbolBuilder {
                 Symbol {
                     draw_chars: vec![GgBunnyChar {
                         index: grass_index,
-                        foreground: Color::new(0.2, 0.25, 0.2, 1.0),
+                        foreground: Color::new(0.2, 0.4, 0.2, 1.0),
                         background: Some(Color::new(0.25, 0.2, 0.2, 1.0)),
                         rotation,
                         mirror,
