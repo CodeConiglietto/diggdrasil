@@ -58,4 +58,16 @@ impl Direction {
             Direction::Left => String::from("left"),
         }
     }
+
+    pub fn is_diagonal(&self) -> bool {
+        let (x, y) = self.get_offset();
+
+        x.abs() == 1 && y.abs() == 1
+    }
+
+    pub fn is_orthogonal(&self) -> bool {
+        let (x, y) = self.get_offset();
+
+        x.abs() != y.abs()
+    }
 }

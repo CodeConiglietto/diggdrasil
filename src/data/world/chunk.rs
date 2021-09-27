@@ -12,25 +12,25 @@ pub struct Chunk {
 
 impl Chunk {
     pub fn generate(&mut self, (chunk_x, chunk_y): (i32, i32), gen_package: &GenPackageResource, world_data: &mut WorldData) {
+        let mut vegetation_local_positions = Vec::new();
+        
         for ((local_x, local_y), chunk_tile) in self.tiles.indexed_iter_mut() {
             let (x, y) = local_to_global_position((chunk_x, chunk_y), (local_x, local_y));
 
+            let fertility = gen_package.fertility_noise.get([x as f64 * 0.05, y as f64 * 0.05]).abs();
+
             chunk_tile.tile = Tile {
                 seed: thread_rng().gen::<usize>(),
-                fertility: (gen_package.fertility_noise.get([x as f64 * 0.05, y as f64 * 0.05]).abs() * 256 as f64) as u8,
+                fertility: (fertility * 256 as f64) as u8,
                 tile_type: if gen_package.elevation_noise.get([x as f64 * 0.05, y as f64 * 0.05]) > 0.25 {
-                    // if thread_rng().gen_range(0.0..1.0) > 0.5 {
-                        TileType::Wall {
-                            material: Material::Stone,
-                        }
-                    // } else {
-                    //     TileType::ConstructedWall {
-                    //         material: Material::Wood,
-                    //         material_shape: MaterialShape::Plank,
-                    //         wall_feature: None,
-                    //     }
-                    // }
+                    TileType::Wall {
+                        material: Material::Stone,
+                    }
                 } else {
+                    if fertility > thread_rng().gen_range(0.0..=2.0) {
+                        vegetation_local_positions.push((local_x, local_y));
+                    }
+
                     TileType::Ground
                 },
                 tile_variant: TileVariant::default(),
@@ -64,34 +64,24 @@ impl Chunk {
             }
         }
 
+        let lazy = &world_data.lazy;
+        let entities = &world_data.entities;
+
+        for local_pos in vegetation_local_positions {
+            self.spawn_entity(
+                match thread_rng().gen_range(0..=3) {
+                    0 => ItemBuilder::Stick.build(lazy, entities),
+                    1 => ItemBuilder::Log.build(lazy, entities),
+                    2 => VegetationBuilder::BerryBush.build(lazy, entities),
+                    3 => VegetationBuilder::Tree.build(lazy, entities),
+                    _ => unreachable!(),
+                }, 
+                ((chunk_x, chunk_y), local_pos), 
+                &mut world_data.position,
+            )
+        }
+
         for _ in 0..16 {
-            let lazy = &world_data.lazy;
-            let entities = &world_data.entities;
-
-            self.spawn_somewhere_free(
-                || VegetationBuilder::Tree.build(lazy, entities),
-                (chunk_x, chunk_y),
-                &mut world_data.position,
-            );
-
-            self.spawn_somewhere_free(
-                || VegetationBuilder::BerryBush.build(lazy, entities),
-                (chunk_x, chunk_y),
-                &mut world_data.position,
-            );
-
-            self.spawn_somewhere_free(
-                || ItemBuilder::Stick.build(lazy, entities),
-                (chunk_x, chunk_y),
-                &mut world_data.position,
-            );
-
-            self.spawn_somewhere_free(
-                || ItemBuilder::Log.build(lazy, entities),
-                (chunk_x, chunk_y),
-                &mut world_data.position,
-            );
-
             self.spawn_somewhere_free(
                 || ItemBuilder::Stone.build(lazy, entities),
                 (chunk_x, chunk_y),

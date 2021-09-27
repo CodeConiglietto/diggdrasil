@@ -223,45 +223,269 @@ impl SpriteBuilder {
                 ],
             },
             Self::Tree => Sprite {
-                origin_x: 0,
-                origin_y: 3,
+                origin_x: 2,
+                origin_y: 4,
                 contents: array![
-                    [Symbol {
-                        draw_chars: vec![GgBunnyChar {
-                            index: 0x02A,
-                            foreground: Color::new(0.0, 1.0, 0.0, 1.0),
-                            background: None,
-                            rotation: CharRotation::None,
-                            mirror: CharMirror::None,
-                        }]
-                    }],
-                    [Symbol {
-                        draw_chars: vec![GgBunnyChar {
-                            index: 0x07C,
-                            foreground: Color::new(0.5, 0.5, 0.0, 1.0),
-                            background: None,
-                            rotation: CharRotation::None,
-                            mirror: CharMirror::None,
-                        }]
-                    }],
-                    [Symbol {
-                        draw_chars: vec![GgBunnyChar {
-                            index: 0x07C,
-                            foreground: Color::new(0.5, 0.5, 0.0, 1.0),
-                            background: None,
-                            rotation: CharRotation::None,
-                            mirror: CharMirror::None,
-                        }]
-                    }],
-                    [Symbol {
-                        draw_chars: vec![GgBunnyChar {
-                            index: 0x07C,
-                            foreground: Color::new(0.5, 0.5, 0.0, 1.0),
-                            background: None,
-                            rotation: CharRotation::None,
-                            mirror: CharMirror::None,
-                        }]
-                    }]
+                    //0
+                    [Symbol::empty(), Symbol::empty(), Symbol{
+                        draw_chars: vec![
+                            GgBunnyChar {
+                                index: 0x32F, 
+                                foreground: Color::new(0.5, 0.5, 0.0, 1.0), 
+                                background: None, 
+                                rotation: Rotation::Rotation270, 
+                                mirror: Mirror::None
+                            },
+                            GgBunnyChar {
+                                index: 0x2B3, 
+                                foreground: Color::new(0.0, 0.5, 0.0, 1.0), 
+                                background: None, 
+                                rotation: Rotation::None, 
+                                mirror: Mirror::None
+                            }
+                        ]
+
+                    }, 
+                    Symbol{
+                        draw_chars: vec![
+                            GgBunnyChar {
+                                index: 0x310, 
+                                foreground: Color::new(0.0, 0.5, 0.0, 1.0), 
+                                background: None, 
+                                rotation: Rotation::Rotation90, 
+                                mirror: Mirror::None
+                            }
+                        ]
+
+                    }, Symbol::empty()],
+
+                    //1
+                    [Symbol::empty(), 
+                    Symbol{
+                        draw_chars: vec![
+                            GgBunnyChar {
+                                index: 0x312, 
+                                foreground: Color::new(0.0, 0.5, 0.0, 1.0), 
+                                background: None,
+                                rotation: Rotation::None, 
+                                mirror: Mirror::None
+                            }
+                        ]
+                    }, Symbol{
+                        draw_chars: vec![
+                            GgBunnyChar {
+                                index: 0x2F7, 
+                                foreground: Color::new(0.5, 0.5, 0.0, 1.0), 
+                                background: None, 
+                                rotation: Rotation::Rotation270, 
+                                mirror: Mirror::None
+                            },
+                            GgBunnyChar {
+                                index: 0x2B3, 
+                                foreground: Color::new(0.0, 0.5, 0.0, 1.0), 
+                                background: None, 
+                                rotation: Rotation::None, 
+                                mirror: Mirror::None
+                            }
+                        ]
+
+                    }, 
+                    Symbol{
+                        draw_chars: vec![
+                            GgBunnyChar {
+                                index: 0x32F, 
+                                foreground: Color::new(0.5, 0.5, 0.0, 1.0), 
+                                background: None, 
+                                rotation: Rotation::Rotation270, 
+                                mirror: Mirror::None
+                            },
+                            GgBunnyChar {
+                                index: 0x2B3, 
+                                foreground: Color::new(0.0, 0.5, 0.0, 1.0), 
+                                background: None, 
+                                rotation: Rotation::None, 
+                                mirror: Mirror::None
+                            }
+                        ]
+                    }, Symbol::empty()],
+
+                    //2
+                    [Symbol{
+                        draw_chars: vec![
+                            GgBunnyChar {
+                                index: 0x310, 
+                                foreground: Color::new(0.0, 0.5, 0.0, 1.0), 
+                                background: None,
+                                rotation: Rotation::None, 
+                                mirror: Mirror::None
+                            }
+                        ]
+                    },Symbol{
+                        draw_chars: vec![
+                            GgBunnyChar {
+                                index: 0x32F, 
+                                foreground: Color::new(0.5, 0.5, 0.0, 1.0), 
+                                background: None, 
+                                rotation: Rotation::Rotation270, 
+                                mirror: Mirror::None
+                            },
+                            GgBunnyChar {
+                                index: 0x2B3, 
+                                foreground: Color::new(0.0, 0.5, 0.0, 1.0), 
+                                background: None, 
+                                rotation: Rotation::None, 
+                                mirror: Mirror::None
+                            }
+                        ]
+
+                    }, 
+                    Symbol{
+                        draw_chars: vec![
+                            GgBunnyChar {
+                                index: 0x31A, 
+                                foreground: Color::new(0.5, 0.5, 0.0, 1.0), 
+                                background: None, 
+                                rotation: Rotation::None, 
+                                mirror: Mirror::None
+                            },
+                            GgBunnyChar {
+                                index: 0x2B3, 
+                                foreground: Color::new(0.0, 0.5, 0.0, 1.0), 
+                                background: None, 
+                                rotation: Rotation::None, 
+                                mirror: Mirror::None
+                            }
+                        ]
+
+                    }, 
+                    Symbol{
+                        draw_chars: vec![
+                            GgBunnyChar {
+                                index: 0x2FB, 
+                                foreground: Color::new(0.5, 0.5, 0.0, 1.0), 
+                                background: None, 
+                                rotation: Rotation::None, 
+                                mirror: Mirror::None
+                            },
+                            GgBunnyChar {
+                                index: 0x2B3, 
+                                foreground: Color::new(0.0, 0.5, 0.0, 1.0), 
+                                background: None, 
+                                rotation: Rotation::None, 
+                                mirror: Mirror::None
+                            }
+                        ]
+                    }, Symbol{
+                        draw_chars: vec![
+                            GgBunnyChar {
+                                index: 0x32F, 
+                                foreground: Color::new(0.5, 0.5, 0.0, 1.0), 
+                                background: None, 
+                                rotation: Rotation::None, 
+                                mirror: Mirror::None
+                            },
+                            GgBunnyChar {
+                                index: 0x2B3, 
+                                foreground: Color::new(0.0, 0.5, 0.0, 1.0), 
+                                background: None, 
+                                rotation: Rotation::None, 
+                                mirror: Mirror::None
+                            }
+                        ]
+                    },
+                    ],
+                    //3
+                    [Symbol::empty(), 
+                    Symbol{
+                        draw_chars: vec![
+                            GgBunnyChar {
+                                index: 0x2F4, 
+                                foreground: Color::new(0.5, 0.5, 0.0, 1.0), 
+                                background: None, 
+                                rotation: Rotation::Rotation270, 
+                                mirror: Mirror::None
+                            }
+                        ]
+                    },
+                    Symbol{
+                        draw_chars: vec![
+                            GgBunnyChar {
+                                index: 0x31B, 
+                                foreground: Color::new(0.5, 0.5, 0.0, 1.0), 
+                                background: None, 
+                                rotation: Rotation::Rotation270, 
+                                mirror: Mirror::None
+                            },
+                        ]
+                    }, 
+                    Symbol{
+                        draw_chars: vec![
+                            GgBunnyChar {
+                                index: 0x318, 
+                                foreground: Color::new(0.5, 0.5, 0.0, 1.0), 
+                                background: None, 
+                                rotation: Rotation::Rotation180, 
+                                mirror: Mirror::None
+                            }
+                        ]
+                    }, 
+                    Symbol::empty()],
+                    //4
+                    [Symbol::empty(), Symbol::empty(), Symbol{
+                        draw_chars: vec![
+                            GgBunnyChar {
+                                index: 0x2DD, 
+                                foreground: Color::new(0.5, 0.5, 0.0, 1.0), 
+                                background: None, 
+                                rotation: Rotation::None, 
+                                mirror: Mirror::None
+                            },
+                            GgBunnyChar {
+                                index: 0x319, 
+                                foreground: Color::new(0.5, 0.5, 0.0, 1.0), 
+                                background: None, 
+                                rotation: Rotation::Rotation90, 
+                                mirror: Mirror::None
+                            }
+                        ]
+                    }, 
+                    Symbol::empty(), Symbol::empty()],
+                    // [Symbol {
+                    //     draw_chars: vec![GgBunnyChar {
+                    //         index: 0x02A,
+                    //         foreground: Color::new(0.0, 1.0, 0.0, 1.0),
+                    //         background: None,
+                    //         rotation: CharRotation::None,
+                    //         mirror: CharMirror::None,
+                    //     }]
+                    // }],
+                    // [Symbol {
+                    //     draw_chars: vec![GgBunnyChar {
+                    //         index: 0x07C,
+                    //         foreground: Color::new(0.5, 0.5, 0.0, 1.0),
+                    //         background: None,
+                    //         rotation: CharRotation::None,
+                    //         mirror: CharMirror::None,
+                    //     }]
+                    // }],
+                    // [Symbol {
+                    //     draw_chars: vec![GgBunnyChar {
+                    //         index: 0x07C,
+                    //         foreground: Color::new(0.5, 0.5, 0.0, 1.0),
+                    //         background: None,
+                    //         rotation: CharRotation::None,
+                    //         mirror: CharMirror::None,
+                    //     }]
+                    // }],
+                    // [Symbol {
+                    //     draw_chars: vec![GgBunnyChar {
+                    //         index: 0x07C,
+                    //         foreground: Color::new(0.5, 0.5, 0.0, 1.0),
+                    //         background: None,
+                    //         rotation: CharRotation::None,
+                    //         mirror: CharMirror::None,
+                    //     }]
+                    // }]
                 ],
             },
             Self::Stick => Sprite {

@@ -5,6 +5,12 @@ pub struct Symbol {
 }
 
 impl Symbol {
+    pub fn empty() -> Symbol {
+        Symbol {
+            draw_chars: Vec::new()
+        }
+    }
+
     pub fn draw_to_font_batch(
         &self,
         font_batch: &mut GgBunnyFontBatch,
