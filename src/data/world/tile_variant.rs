@@ -1,6 +1,8 @@
+use serde::{Deserialize, Serialize};
+
 use crate::prelude::*;
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Serialize, Deserialize)]
 pub struct TileVariant {
     pub layout: TileLayout,
     pub rotation: Rotation,

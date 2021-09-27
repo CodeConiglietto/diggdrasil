@@ -26,12 +26,16 @@ pub use crate::{
         effects::{
             particle_type::ParticleType,
         },
+        equipment::{
+            attack_type::AttackType,
+        },
         geometry::{
             axis::Axis,
             direction::Direction,
             directions::Directions,
             mirror::Mirror,
             rotation::Rotation,
+            rotation_direction::RotationDirection,
         },
         ui::{
             directions_widget::DirectionsWidget,
@@ -41,9 +45,13 @@ pub use crate::{
             popup::Popup,
             ui::Ui,
         },
+        util::{
+            dice_roll::DiceRoll,
+        },
         world::{
             chunk::Chunk,
             chunk_tile::ChunkTile,
+            saved_chunk::SavedChunk,
             tile_layout::TileLayout,
             tile_type::TileType,
             tile_variant::TileVariant,
@@ -55,6 +63,7 @@ pub use crate::{
         components::{
             ai_action::AIActionComponent,
             ai_goal::AIGoalComponent,
+            attack::AttackComponent,
             butcherable::ButcherableComponent,
             collider::ColliderComponent,
             collision::CollisionComponent,
@@ -63,6 +72,7 @@ pub use crate::{
             draw::DrawComponent,
             edible::EdibleComponent,
             health::HealthComponent,
+            id::IdComponent,
             input::InputComponent,
             intended_movement::IntendedMovementComponent,
             inventory::InventoryComponent,
@@ -73,12 +83,17 @@ pub use crate::{
             particle::ParticleComponent,
             particle_emitter::ParticleEmitterComponent,
             position::PositionComponent,
+            save_marker::SaveMarkerComponent,
+            to_save::ToSaveComponent,
             velocity::VelocityComponent,
         },
         resources::{
             gen_package::GenPackageResource,
+            id_generator::IdGeneratorResource,
             keyboard::KeyboardResource,
             particle_map::ParticleMapResource,
+            pending_load::PendingLoadResource,
+            save_marker_allocator::SaveMarkerAllocatorResource,
             tile_world::TileWorldResource,
         },
         system_data::{
@@ -86,6 +101,7 @@ pub use crate::{
             world_data::WorldData,
             input_data::InputData,
             render_data::RenderData,
+            save_load_data::SaveLoadData,
         },
         systems::{
             action_resolution::ActionResolutionSystem,
@@ -98,6 +114,7 @@ pub use crate::{
             movement_resolution::MovementResolutionSystem,
             particle_emitter::ParticleEmitterSystem,
             particle::ParticleSystem,
+            save_load::SaveLoadSystem,
             world_maintenance::WorldMaintenanceSystem,
         },
     },

@@ -3,6 +3,7 @@ pub mod assets;
 pub mod crafting;
 pub mod creatures;
 pub mod effects;
+pub mod equipment;
 pub mod geometry;
 pub mod ui;
 pub mod util;

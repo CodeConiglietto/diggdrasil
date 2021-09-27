@@ -1,5 +1,6 @@
 pub mod chunk;
 pub mod chunk_tile;
+pub mod saved_chunk;
 pub mod tile;
 pub mod tile_layout;
 pub mod tile_type;

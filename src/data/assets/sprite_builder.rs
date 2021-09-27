@@ -2,12 +2,13 @@ use bunnyfont::{
     char_transforms::{CharMirror, CharRotation},
     ggez::GgBunnyChar,
 };
-
 use ggez::graphics::Color;
 use ndarray::prelude::*;
+use serde::{Deserialize, Serialize};
 
 use crate::prelude::*;
 
+#[derive(Clone, Serialize, Deserialize)]
 pub enum SpriteBuilder {
     Text {
         contents: String,

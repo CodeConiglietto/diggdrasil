@@ -8,7 +8,7 @@ edition = "2018"
 
 [dependencies]
 bitflags = "1.3.2"
-bunnyfont = { git = "https://github.com/CodeConiglietto/bunnyfont.git", branch = "master", features = ["ggez-integration"] }
+bunnyfont = { git = "https://github.com/CodeConiglietto/bunnyfont.git", branch = "master", features = ["ggez-integration", "serde"] }
 chrono = "0.4.19"
 fern = "0.6.0"
 fxhash = "0.2.1"
@@ -17,9 +17,11 @@ glam = { version = "0.15.0", features = ["mint"] }
 itertools = "0.10.1"
 lazy_static = "1.4.0"
 log = "0.4.14"
-ndarray = "0.15.3"
+ndarray = { version = "0.15.3", features = ["serde"] }
 noise = "0.7.0"
 rand = "0.8.4"
-specs = { version = "0.17.0", features = ["shred-derive", "specs-derive"] }
+rmp-serde = "0.15.5"
+serde = { version = "1.0.130", features = ["derive"] }
+specs = { version = "0.17.0", features = ["shred-derive", "specs-derive", "serde"] }
 strum = { version = "0.21.0", features = ["derive"] }
 tui = { version = "0.16.0", default-features = false }

@@ -1,5 +1,6 @@
-use specs::{Component, VecStorage};
+use serde::{Deserialize, Serialize};
+use specs::{Component, NullStorage};
 
-#[derive(Component)]
-#[storage(VecStorage)]
+#[derive(Clone, Default, Component, Serialize, Deserialize)]
+#[storage(NullStorage)]
 pub struct ColliderComponent;

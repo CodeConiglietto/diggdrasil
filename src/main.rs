@@ -1,3 +1,5 @@
+use std::fs;
+
 use bunnyfont::ggez::{GgBunnyFont, GgBunnyFontBatch};
 use ggez::{
     conf::WindowMode,
@@ -11,8 +13,8 @@ use itertools::Itertools;
 use noise::{Perlin, Seedable};
 use rand::prelude::*;
 use specs::{
-    Builder, Entities, Join, LazyUpdate, Read, RunNow, World as ECSWorld, WorldExt as ECSWorldExt,
-    WriteStorage,
+    BitSet, Builder, Entities, Join, LazyUpdate, Read, RunNow, World as ECSWorld,
+    WorldExt as ECSWorldExt, WriteStorage,
 };
 use std::{env, path::PathBuf, time::Duration};
 use tui::{
@@ -52,6 +54,7 @@ struct MainState {
     particle_emitter_system: ParticleEmitterSystem,
     particle_system: ParticleSystem,
     world_maintenance_system: WorldMaintenanceSystem,
+    save_load_system: SaveLoadSystem,
 
     //Player and UI variables
     symbolic_view: bool,
@@ -64,10 +67,20 @@ impl MainState {
         let mut texture = Image::new(ctx, "/master8x8.png")?;
         texture.set_filter(FilterMode::Nearest);
 
+        // Clear and create save directory
+        let save_path = save_path();
+
+        if save_path.exists() {
+            fs::remove_dir_all(&save_path).unwrap();
+        }
+
+        fs::create_dir_all(&save_path).unwrap();
+
         //Register all components
         let mut ecs_world = ECSWorld::new();
         ecs_world.register::<AIActionComponent>();
         ecs_world.register::<AIGoalComponent>();
+        ecs_world.register::<AttackComponent>();
         ecs_world.register::<ButcherableComponent>();
         ecs_world.register::<ColliderComponent>();
         ecs_world.register::<CollisionComponent>();
@@ -76,6 +89,7 @@ impl MainState {
         ecs_world.register::<DrawComponent>();
         ecs_world.register::<EdibleComponent>();
         ecs_world.register::<HealthComponent>();
+        ecs_world.register::<IdComponent>();
         ecs_world.register::<InputComponent>();
         ecs_world.register::<IntendedMovementComponent>();
         ecs_world.register::<InventoryComponent>();
@@ -86,6 +100,8 @@ impl MainState {
         ecs_world.register::<ParticleComponent>();
         ecs_world.register::<ParticleEmitterComponent>();
         ecs_world.register::<PositionComponent>();
+        ecs_world.register::<SaveMarkerComponent>();
+        ecs_world.register::<ToSaveComponent>();
         ecs_world.register::<VelocityComponent>();
 
         //Initialise all resources
@@ -94,7 +110,7 @@ impl MainState {
             modifiers: KeyMods::default(),
         };
 
-        let gen_package = GenPackageResource{
+        let gen_package = GenPackageResource {
             elevation_noise: Perlin::new().set_seed(thread_rng().gen()),
             fertility_noise: Perlin::new().set_seed(thread_rng().gen()),
         };
@@ -124,12 +140,21 @@ impl MainState {
         ecs_world.insert(keyboard);
         ecs_world.insert(tile_world);
         ecs_world.insert(particle_map);
+        ecs_world.insert(IdGeneratorResource::new());
+        ecs_world.insert(SaveMarkerAllocatorResource::new());
+        ecs_world.insert(PendingLoadResource::new());
 
         let (char_width, char_height) = (8, 8);
         let (ui_width, ui_height) = (
             (WINDOW_WIDTH as f32 / (char_width as f32 * RENDER_SCALE)).floor() as usize,
             (WINDOW_HEIGHT as f32 / (char_height as f32 * RENDER_SCALE)).floor() as usize,
         );
+
+        let save_load_system = SaveLoadSystem {
+            bitset: BitSet::default(),
+            to_save: Vec::new(),
+            save_buf: Vec::new(),
+        };
 
         ecs_world.maintain();
 
@@ -163,7 +188,11 @@ impl MainState {
             health_resolution_system: HealthResolutionSystem,
             particle_emitter_system: ParticleEmitterSystem,
             particle_system: ParticleSystem,
-            world_maintenance_system: WorldMaintenanceSystem,
+            world_maintenance_system: WorldMaintenanceSystem {
+                save_buf: Vec::new(),
+                ids: Vec::new(),
+            },
+            save_load_system,
 
             //Player and UI variables
             symbolic_view: false,
@@ -256,7 +285,11 @@ impl event::EventHandler<ggez::GameError> for MainState {
         self.health_resolution_system.run_now(&self.ecs_world);
         self.particle_emitter_system.run_now(&self.ecs_world);
         self.particle_system.run_now(&self.ecs_world);
+
+        self.ecs_world.maintain();
+
         self.world_maintenance_system.run_now(&self.ecs_world);
+        self.save_load_system.run_now(&self.ecs_world);
 
         self.ecs_world.maintain();
 

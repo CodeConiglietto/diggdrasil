@@ -1,7 +1,8 @@
 use ggez::input::keyboard::KeyCode;
+use serde::{Deserialize, Serialize};
 use strum::EnumIter;
 
-#[derive(Clone, Copy, EnumIter)]
+#[derive(Clone, Copy, EnumIter, Serialize, Deserialize)]
 pub enum Direction {
     None,
     UpLeft,

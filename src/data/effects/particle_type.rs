@@ -4,12 +4,13 @@ use bunnyfont::{
 };
 use ggez::graphics::Color;
 use rand::prelude::*;
+use serde::{Deserialize, Serialize};
 
 use crate::prelude::*;
 
 //TODO: Maybe change these to be more generic if there's too much code repetition
 //TODO: Create some method to instantiate these to remove potential for creating malformed particles
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Serialize, Deserialize)]
 pub enum ParticleType {
     Finished,
     Rain { initial_angle: Direction },
@@ -33,9 +34,21 @@ impl ParticleType {
                 z - thread_rng().gen_range(0..=1),
             ),
             Self::Smoke { .. } => (
-                x + if thread_rng().gen_range(0..=4) == 0 { thread_rng().gen_range(-1..=1) } else { 0 },
-                y + if thread_rng().gen_range(0..=4) == 0 { thread_rng().gen_range(-1..=1) } else { 0 },
-                z + if thread_rng().gen_range(0..=3) != 0 { 1 } else { 0 },
+                x + if thread_rng().gen_range(0..=4) == 0 {
+                    thread_rng().gen_range(-1..=1)
+                } else {
+                    0
+                },
+                y + if thread_rng().gen_range(0..=4) == 0 {
+                    thread_rng().gen_range(-1..=1)
+                } else {
+                    0
+                },
+                z + if thread_rng().gen_range(0..=3) != 0 {
+                    1
+                } else {
+                    0
+                },
             ),
             _ => todo!(),
         }

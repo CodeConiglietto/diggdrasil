@@ -2,13 +2,16 @@ use bunnyfont::{
     char_transforms::{CharMirror, CharRotation},
     ggez::GgBunnyChar,
 };
-
 use ggez::graphics::Color;
+use serde::{Deserialize, Serialize};
 
 use crate::prelude::*;
 
+#[derive(Clone, Serialize, Deserialize)]
 pub enum SymbolBuilder {
-    Ground {fertility: u8},
+    Ground {
+        fertility: u8,
+    },
     Wall {
         material: Material,
     },
@@ -30,13 +33,13 @@ pub enum SymbolBuilder {
     CampFire,
     Spear,
     Pick,
-    Axe
+    Axe,
 }
 
 impl SymbolBuilder {
     pub fn get_symbol(&self, seed: usize) -> Symbol {
         match self {
-            Self::Ground {fertility} => {
+            Self::Ground { fertility } => {
                 let grass_index = if *fertility < 8 {
                     0x000
                 } else if *fertility >= 248 {
@@ -46,7 +49,7 @@ impl SymbolBuilder {
                 };
 
                 let (rotation, mirror) = get_random_transforms_from_seed(seed);
-                
+
                 Symbol {
                     draw_chars: vec![GgBunnyChar {
                         index: grass_index,
@@ -56,7 +59,7 @@ impl SymbolBuilder {
                         mirror,
                     }],
                 }
-            },
+            }
             Self::Wall { material, .. } => Symbol {
                 draw_chars: vec![GgBunnyChar {
                     index: 0x321,
@@ -274,7 +277,7 @@ impl SymbolBuilder {
                         rotation: CharRotation::None,
                         mirror: CharMirror::None,
                     },
-                ]
+                ],
             },
             Self::Pick => Symbol {
                 draw_chars: vec![
@@ -292,7 +295,7 @@ impl SymbolBuilder {
                         rotation: CharRotation::Rotation90,
                         mirror: CharMirror::None,
                     },
-                ]
+                ],
             },
             Self::Axe => Symbol {
                 draw_chars: vec![
@@ -310,8 +313,8 @@ impl SymbolBuilder {
                         rotation: CharRotation::Rotation270,
                         mirror: CharMirror::None,
                     },
-                ]
-            }
+                ],
+            },
         }
     }
 }

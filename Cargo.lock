@@ -155,10 +155,11 @@ checksum = "9c59e7af012c713f529e7a3ee57ce9b31ddd858d4b512923602f74608b009631"
 [[package]]
 name = "bunnyfont"
 version = "0.1.0"
-source = "git+https://github.com/CodeConiglietto/bunnyfont.git?branch=master#692b56fcbbbc2b55b1b492115f50e136a27f9f8c"
+source = "git+https://github.com/CodeConiglietto/bunnyfont.git?branch=master#fdca87d830455e50cea8fb80a371d7aa964b1181"
 dependencies = [
  "ggez",
  "glam",
+ "serde",
 ]
 
 [[package]]
@@ -660,6 +661,8 @@ dependencies = [
  "ndarray",
  "noise",
  "rand 0.8.4",
+ "rmp-serde",
+ "serde",
  "specs",
  "strum",
  "tui",
@@ -1579,6 +1582,7 @@ dependencies = [
  "num-integer",
  "num-traits",
  "rawpointer",
+ "serde",
 ]
 
 [[package]]
@@ -2247,6 +2251,27 @@ dependencies = [
 ]
 
 [[package]]
+name = "rmp"
+version = "0.8.10"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4f55e5fa1446c4d5dd1f5daeed2a4fe193071771a2636274d0d7a3b082aa7ad6"
+dependencies = [
+ "byteorder",
+ "num-traits",
+]
+
+[[package]]
+name = "rmp-serde"
+version = "0.15.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "723ecff9ad04f4ad92fe1c8ca6c20d2196d9286e9c60727c4cb5511629260e9d"
+dependencies = [
+ "byteorder",
+ "rmp",
+ "serde",
+]
+
+[[package]]
 name = "rodio"
 version = "0.14.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2535,6 +2560,7 @@ dependencies = [
  "hibitset",
  "log",
  "rayon",
+ "serde",
  "shred",
  "shrev",
  "specs-derive",

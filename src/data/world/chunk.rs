@@ -2,27 +2,41 @@ use log::warn;
 use ndarray::Array2;
 use noise::NoiseFn;
 use rand::prelude::*;
+use serde::{Deserialize, Serialize};
 use specs::{Entity, WriteStorage};
 
 use crate::prelude::*;
 
+#[derive(Clone, Serialize, Deserialize)]
 pub struct Chunk {
     pub tiles: Array2<ChunkTile>,
 }
 
 impl Chunk {
-    pub fn generate(&mut self, (chunk_x, chunk_y): (i32, i32), gen_package: &GenPackageResource, world_data: &mut WorldData) {
+    pub fn generate(
+        &mut self,
+        (chunk_x, chunk_y): (i32, i32),
+        gen_package: &GenPackageResource,
+        world_data: &mut WorldData,
+    ) {
         let mut vegetation_local_positions = Vec::new();
-        
+
         for ((local_x, local_y), chunk_tile) in self.tiles.indexed_iter_mut() {
             let (x, y) = local_to_global_position((chunk_x, chunk_y), (local_x, local_y));
 
-            let fertility = gen_package.fertility_noise.get([x as f64 * 0.05, y as f64 * 0.05]).abs();
+            let fertility = gen_package
+                .fertility_noise
+                .get([x as f64 * 0.05, y as f64 * 0.05])
+                .abs();
 
             chunk_tile.tile = Tile {
                 seed: thread_rng().gen::<usize>(),
                 fertility: (fertility * 256 as f64) as u8,
-                tile_type: if gen_package.elevation_noise.get([x as f64 * 0.05, y as f64 * 0.05]) > 0.25 {
+                tile_type: if gen_package
+                    .elevation_noise
+                    .get([x as f64 * 0.05, y as f64 * 0.05])
+                    > 0.25
+                {
                     TileType::Wall {
                         material: Material::Stone,
                     }
@@ -75,8 +89,8 @@ impl Chunk {
                     2 => VegetationBuilder::BerryBush.build(lazy, entities),
                     3 => VegetationBuilder::Tree.build(lazy, entities),
                     _ => unreachable!(),
-                }, 
-                ((chunk_x, chunk_y), local_pos), 
+                },
+                ((chunk_x, chunk_y), local_pos),
                 &mut world_data.position,
             )
         }
@@ -87,14 +101,6 @@ impl Chunk {
                 (chunk_x, chunk_y),
                 &mut world_data.position,
             );
-        }
-    }
-
-    pub fn unload(&mut self, world_data: &mut WorldData) {
-        for chunk_tile in self.tiles.iter_mut() {
-            for entity in chunk_tile.entities.drain(..) {
-                world_data.entities.delete(entity).unwrap();
-            }
         }
     }
 

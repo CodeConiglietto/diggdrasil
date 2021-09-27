@@ -1,7 +1,8 @@
 use ggez::graphics::Color;
+use serde::{Deserialize, Serialize};
 use strum::EnumIter;
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, EnumIter)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, EnumIter, Serialize, Deserialize)]
 pub enum Material {
     Stone,
     Wood,

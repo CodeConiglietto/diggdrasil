@@ -1,6 +1,7 @@
 use ggez::graphics::Color;
+use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Serialize, Deserialize)]
 pub enum Race {
     Human,
     Elf,

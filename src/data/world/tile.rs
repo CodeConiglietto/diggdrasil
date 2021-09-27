@@ -1,10 +1,13 @@
+use serde::{Deserialize, Serialize};
+
 use crate::prelude::*;
 
-#[derive(Default, Clone, Copy)]
+#[derive(Default, Clone, Copy, Serialize, Deserialize)]
 pub struct Tile {
     pub seed: usize,
     pub fertility: u8,
     pub tile_type: TileType,
+    #[serde(skip)]
     pub tile_variant: TileVariant,
 }
 

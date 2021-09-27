@@ -2,6 +2,7 @@ use specs::Entity;
 
 use crate::prelude::*;
 
+#[derive(Clone)]
 pub enum AIAction {
     MoveInDirection {
         x: i32,

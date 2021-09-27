@@ -1,5 +1,9 @@
-use crate::prelude::*;
+use std::{env, path::PathBuf};
+
 use ggez::event::{KeyCode, KeyMods};
+use serde::{Deserialize, Serialize};
+
+use crate::prelude::*;
 
 pub fn pos_is_adjacent((ax, ay): (i32, i32), (bx, by): (i32, i32)) -> bool {
     (ax - bx).abs() == 1 || (ay - by).abs() == 1
@@ -166,4 +170,31 @@ pub fn local_to_global_position(
         chunk_x * CHUNK_SIZE as i32 + local_x as i32,
         chunk_y * CHUNK_SIZE as i32 + local_y as i32,
     )
+}
+
+pub fn save_path() -> PathBuf {
+    if let Ok(manifest_dir) = env::var("CARGO_MANIFEST_DIR") {
+        PathBuf::from(manifest_dir)
+    } else {
+        PathBuf::from(env::current_dir().unwrap())
+    }
+    .join("saves")
+}
+
+pub fn serialize_data<T: Serialize>(t: &T, buf: &mut Vec<u8>) {
+    rmp_serde::encode::write(buf, t).unwrap()
+}
+
+pub fn deserialize_data<'de, T: Deserialize<'de>>(buf: &'de [u8]) -> T {
+    rmp_serde::decode::from_read_ref(buf).unwrap()
+}
+
+pub fn serializer(buf: &mut Vec<u8>) -> rmp_serde::encode::Serializer<&mut Vec<u8>> {
+    rmp_serde::encode::Serializer::new(buf)
+}
+
+pub fn deserializer(
+    buf: &[u8],
+) -> rmp_serde::decode::Deserializer<rmp_serde::decode::ReadReader<&[u8]>> {
+    rmp_serde::decode::Deserializer::new(buf)
 }

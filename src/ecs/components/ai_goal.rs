@@ -1,8 +1,11 @@
-use crate::prelude::*;
+use serde::{Deserialize, Serialize};
 use specs::{Component, VecStorage};
 
-#[derive(Component)]
+use crate::prelude::*;
+
+#[derive(Clone, Component, Serialize, Deserialize)]
 #[storage(VecStorage)]
 pub struct AIGoalComponent {
+    #[serde(skip)]
     pub current_goal: Option<AIGoal>,
 }

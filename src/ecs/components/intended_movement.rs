@@ -1,6 +1,7 @@
+use serde::{Deserialize, Serialize};
 use specs::{Component, VecStorage};
 
-#[derive(Component, Debug)]
+#[derive(Clone, Component, Debug, Serialize, Deserialize)]
 #[storage(VecStorage)]
 pub struct IntendedMovementComponent {
     pub x_delta: i32,

@@ -1,4 +1,7 @@
-use specs::{Component, Entity, ReadStorage, VecStorage};
+use std::convert::Infallible;
+
+use serde::{Deserialize, Serialize};
+use specs::{saveload::ConvertSaveload, Component, Entity, ReadStorage, VecStorage};
 
 use crate::prelude::*;
 
@@ -38,5 +41,33 @@ impl DigestionComponent {
         self.contents.remove(index);
 
         true
+    }
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct DigestionComponentData {
+    pub contents: Vec<SaveMarkerComponent>,
+}
+
+impl ConvertSaveload<SaveMarkerComponent> for DigestionComponent {
+    type Data = DigestionComponentData;
+    type Error = Infallible;
+
+    fn convert_into<F>(&self, mut ids: F) -> Result<Self::Data, Self::Error>
+    where
+        F: FnMut(Entity) -> Option<SaveMarkerComponent>,
+    {
+        Ok(DigestionComponentData {
+            contents: self.contents.iter().map(|e| ids(*e).unwrap()).collect(),
+        })
+    }
+
+    fn convert_from<F>(data: Self::Data, mut ids: F) -> Result<Self, Self::Error>
+    where
+        F: FnMut(SaveMarkerComponent) -> Option<Entity>,
+    {
+        Ok(Self {
+            contents: data.contents.into_iter().map(|m| ids(m).unwrap()).collect(),
+        })
     }
 }

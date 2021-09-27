@@ -1,6 +1,8 @@
+use serde::{Deserialize, Serialize};
+
 use crate::prelude::*;
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub enum TileType {
     Ground,
     Wall {

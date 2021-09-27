@@ -1,6 +1,9 @@
-use specs::{Component, Entity, VecStorage};
+use serde::{Deserialize, Serialize};
+use specs::{Component, VecStorage};
 
-#[derive(Component)]
+use crate::prelude::*;
+
+#[derive(Clone, Component, Serialize, Deserialize)]
 #[storage(VecStorage)]
 pub struct AttackComponent {
     pub attack_roll: DiceRoll,
