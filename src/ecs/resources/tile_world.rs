@@ -1,3 +1,5 @@
+use std::ops::Not;
+
 use specs::{Entity, WriteStorage};
 
 use crate::prelude::*;
@@ -5,6 +7,7 @@ use crate::prelude::*;
 pub struct TileWorldResource {
     pub offset: (i32, i32),
     pub buffer: [Chunk; 9],
+    pub a_star: AStar,
 }
 
 impl TileWorldResource {
@@ -36,6 +39,7 @@ impl TileWorldResource {
         let mut world = Self {
             offset: (offset_x, offset_y),
             buffer,
+            a_star: AStar::new(CHUNK_SIZE * 3, CHUNK_SIZE * 3),
         };
 
         let (left, top) = local_to_global_position((offset_x, offset_y), (0, 0));
@@ -148,6 +152,67 @@ impl TileWorldResource {
     }
 
     pub fn buffer_idx(buffer_x: usize, buffer_y: usize) -> usize {
-        buffer_y * 3 + buffer_x
+        buffer_idx(buffer_x, buffer_y)
     }
+
+    pub fn pathfind(&mut self, start: (i32, i32), end: (i32, i32)) -> Option<Vec<(i32, i32)>> {
+        let (start_x, start_y) = start;
+        let (end_x, end_y) = end;
+
+        let (offset_x, offset_y) = self.offset;
+        let (loaded_offset_x, loaded_offset_y) =
+            (offset_x * CHUNK_SIZE as i32, offset_y * CHUNK_SIZE as i32);
+
+        let (start_loaded_x, start_loaded_y) =
+            (start_x - loaded_offset_x, start_y - loaded_offset_y);
+        let (end_loaded_x, end_loaded_y) = (end_x - loaded_offset_x, end_y - loaded_offset_y);
+
+        let range = 0..(CHUNK_SIZE as i32 * 3);
+
+        if !range.contains(&start_loaded_x)
+            || !range.contains(&start_loaded_y)
+            || !range.contains(&end_loaded_x)
+            || !range.contains(&end_loaded_y)
+        {
+            return None;
+        }
+
+        let buffer = &self.buffer;
+
+        self.a_star
+            .a_star_simple(
+                (start_loaded_x as usize, start_loaded_y as usize),
+                (end_loaded_x as usize, end_loaded_y as usize),
+                |loaded_x, loaded_y| {
+                    let (buffer_x, buffer_y) = (loaded_x / CHUNK_SIZE, loaded_y / CHUNK_SIZE);
+                    let (local_x, local_y) = (loaded_x % CHUNK_SIZE, loaded_y % CHUNK_SIZE);
+
+                    buffer[buffer_idx(buffer_x, buffer_y)].tiles[[local_x, local_y]]
+                        .tile
+                        .tile_type
+                        .collides()
+                        .not()
+                        .then(|| 1)
+                },
+            )
+            .map(|path| {
+                let mut path: Vec<_> = path
+                    .skip(1)
+                    .map(|(loaded_x, loaded_y)| {
+                        (
+                            loaded_x as i32 + loaded_offset_x,
+                            loaded_y as i32 + loaded_offset_y,
+                        )
+                    })
+                    .collect();
+
+                path.reverse();
+
+                path
+            })
+    }
+}
+
+fn buffer_idx(buffer_x: usize, buffer_y: usize) -> usize {
+    buffer_y * 3 + buffer_x
 }

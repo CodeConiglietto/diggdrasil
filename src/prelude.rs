@@ -7,6 +7,7 @@ pub use crate::{
             ai_action::AIAction,
             ai_goal::AIGoal,
             ai_goal_status::AIGoalStatus,
+            a_star::AStar,
         },
         assets::{
             sprite::Sprite,
