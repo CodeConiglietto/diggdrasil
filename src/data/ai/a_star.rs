@@ -178,6 +178,8 @@ impl AStar {
     where
         F: Fn(usize, usize) -> Option<u32>,
     {
+        let (width, height) = self.visited.dim();
+
         self.clear();
 
         self.add_to_frontier(
@@ -198,6 +200,7 @@ impl AStar {
 
                     xx.and_then(|xx| yy.map(|yy| (xx, yy)))
                 })
+                .filter(|(xx, yy)| *xx < width && *yy < height)
                 .filter_map(|(xx, yy)| {
                     travel_fn(xx, yy).map(|distance| FrontierNode {
                         pos: (xx, yy),
