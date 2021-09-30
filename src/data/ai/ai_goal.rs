@@ -1,18 +1,20 @@
 use crate::prelude::*;
 use specs::prelude::*;
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub enum AIGoal {
     // Wander,
     MoveInDirection {
-        x: i32,
-        y: i32,
+        direction: Direction,
     },
-    PickUpItem {
+    StowItem {
         item: Entity,
     },
     DropItem {
         item: Entity,
+    },
+    HoldItem {
+        item: Option<Entity>,
     },
     EatItem {
         item: Option<Entity>,
@@ -37,14 +39,24 @@ pub enum AIGoal {
 impl AIGoal {
     pub fn get_textual_representation(&self, data: &RenderData) -> String {
         match self {
-            Self::MoveInDirection { x, y } => {
-                format!("Move towards {}, {}", x, y)
+            Self::MoveInDirection { direction } => {
+                format!("Move towards {:?}", direction)
             }
-            Self::PickUpItem { item } => {
-                format!("Pick up {}", data.name.get(*item).unwrap().name)
+            Self::StowItem { item } => {
+                format!("Stow {}", data.name.get(*item).unwrap().name)
             }
             Self::DropItem { item } => {
                 format!("Drop {}", data.name.get(*item).unwrap().name)
+            }
+            Self::HoldItem { item } => {
+                let consumed_entity_name =
+                    if let Some(name_component) = item.map(|e| data.name.get(e).unwrap()) {
+                        &name_component.name
+                    } else {
+                        "something"
+                    };
+
+                format!("Hold {}", consumed_entity_name)
             }
             Self::EatItem { item } => {
                 let consumed_entity_name =
@@ -81,10 +93,7 @@ impl AIGoal {
                     tile_name, x, y, consumed_entity_name
                 )
             }
-            Self::Craft {
-                recipe,
-                ..
-            } => {
+            Self::Craft { recipe, .. } => {
                 let recipe_name = if let Some(recipe) = recipe {
                     recipe.get_resulting_object_name()
                 } else {

@@ -14,7 +14,9 @@ pub struct Tile {
 impl Tile {
     pub fn get_spritebuilder(&self) -> SpriteBuilder {
         match self.tile_type {
-            TileType::Ground => SpriteBuilder::Ground {fertility: self.fertility},
+            TileType::Ground => SpriteBuilder::Ground {
+                fertility: self.fertility,
+            },
             TileType::Wall { material } => SpriteBuilder::Wall { material },
             TileType::ConstructedWall {
                 material,
@@ -30,7 +32,9 @@ impl Tile {
     }
     pub fn get_symbolbuilder(&self) -> SymbolBuilder {
         match self.tile_type {
-            TileType::Ground => SymbolBuilder::Ground {fertility: self.fertility},
+            TileType::Ground => SymbolBuilder::Ground {
+                fertility: self.fertility,
+            },
             TileType::Wall { material } => SymbolBuilder::Wall { material },
             TileType::ConstructedWall {
                 material,

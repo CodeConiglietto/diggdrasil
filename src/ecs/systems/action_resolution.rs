@@ -1,5 +1,5 @@
 use rand::prelude::*;
-use specs::{Entities, Join, LazyUpdate, Read, System, WriteExpect, WriteStorage};
+use specs::{Builder, Entities, Join, LazyUpdate, Read, System, WriteExpect, WriteStorage};
 
 use crate::prelude::*;
 
@@ -17,29 +17,88 @@ impl<'a> System<'a> for ActionResolutionSystem {
         WriteStorage<'a, InventoryComponent>,
         WriteStorage<'a, HealthComponent>,
         WriteStorage<'a, DigestionComponent>,
+        WriteStorage<'a, ManipulatorComponent>,
     );
 
     fn run(&mut self, data: Self::SystemData) {
-        let (eids, lup, crd, mut twld, mut pos, mut act, mut imc, mut inv, mut hpc, mut dig) = data;
+        let (
+            eids,
+            lup,
+            crd,
+            mut twld,
+            mut pos,
+            mut act,
+            mut imc,
+            mut inv,
+            mut hpc,
+            mut dig,
+            mut man,
+        ) = data;
 
-        for (eid, act, imc) in (&eids, &mut act, &mut imc).join() {
-            let current_action = &act.current_action;
+        for (eid, act, imc, man) in (&eids, &mut act, &mut imc, (&mut man).maybe()).join() {
+            let current_action = &mut act.current_action;
 
-            if let Some(action) = current_action {
-                match action {
+            //TODO: check for interruptions and then cancel action if it's interrupted
+            if let Some(action) = current_action.take() {
+                println!("Current action is: {:?}", action);
+
+                act.current_action = match action {
                     AIAction::MoveInDirection { x, y } => {
-                        imc.x_delta = *x;
-                        imc.y_delta = *y;
+                        imc.x_delta = x;
+                        imc.y_delta = y;
                         imc.controlled = true;
+                        None
+                    }
+                    AIAction::AttackInDirection {
+                        direction,
+                        attack,
+                        attack_offsets,
+                    } => {
+                        let mut final_action = None;
+
+                        let this_pos = pos.get(eid).unwrap();
+
+                        let mut attack_offsets = attack_offsets
+                            .unwrap_or_else(|| attack.attack_type.get_offsets(&direction, None));
+
+                        if attack_offsets.len() > 0 {
+                            let (offset_x, offset_y) = attack_offsets.pop().unwrap();
+                            let attack_pos = (offset_x + this_pos.x, offset_y + this_pos.y);
+                            let (attack_x, attack_y) = attack_pos;
+                            let attack_tile = twld.get(attack_pos);
+                            if let Some(attack_tile) = attack_tile {
+                                for entity in &attack_tile.entities {
+                                    if let Some(target_hp) = &mut hpc.get_mut(*entity) {
+                                        target_hp.turn_damage += attack.attack_dice.roll();
+                                        break;
+                                    }
+                                }
+
+                                lup.create_entity(&eids)
+                                    .with(ParticleComponent {
+                                        position: (attack_x, attack_y, 0),
+                                        particle_type: ParticleType::Thrust { drawn: false, direction_from_player: Direction::from_positions((offset_x, offset_y), (0, 0)) },
+                                    })
+                                    .build();
+
+                                final_action = Some(AIAction::AttackInDirection {
+                                    direction,
+                                    attack,
+                                    attack_offsets: Some(attack_offsets),
+                                });
+                            }
+                        }
+
+                        final_action
                     }
                     AIAction::AttackEntity { target } => {
                         //Will crash if attempting to attack a target without a position
-                        let target_pos = pos.get(*target).unwrap();
+                        let target_pos = pos.get(target).unwrap();
                         let this_pos = pos.get(eid).unwrap();
 
                         if pos_is_adjacent((this_pos.x, this_pos.y), (target_pos.x, target_pos.y)) {
                             //Will crash if attempting to attack a target that has no health component
-                            if let Some(target_hp) = &mut hpc.get_mut(*target) {
+                            if let Some(target_hp) = &mut hpc.get_mut(target) {
                                 if target_hp.value > 0 {
                                     target_hp.turn_damage += 1;
                                 }
@@ -51,40 +110,68 @@ impl<'a> System<'a> for ActionResolutionSystem {
                         } else {
                             println!("Entity attempted to attack target that it cannot reach!");
                         }
+                        None
                     }
-                    AIAction::PickUpItem { item } => {
+                    AIAction::StowItemFromGround { item } => {
                         if let Some(inventory) = inv.get_mut(eid) {
                             if let Some(entity_position) = pos.get(eid) {
-                                if let Some(item_position) = pos.get(*item) {
+                                if let Some(item_position) = pos.get(item) {
                                     if entity_position.x == item_position.x
                                         && entity_position.y == item_position.y
                                     {
-                                        if inventory.insert(*item) {
-                                            twld.despawn_entity(*item, &mut pos);
+                                        if inventory.insert(item) {
+                                            twld.despawn_entity(item, &mut pos);
+                                        } else {
+                                            println!("Entity failed to stow item in inventory!");
                                         }
                                     } else {
-                                        println!("Entity attempted to pick up item that it cannot reach!");
+                                        println!(
+                                            "Entity attempted to stow item that it cannot reach!"
+                                        );
                                     }
                                 } else {
                                     println!(
-                                        "Entity attempting to pick up item that has no position!"
+                                        "Entity attempting to stow item that has no position!"
                                     );
                                 }
                             } else {
                                 println!(
-                                    "Entity attempting to pick up item despite having no position!"
+                                    "Entity attempting to stow item despite having no position!"
                                 );
                             }
                         } else {
                             println!("No inventory to store item in!");
                         }
+                        None
                     }
-                    AIAction::DropItem { item } => {
+                    AIAction::StowHeldItem => {
+                        if let Some(inventory) = inv.get_mut(eid) {
+                            if let Some(man) = man {
+                                if let Some(held_item) = man.held_item {
+                                    if inventory.insert(held_item) {
+                                        man.held_item = None;
+                                    } else {
+                                        println!("Entity failed to stow item in inventory!");
+                                    }
+                                } else {
+                                    println!(
+                                        "Entity attempting to stow held item that is not held by that entity!"
+                                    );
+                                }
+                            } else {
+                                println!("Entity attempting to stow held item despite being unable to hold items!");
+                            }
+                        } else {
+                            println!("No inventory to store item in!");
+                        }
+                        None
+                    }
+                    AIAction::DropItemFromInventory { item } => {
                         if let Some(inventory) = inv.get_mut(eid) {
                             if let Some(entity_position) = pos.get(eid) {
-                                inventory.remove(*item);
+                                inventory.remove(item);
                                 twld.spawn_entity(
-                                    *item,
+                                    item,
                                     (entity_position.x, entity_position.y),
                                     &mut pos,
                                 );
@@ -98,14 +185,38 @@ impl<'a> System<'a> for ActionResolutionSystem {
                                 "Entity attempting to drop an item despite having no inventory!"
                             );
                         }
+                        None
                     }
-                    AIAction::EatItem { item } => {
+                    AIAction::HoldItemFromInventory { item } => {
+                        if let Some(man) = man {
+                            if man.held_item.is_none() {
+                                if let Some(inv) = inv.get_mut(eid) {
+                                    if inv.remove(item) {
+                                        man.held_item = Some(item);
+                                    } else {
+                                        println!("Entity attempting to hold item from inventory that is not in its inventory!");
+                                    }
+                                }
+                            } else {
+                                println!(
+                                    "Entity attempting to hold item despite already holding one!"
+                                );
+                            }
+                        } else {
+                            println!(
+                                "Entity attempting to hold item despite having no manipulator!"
+                            );
+                        }
+                        None
+                    }
+                    AIAction::EatItemFromInventory { item } => {
                         if let Some(dig) = dig.get_mut(eid) {
                             if let Some(inv) = inv.get_mut(eid) {
-                                inv.remove(*item);
-                                dig.insert(*item);
+                                inv.remove(item);
+                                dig.insert(item);
                             }
                         }
+                        None
                     }
                     AIAction::BuildAtLocation {
                         x,
@@ -113,19 +224,19 @@ impl<'a> System<'a> for ActionResolutionSystem {
                         tile_type,
                         consumed_entity,
                     } => {
-                        if let Some(chunk_tile) = twld.get((*x, *y)) {
+                        if let Some(chunk_tile) = twld.get((x, y)) {
                             if let Some(pos) = pos.get(eid) {
-                                if pos_is_adjacent((*x, *y), (pos.x, pos.y)) {
+                                if pos_is_adjacent((x, y), (pos.x, pos.y)) {
                                     if chunk_tile
                                         .tile
                                         .tile_type
                                         .available_buildings()
-                                        .contains(tile_type)
+                                        .contains(&tile_type)
                                     {
                                         if let Some(inv) = inv.get_mut(eid) {
                                             if let Some((item_index, item)) =
                                                 inv.items.iter().enumerate().find(|(_, slot)| {
-                                                    **slot == Some(*consumed_entity)
+                                                    **slot == Some(consumed_entity)
                                                 })
                                             {
                                                 if let Some(item_material) =
@@ -137,27 +248,24 @@ impl<'a> System<'a> for ActionResolutionSystem {
                                                         tile_type.get_build_requirements(),
                                                     ) {
                                                         // Actually do it
-                                                        twld.get_mut((*x, *y)).unwrap().tile =
-                                                            Tile {
-                                                                seed: thread_rng().gen::<usize>(),
-                                                                fertility: chunk_tile.tile.fertility,
-                                                                tile_type: *tile_type,
-                                                                tile_variant:
-                                                                    TileVariant::get_from_neighbours(
-                                                                        twld.get_neighbours((
-                                                                            *x, *y,
-                                                                        )),
-                                                                    ),
-                                                            };
+                                                        twld.get_mut((x, y)).unwrap().tile = Tile {
+                                                            seed: thread_rng().gen::<usize>(),
+                                                            fertility: chunk_tile.tile.fertility,
+                                                            tile_type,
+                                                            tile_variant:
+                                                                TileVariant::get_from_neighbours(
+                                                                    twld.get_neighbours((x, y)),
+                                                                ),
+                                                        };
 
                                                         twld.refresh_tile_and_adjacent_variants((
-                                                            *x, *y,
+                                                            x, y,
                                                         ));
 
                                                         // tile.tile_type = *tile_type;
                                                         inv.items[item_index] = None;
 
-                                                        eids.delete(*consumed_entity).unwrap();
+                                                        eids.delete(consumed_entity).unwrap();
                                                         // If entity is adjacent, despawn from entity map
                                                     } else {
                                                         println!("Entity attempting to build with items that do not fulfill the material requirements");
@@ -197,6 +305,7 @@ impl<'a> System<'a> for ActionResolutionSystem {
                         //Then when crafting:
                         //Remove the entity from where it's stored
                         //Place the tile
+                        None
                     }
 
                     AIAction::Craft {
@@ -205,11 +314,11 @@ impl<'a> System<'a> for ActionResolutionSystem {
                     } => {
                         if let Some(ent_pos) = pos.get(eid) {
                             if let Some(inv) = inv.get_mut(eid) {
-                                match recipe.craft(ingredients, &lup, &eids, &crd) {
+                                match recipe.craft(&ingredients, &lup, &eids, &crd) {
                                     Ok(crafted_entity) => {
                                         for item in ingredients {
-                                            inv.remove(*item);
-                                            eids.delete(*item).unwrap();
+                                            inv.remove(item);
+                                            eids.delete(item).unwrap();
                                         }
 
                                         twld.spawn_entity(
@@ -227,11 +336,11 @@ impl<'a> System<'a> for ActionResolutionSystem {
                         } else {
                             println!("Entity attempted to craft without position");
                         }
+
+                        None
                     }
                 }
             }
-
-            act.current_action = None;
         }
     }
 }

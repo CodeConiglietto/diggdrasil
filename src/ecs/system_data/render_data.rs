@@ -20,7 +20,7 @@ pub struct RenderData<'a> {
     pub intended_movement: ReadStorage<'a, IntendedMovementComponent>,
     pub inventory: ReadStorage<'a, InventoryComponent>,
     pub item: ReadStorage<'a, ItemComponent>,
-    pub manipulation: ReadStorage<'a, ManipulatorComponent>,
+    pub manipulator: ReadStorage<'a, ManipulatorComponent>,
     pub name: ReadStorage<'a, NameComponent>,
     pub particle: ReadStorage<'a, ParticleComponent>,
     pub position: ReadStorage<'a, PositionComponent>,

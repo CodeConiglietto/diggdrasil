@@ -6,6 +6,5 @@ use crate::prelude::*;
 #[derive(Clone, Component, Serialize, Deserialize)]
 #[storage(VecStorage)]
 pub struct AttackComponent {
-    pub attack_roll: DiceRoll,
-    pub attack_type: AttackType,
+    pub available_attacks: Vec<Attack>,
 }

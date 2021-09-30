@@ -306,10 +306,11 @@ impl event::EventHandler<ggez::GameError> for MainState {
         self.font_batch.clear();
 
         let data: RenderData = self.ecs_world.system_data();
-        if let Some((input, position, inventory, digestion, health)) = (
+        if let Some((input, position, inventory, manipulator, digestion, health)) = (
             &data.input,
             &data.position,
             (&data.inventory).maybe(),
+            (&data.manipulator).maybe(),
             (&data.digestion).maybe(),
             (&data.health).maybe(),
         )
@@ -443,7 +444,7 @@ impl event::EventHandler<ggez::GameError> for MainState {
                     }
 
                     if let Some(digestion) = digestion {
-                        let (digestion_pane, _rest) = Layout::default()
+                        let (digestion_pane, rest) = Layout::default()
                             .direction(LayoutDirection::Vertical)
                             .constraints([
                                 Constraint::Length(
@@ -455,6 +456,8 @@ impl event::EventHandler<ggez::GameError> for MainState {
                             .into_iter()
                             .collect_tuple()
                             .unwrap();
+
+                        right_pane = rest;
 
                         let list = List::new(
                             digestion
@@ -478,6 +481,26 @@ impl event::EventHandler<ggez::GameError> for MainState {
                             .borders(Borders::ALL);
 
                         f.render_widget(list.block(block), digestion_pane);
+                    }
+
+                    if let Some(manipulator) = manipulator {
+                        let (manipulator_pane, _rest) = Layout::default()
+                            .direction(LayoutDirection::Vertical)
+                            .constraints([Constraint::Length(3), Constraint::Min(0)])
+                            .split(right_pane)
+                            .into_iter()
+                            .collect_tuple()
+                            .unwrap();
+
+                        let list = List::new(vec![if let Some(item) = &manipulator.held_item {
+                            ListItem::new(data.name.get(*item).unwrap().name.as_str())
+                        } else {
+                            ListItem::new("-")
+                        }]);
+
+                        let block = Block::default().title("Held").borders(Borders::ALL);
+
+                        f.render_widget(list.block(block), manipulator_pane);
                     }
 
                     if let Some(health) = health {

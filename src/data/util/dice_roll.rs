@@ -3,9 +3,9 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct DiceRoll {
-    pub rolls: usize,
-    pub dice: usize,
-    pub bonus: usize,
+    pub rolls: u32,
+    pub dice: u32,
+    pub bonus: u32,
 }
 
 impl DiceRoll {
@@ -14,9 +14,9 @@ impl DiceRoll {
         let (dice_string, bonus) = string.split_once("+").unwrap_or((string, "0"));
         let (rolls, dice) = dice_string.split_once("d").unwrap();
         let (rolls, dice, bonus) = (
-            rolls.parse::<usize>().unwrap(),
-            dice.parse::<usize>().unwrap(),
-            bonus.parse::<usize>().unwrap(),
+            rolls.parse::<u32>().unwrap(),
+            dice.parse::<u32>().unwrap(),
+            bonus.parse::<u32>().unwrap(),
         );
 
         DiceRoll { rolls, dice, bonus }
@@ -26,10 +26,10 @@ impl DiceRoll {
         String::from(format!("{}d{}+{}", self.rolls, self.dice, self.bonus))
     }
 
-    pub fn roll(&self) -> usize {
+    pub fn roll(&self) -> u32 {
         let mut final_value = 0;
         for _ in 0..self.rolls {
-            final_value += (thread_rng().gen::<usize>() % self.dice) + 1;
+            final_value += (thread_rng().gen::<u32>() % self.dice) + 1;
         }
 
         final_value += self.bonus;

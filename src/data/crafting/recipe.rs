@@ -3,7 +3,7 @@ use strum::EnumIter;
 
 use crate::prelude::*;
 
-#[derive(Clone, Copy, EnumIter)]
+#[derive(Clone, Copy, Debug, EnumIter)]
 pub enum Recipe {
     CampFire,
     Spear,

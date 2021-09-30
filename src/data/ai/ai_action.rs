@@ -2,22 +2,31 @@ use specs::Entity;
 
 use crate::prelude::*;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub enum AIAction {
     MoveInDirection {
         x: i32,
         y: i32,
     },
+    AttackInDirection {
+        direction: Direction,
+        attack: Attack,
+        attack_offsets: Option<Vec<(i32, i32)>>,
+    },
     AttackEntity {
         target: Entity,
     },
-    PickUpItem {
+    StowItemFromGround {
         item: Entity,
     },
-    DropItem {
+    StowHeldItem,
+    DropItemFromInventory {
         item: Entity,
     },
-    EatItem {
+    HoldItemFromInventory {
+        item: Entity,
+    },
+    EatItemFromInventory {
         item: Entity,
     },
     BuildAtLocation {

@@ -1,8 +1,9 @@
 use ggez::input::keyboard::KeyCode;
 use serde::{Deserialize, Serialize};
 use strum::EnumIter;
+use std::cmp::Ordering;
 
-#[derive(Clone, Copy, EnumIter, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, EnumIter, Serialize, Deserialize)]
 pub enum Direction {
     None,
     UpLeft,
@@ -16,6 +17,20 @@ pub enum Direction {
 }
 
 impl Direction {
+    pub fn from_positions((ax, ay): (i32, i32), (bx, by): (i32, i32)) -> Self {
+        match (ax.cmp(&bx), ay.cmp(&by)) {
+            (Ordering::Equal, Ordering::Equal) => Direction::None,
+            (Ordering::Less, Ordering::Less) => Direction::UpLeft,
+            (Ordering::Equal, Ordering::Less) => Direction::Up,
+            (Ordering::Greater, Ordering::Less) => Direction::UpRight,
+            (Ordering::Greater, Ordering::Equal) => Direction::Right,
+            (Ordering::Greater, Ordering::Greater) => Direction::DownRight,
+            (Ordering::Equal, Ordering::Greater) => Direction::Down ,
+            (Ordering::Less, Ordering::Greater) => Direction::DownLeft ,
+            (Ordering::Less, Ordering::Equal) => Direction::Left ,
+        }
+    }
+
     pub fn from_keycode(keycode: KeyCode) -> Option<Self> {
         match keycode {
             KeyCode::Numpad1 => Some(Self::DownLeft),
@@ -43,6 +58,20 @@ impl Direction {
             Direction::Down => (0, 1),
             Direction::DownLeft => (-1, 1),
             Direction::Left => (-1, 0),
+        }
+    }
+
+    pub fn get_angle(&self) -> Option<i32> {
+        match self {
+            Direction::None => None,
+            Direction::Up => Some(0),
+            Direction::UpRight => Some(1),
+            Direction::Right => Some(2),
+            Direction::DownRight => Some(3),
+            Direction::Down => Some(4),
+            Direction::DownLeft => Some(5),
+            Direction::Left => Some(6),
+            Direction::UpLeft => Some(7),
         }
     }
 

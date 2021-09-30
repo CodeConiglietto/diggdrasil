@@ -10,7 +10,7 @@ use crate::prelude::*;
 
 //TODO: Maybe change these to be more generic if there's too much code repetition
 //TODO: Create some method to instantiate these to remove potential for creating malformed particles
-#[derive(Clone, Copy, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, Serialize, Deserialize)]
 pub enum ParticleType {
     Finished,
     Rain { initial_angle: Direction },
@@ -21,6 +21,8 @@ pub enum ParticleType {
     // Splinter { direction: Direction },
     // Debris { direction: Direction },
     Smoke { lifetime: usize },
+    Thrust { drawn: bool, direction_from_player: Direction }, 
+    Swing { drawn: bool, direction_from_player: Direction, rotation_direction: RotationDirection },
 }
 
 impl ParticleType {
@@ -50,6 +52,8 @@ impl ParticleType {
                     0
                 },
             ),
+            Self::Thrust { .. } => (x, y, z),
+            Self::Swing { .. } => (x, y, z),
             _ => todo!(),
         }
     }
@@ -105,6 +109,8 @@ impl ParticleType {
                     }
                 }
             }
+            Self::Thrust { drawn, direction_from_player } => if *drawn { ParticleType::Finished } else { Self::Thrust{drawn: true, direction_from_player: *direction_from_player} },
+            Self::Swing { drawn, direction_from_player, rotation_direction } => if *drawn { ParticleType::Finished } else { Self::Swing{drawn: true, direction_from_player: *direction_from_player, rotation_direction: *rotation_direction} },
             _ => *self,
         }
     }
@@ -177,8 +183,50 @@ impl ParticleType {
                     rotation: CharRotation::None,
                     mirror: CharMirror::None,
                 }
+            },
+            Self::Thrust { direction_from_player, .. } => {
+                let (index, rotation) = match direction_from_player {
+                    Direction::None => (0x00F, Rotation::None),
+                    Direction::UpLeft => (0x30D, Rotation::None),
+                    Direction::Up => (0x05E, Rotation::None),
+                    Direction::UpRight => (0x30D, Rotation::Rotation90),
+                    Direction::Right => (0x05E, Rotation::Rotation90),
+                    Direction::DownRight => (0x30D, Rotation::Rotation180),
+                    Direction::Down => (0x05E, Rotation::Rotation180),
+                    Direction::DownLeft => (0x30D, Rotation::Rotation270),
+                    Direction::Left => (0x05E, Rotation::Rotation270),
+                };
+
+                GgBunnyChar {
+                    index,
+                    foreground: Color::new(0.75, 0.75, 0.75, 1.0),
+                    background: None,
+                    rotation,
+                    mirror: CharMirror::None,
+                }
             }
-            _ => todo!(),
+            Self::Swing { direction_from_player, .. } => {
+                let (index, rotation) = match direction_from_player {
+                    Direction::None => (0x00F, Rotation::None),
+                    Direction::UpLeft => (0x30D, Rotation::None),
+                    Direction::Up => (0x05E, Rotation::None),
+                    Direction::UpRight => (0x30D, Rotation::Rotation90),
+                    Direction::Right => (0x05E, Rotation::Rotation90),
+                    Direction::DownRight => (0x30D, Rotation::Rotation180),
+                    Direction::Down => (0x05E, Rotation::Rotation180),
+                    Direction::DownLeft => (0x30D, Rotation::Rotation270),
+                    Direction::Left => (0x05E, Rotation::Rotation270),
+                };
+
+                GgBunnyChar {
+                    index,
+                    foreground: Color::new(0.75, 0.75, 0.75, 1.0),
+                    background: None,
+                    rotation,
+                    mirror: CharMirror::None,
+                }
+            }
+            _ => todo!("{:?}", self),
         }
     }
 }

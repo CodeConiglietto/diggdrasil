@@ -42,7 +42,7 @@ impl<'a> System<'a> for InputResolutionSystem {
                         PopupState::Waiting => {}
                         PopupState::Canceling => inc.popup = None,
                         PopupState::Returning(goal) => {
-                            gol.current_goal = Some(goal.clone());
+                            gol.goal_stack.push(goal.clone());
                             inc.popup = None;
                         }
                     }
@@ -51,28 +51,44 @@ impl<'a> System<'a> for InputResolutionSystem {
                     match key {
                         //TODO: move these to use direction enum
                         KeyCode::Numpad1 => {
-                            gol.current_goal = Some(AIGoal::MoveInDirection { x: -1, y: 1 });
+                            gol.goal_stack.push(AIGoal::MoveInDirection {
+                                direction: Direction::DownLeft,
+                            });
                         }
                         KeyCode::Numpad2 | KeyCode::Down => {
-                            gol.current_goal = Some(AIGoal::MoveInDirection { x: 0, y: 1 });
+                            gol.goal_stack.push(AIGoal::MoveInDirection {
+                                direction: Direction::Down,
+                            });
                         }
                         KeyCode::Numpad3 => {
-                            gol.current_goal = Some(AIGoal::MoveInDirection { x: 1, y: 1 });
+                            gol.goal_stack.push(AIGoal::MoveInDirection {
+                                direction: Direction::DownRight,
+                            });
                         }
                         KeyCode::Numpad4 | KeyCode::Left => {
-                            gol.current_goal = Some(AIGoal::MoveInDirection { x: -1, y: 0 });
+                            gol.goal_stack.push(AIGoal::MoveInDirection {
+                                direction: Direction::Left,
+                            });
                         }
                         KeyCode::Numpad6 | KeyCode::Right => {
-                            gol.current_goal = Some(AIGoal::MoveInDirection { x: 1, y: 0 });
+                            gol.goal_stack.push(AIGoal::MoveInDirection {
+                                direction: Direction::Right,
+                            });
                         }
                         KeyCode::Numpad7 => {
-                            gol.current_goal = Some(AIGoal::MoveInDirection { x: -1, y: -1 });
+                            gol.goal_stack.push(AIGoal::MoveInDirection {
+                                direction: Direction::UpLeft,
+                            });
                         }
                         KeyCode::Numpad8 | KeyCode::Up => {
-                            gol.current_goal = Some(AIGoal::MoveInDirection { x: 0, y: -1 });
+                            gol.goal_stack.push(AIGoal::MoveInDirection {
+                                direction: Direction::Up,
+                            });
                         }
                         KeyCode::Numpad9 => {
-                            gol.current_goal = Some(AIGoal::MoveInDirection { x: 1, y: -1 });
+                            gol.goal_stack.push(AIGoal::MoveInDirection {
+                                direction: Direction::UpRight,
+                            });
                         }
                         //TODO: add modifier check to see if player presses G or g.
                         //G picks up an entity in a manipulator
@@ -93,17 +109,17 @@ impl<'a> System<'a> for InputResolutionSystem {
                                             PopupListItem::new(
                                                 index,
                                                 None,
-                                                AIGoal::PickUpItem { item: *item },
+                                                AIGoal::StowItem { item: *item },
                                             )
                                         })
                                         .collect();
 
                                     match pickup_goals.len() {
                                         0 => {}
-                                        1 => gol.current_goal = Some(pickup_goals.remove(0).goal),
+                                        1 => gol.goal_stack.push(pickup_goals.remove(0).goal),
                                         _ => {
                                             inc.popup = Some(Popup::list(
-                                                String::from("Pick up what?"),
+                                                String::from("Stow what?"),
                                                 pickup_goals,
                                             ));
                                         }
@@ -146,8 +162,39 @@ impl<'a> System<'a> for InputResolutionSystem {
                                 }
                             }
                         }
+                        KeyCode::W => {
+                            let hold_goals: Vec<_> = inv
+                                .get_mut(eid)
+                                .unwrap()
+                                .items
+                                .iter()
+                                .enumerate()
+                                .filter_map(|(index, inventory_slot)| {
+                                    //Check that the inventory slot has something in it, and also that it is an item
+                                    if let Some(item) = inventory_slot {
+                                        if itc.get(*item).is_some() {
+                                            return Some(PopupListItem::new(
+                                                index,
+                                                None,
+                                                AIGoal::HoldItem { item: Some(*item) },
+                                            ));
+                                        }
+                                    }
+
+                                    None
+                                })
+                                .collect();
+
+                            match hold_goals.len() {
+                                0 => {}
+                                _ => {
+                                    inc.popup =
+                                        Some(Popup::list(String::from("Hold what?"), hold_goals));
+                                }
+                            }
+                        }
                         KeyCode::E => {
-                            gol.current_goal = Some(AIGoal::EatItem { item: None });
+                            gol.goal_stack.push(AIGoal::EatItem { item: None });
                         }
                         KeyCode::B => {
                             //TODO: ensure player has some way to manipulate objects, otherwise they can't build :(
@@ -169,12 +216,10 @@ impl<'a> System<'a> for InputResolutionSystem {
                                 },
                             ));
                         }
-                        KeyCode::C => {
-                            gol.current_goal = Some(AIGoal::Craft {
-                                recipe: None,
-                                ingredients: Vec::new(),
-                            })
-                        }
+                        KeyCode::C => gol.goal_stack.push(AIGoal::Craft {
+                            recipe: None,
+                            ingredients: Vec::new(),
+                        }),
                         _ => (),
                     }
                 }

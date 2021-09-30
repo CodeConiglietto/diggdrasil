@@ -32,7 +32,9 @@ impl CreatureBuilder {
                     .with(AIActionComponent {
                         current_action: None,
                     })
-                    .with(AIGoalComponent { current_goal: None })
+                    .with(AIGoalComponent {
+                        goal_stack: Vec::new(),
+                    })
                     .with(HealthComponent {
                         hit_particle: None, //TODO: Make this blood
                         turn_damage: 0,
@@ -51,6 +53,7 @@ impl CreatureBuilder {
                     .with(DeathComponent {
                         contained_entities: Vec::new(),
                     })
+                    .with(ManipulatorComponent { held_item: None })
                     .build()
             }
         }

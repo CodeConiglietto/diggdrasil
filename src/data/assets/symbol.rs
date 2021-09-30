@@ -7,7 +7,7 @@ pub struct Symbol {
 impl Symbol {
     pub fn empty() -> Symbol {
         Symbol {
-            draw_chars: Vec::new()
+            draw_chars: Vec::new(),
         }
     }
 

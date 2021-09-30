@@ -1,17 +1,21 @@
 use crate::prelude::*;
 use rand::prelude::*;
-use specs::{Join, ReadExpect, ReadStorage, System, WriteStorage};
+use specs::prelude::*;
 use strum::IntoEnumIterator;
 
 pub struct GoalResolutionSystem;
 
 impl<'a> System<'a> for GoalResolutionSystem {
     type SystemData = (
+        Entities<'a>,
         CraftingData<'a>,
         ReadExpect<'a, TileWorldResource>,
+        ReadStorage<'a, AttackComponent>,
+        ReadStorage<'a, EdibleComponent>,
         ReadStorage<'a, PositionComponent>,
         ReadStorage<'a, HealthComponent>,
         ReadStorage<'a, InventoryComponent>,
+        ReadStorage<'a, ManipulatorComponent>,
         ReadStorage<'a, NameComponent>,
         WriteStorage<'a, AIGoalComponent>,
         WriteStorage<'a, AIActionComponent>,
@@ -19,20 +23,25 @@ impl<'a> System<'a> for GoalResolutionSystem {
     );
 
     fn run(&mut self, data: Self::SystemData) {
-        let (crd, twld, pos, hpc, inv, nam, mut gol, mut act, mut inp) = data;
+        let (eids, crd, twld, atk, edb, pos, hpc, inv, man, nam, mut gol, mut act, mut inp) = data;
 
-        for (pos, inv, gol, act, inp) in
-            (&pos, (&inv).maybe(), &mut gol, &mut act, (&mut inp).maybe()).join()
+        for (_eid, pos, inv, man, gol, act, inp) in (
+            &eids,
+            &pos,
+            (&inv).maybe(),
+            (&man).maybe(),
+            &mut gol,
+            &mut act,
+            (&mut inp).maybe(),
+        )
+            .join()
         {
-            let current_goal = &gol.current_goal;
-
-            if let Some(goal) = current_goal {
-                match goal {
+            if let Some(current_goal) = gol.goal_stack.last() {
+                // if let Some(goal) = current_goal {
+                let goal_status = match current_goal {
                     // AIGoal::Wander => {},
-                    AIGoal::MoveInDirection {
-                        x,
-                        y, //TODO: Change to use direction enum
-                    } => {
+                    AIGoal::MoveInDirection { direction } => {
+                        let (x, y) = direction.get_offset();
                         let (new_x, new_y) = (pos.x + x, pos.y + y);
 
                         if let Some(chunk_tile) = twld.get((new_x, new_y)) {
@@ -41,16 +50,38 @@ impl<'a> System<'a> for GoalResolutionSystem {
                                 if !chunk_tile.entities.is_empty() {
                                     for entity in chunk_tile.entities.iter() {
                                         if hpc.get(*entity).is_some() {
-                                            act.current_action =
-                                                Some(AIAction::AttackEntity { target: *entity });
-                                            break;
+                                            if let Some(man) = man {
+                                                if let Some(wep) = man.held_item {
+                                                    if let Some(atk) = atk.get(wep) {
+                                                        let attack = atk
+                                                            .available_attacks
+                                                            .choose(&mut thread_rng())
+                                                            .unwrap();
+
+                                                        act.current_action =
+                                                            Some(AIAction::AttackInDirection {
+                                                                direction: *direction,
+                                                                attack: attack.clone(),
+                                                                attack_offsets: None,
+                                                            });
+                                                        // act.current_action =
+                                                        //     Some(AIAction::AttackEntity { target: *entity });
+                                                        break;
+                                                    }
+                                                } else {
+                                                    //TODO: add a basic attack to creatures, and use this here instead
+                                                    act.current_action =
+                                                        Some(AIAction::AttackEntity {
+                                                            target: *entity,
+                                                        });
+                                                }
+                                            }
                                         }
                                     }
                                 }
 
                                 if act.current_action.is_none() {
-                                    act.current_action =
-                                        Some(AIAction::MoveInDirection { x: *x, y: *y });
+                                    act.current_action = Some(AIAction::MoveInDirection { x, y });
                                 }
                             } else {
                                 if x.abs() == 1 && y.abs() == 1 {
@@ -62,7 +93,7 @@ impl<'a> System<'a> for GoalResolutionSystem {
                                     }
 
                                     for axis in axes.iter() {
-                                        let (mut dx, mut dy) = (*x, *y);
+                                        let (mut dx, mut dy) = (x, y);
 
                                         match axis {
                                             Axis::X => {
@@ -91,7 +122,7 @@ impl<'a> System<'a> for GoalResolutionSystem {
                                     }
                                 } else {
                                     //Movement is orthogonal
-                                    if *x == 0 {
+                                    if x == 0 {
                                         let mut x_vals = [1, -1];
 
                                         if thread_rng().gen::<bool>() {
@@ -99,7 +130,7 @@ impl<'a> System<'a> for GoalResolutionSystem {
                                         }
 
                                         for val in x_vals.iter() {
-                                            let (dx, dy) = (*val, *y);
+                                            let (dx, dy) = (*val, y);
                                             let (new_x, new_y) = (pos.x + val, pos.y + y);
 
                                             if let Some(chunk_tile) = twld.get((new_x, new_y)) {
@@ -117,7 +148,7 @@ impl<'a> System<'a> for GoalResolutionSystem {
                                             }
                                         }
                                         //movement is about the y axis
-                                    } else if *y == 0 {
+                                    } else if y == 0 {
                                         //movement is about the x axis
                                         let mut y_vals = [1, -1];
 
@@ -126,7 +157,7 @@ impl<'a> System<'a> for GoalResolutionSystem {
                                         }
 
                                         for val in y_vals.iter() {
-                                            let (dx, dy) = (*x, *val);
+                                            let (dx, dy) = (x, *val);
                                             let (new_x, new_y) = (pos.x + dx, pos.y + dy);
 
                                             if let Some(chunk_tile) = twld.get((new_x, new_y)) {
@@ -147,18 +178,81 @@ impl<'a> System<'a> for GoalResolutionSystem {
                                 }
                             }
                         } else {
-                            println!("Entity attempting to move into unloaded tile!")
+                            println!("Entity attempting to move into unloaded tile!");
                         }
+
+                        AIGoalStatus::Finished
                     }
-                    AIGoal::PickUpItem { item } => {
-                        act.current_action = Some(AIAction::PickUpItem { item: *item });
+                    //TODO: Add better error handling and move item requests to here
+                    AIGoal::StowItem { item } => {
+                        if let Some(man) = man {
+                            if let Some(held_item) = man.held_item {
+                                if held_item == *item {
+                                    //Our item is held
+                                    act.current_action = Some(AIAction::StowHeldItem);
+                                }
+                            }
+                        }
+                        //If we're not holding the item to stow, then try from the ground
+                        if act.current_action.is_none() {
+                            act.current_action = Some(AIAction::StowItemFromGround { item: *item });
+                        }
+                        AIGoalStatus::Finished
                     }
                     AIGoal::DropItem { item } => {
-                        act.current_action = Some(AIAction::DropItem { item: *item });
+                        act.current_action = Some(AIAction::DropItemFromInventory { item: *item });
+                        AIGoalStatus::Finished
                     }
+                    //TODO: allow player to hold item from ground
+                    AIGoal::HoldItem { item } => {
+                        if let Some(man) = man {
+                            if let Some(held) = man.held_item {
+                                //TODO: make this stow, drop, or sheath the held item
+                                AIGoalStatus::HasChildGoals {
+                                    goals: vec![AIGoal::StowItem { item: held }],
+                                }
+                            } else {
+                                if let Some(item) = item {
+                                    act.current_action =
+                                        Some(AIAction::HoldItemFromInventory { item: *item });
+                                } else {
+                                    if let Some(inp) = inp {
+                                        if let Some(inv) = inv {
+                                            let item_goals = inv
+                                                .items
+                                                .iter()
+                                                .enumerate()
+                                                .filter_map(|(i, slot)| {
+                                                    slot.map(|item| {
+                                                        (
+                                                            i,
+                                                            None,
+                                                            AIGoal::HoldItem { item: Some(item) },
+                                                        )
+                                                    })
+                                                })
+                                                .map(PopupListItem::from)
+                                                .collect();
+
+                                            inp.popup = Some(Popup::list(
+                                                format!("Hold what?",),
+                                                item_goals,
+                                            ));
+                                        }
+                                    }
+                                }
+                                AIGoalStatus::Finished
+                            }
+                        } else {
+                            println!("Entity attempting to equip item does not have a manipulator component");
+                            AIGoalStatus::Canceled
+                        }
+                    }
+                    //TODO: allow player to eat items from the ground
                     AIGoal::EatItem { item } => {
                         if let Some(item) = item {
-                            act.current_action = Some(AIAction::EatItem { item: *item });
+                            act.current_action =
+                                Some(AIAction::EatItemFromInventory { item: *item });
                         } else {
                             if let Some(inp) = inp {
                                 if let Some(inv) = inv {
@@ -167,8 +261,11 @@ impl<'a> System<'a> for GoalResolutionSystem {
                                         .iter()
                                         .enumerate()
                                         .filter_map(|(i, slot)| {
-                                            slot.map(|item| {
-                                                (i, None, AIGoal::EatItem { item: Some(item) })
+                                            slot.and_then(|item| {
+                                                //Only allow the player to choose things that are actually edible
+                                                edb.get(item).map(|_| {
+                                                    (i, None, AIGoal::EatItem { item: Some(item) })
+                                                })
                                             })
                                         })
                                         .map(PopupListItem::from)
@@ -179,6 +276,7 @@ impl<'a> System<'a> for GoalResolutionSystem {
                                 }
                             }
                         }
+                        AIGoalStatus::Finished
                     }
                     AIGoal::Build {
                         x,
@@ -314,6 +412,7 @@ impl<'a> System<'a> for GoalResolutionSystem {
                         } else {
                             println!("Entity trying to build in an unloaded tile!");
                         }
+                        AIGoalStatus::Finished
                     }
                     AIGoal::Craft {
                         recipe,
@@ -406,11 +505,27 @@ impl<'a> System<'a> for GoalResolutionSystem {
                         } else {
                             println!("Entity attempting to find recipe to craft without an input component!");
                         }
+                        AIGoalStatus::Finished
                     }
+                };
+                // }
+
+                println!("Goal stack size: {}", gol.goal_stack.len());
+                println!("Goal status is: {:?}", goal_status);
+
+                match goal_status {
+                    AIGoalStatus::HasChildGoals { mut goals } => {
+                        gol.goal_stack.append(&mut goals);
+                    }
+                    AIGoalStatus::Finished | AIGoalStatus::Canceled => {
+                        gol.goal_stack.pop().unwrap();
+                    }
+                    AIGoalStatus::Continuing => (),
                 }
+
+                //Assume goal is resolved for now
+                // gol.current_goal = None;
             }
-            //Assume goal is resolved for now
-            gol.current_goal = None;
         }
     }
 }

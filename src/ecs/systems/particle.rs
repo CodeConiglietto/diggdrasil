@@ -33,7 +33,6 @@ impl<'a> System<'a> for ParticleSystem {
 
                 let delete = match pac.particle_type {
                     ParticleType::Finished => true,
-
                     _ => {
                         if let Some(layer) = usize::try_from(y - player_y + MAP_Y_SIZE as i32 / 2)
                             .ok()

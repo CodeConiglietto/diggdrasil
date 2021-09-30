@@ -29,6 +29,13 @@ impl EquipmentBuilder {
                     sprite_builder: SpriteBuilder::Spear,
                     symbol_builder: Some(SymbolBuilder::Spear),
                 })
+                .with(AttackComponent {
+                    available_attacks: vec![Attack {
+                        name: String::from("thrust"),
+                        attack_type: AttackType::Thrust,
+                        attack_dice: DiceRoll::new_from_string("1d6"),
+                    }],
+                })
                 .with(NameComponent {
                     name: format!("{} spear", head_material.get_name()),
                 })
@@ -41,6 +48,13 @@ impl EquipmentBuilder {
                     sprite_builder: SpriteBuilder::Pick,
                     symbol_builder: Some(SymbolBuilder::Pick),
                 })
+                .with(AttackComponent {
+                    available_attacks: vec![Attack {
+                        name: String::from("swing"),
+                        attack_type: AttackType::Swing,
+                        attack_dice: DiceRoll::new_from_string("1d4"),
+                    }],
+                })
                 .with(NameComponent {
                     name: format!("{} pick", head_material.get_name()),
                 })
@@ -52,6 +66,13 @@ impl EquipmentBuilder {
                     seed: thread_rng().gen::<usize>(),
                     sprite_builder: SpriteBuilder::Axe,
                     symbol_builder: Some(SymbolBuilder::Axe),
+                })
+                .with(AttackComponent {
+                    available_attacks: vec![Attack {
+                        name: String::from("swing"),
+                        attack_type: AttackType::Swing,
+                        attack_dice: DiceRoll::new_from_string("1d6"),
+                    }],
                 })
                 .with(NameComponent {
                     name: format!("{} axe", head_material.get_name()),

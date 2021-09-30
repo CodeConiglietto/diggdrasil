@@ -7,5 +7,5 @@ use crate::prelude::*;
 #[storage(VecStorage)]
 pub struct AIGoalComponent {
     #[serde(skip)]
-    pub current_goal: Option<AIGoal>,
+    pub goal_stack: Vec<AIGoal>,
 }

@@ -1,4 +1,4 @@
-use specs::{Builder, Entities, Join, LazyUpdate, System, Read, ReadStorage};
+use specs::{Builder, Entities, Join, LazyUpdate, Read, ReadStorage, System};
 
 use crate::prelude::*;
 
@@ -16,15 +16,11 @@ impl<'a> System<'a> for ParticleEmitterSystem {
         let (eids, lup, pos, pec) = data;
 
         for (pos, pec) in (&pos, &pec).join() {
-            let PositionComponent{x, y} = pos;
+            let PositionComponent { x, y } = pos;
 
             lup.create_entity(&eids)
                 .with(ParticleComponent {
-                    position: (
-                        *x,
-                        *y, 
-                        1,
-                    ),
+                    position: (*x, *y, 1),
                     particle_type: pec.particle_type,
                 })
                 .build();

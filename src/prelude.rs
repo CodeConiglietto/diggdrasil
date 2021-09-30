@@ -5,7 +5,8 @@ pub use crate::{
     data::{
         ai::{
             ai_action::AIAction,
-            ai_goal::AIGoal
+            ai_goal::AIGoal,
+            ai_goal_status::AIGoalStatus,
         },
         assets::{
             sprite::Sprite,
@@ -27,12 +28,14 @@ pub use crate::{
             particle_type::ParticleType,
         },
         equipment::{
+            attack::Attack,
             attack_type::AttackType,
         },
         geometry::{
             axis::Axis,
             direction::Direction,
             directions::Directions,
+            itrig::IWave,
             mirror::Mirror,
             rotation::Rotation,
             rotation_direction::RotationDirection,
