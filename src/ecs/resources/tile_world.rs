@@ -200,7 +200,6 @@ impl TileWorldResource {
             )
             .map(|path| {
                 let mut path: Vec<_> = path
-                    .skip(1)
                     .map(|(loaded_x, loaded_y)| {
                         (
                             loaded_x as i32 + loaded_offset_x,
