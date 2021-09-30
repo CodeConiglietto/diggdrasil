@@ -9,7 +9,8 @@ pub struct InputData<'a> {
 
     //Resources
     pub keyboard: ReadExpect<'a, KeyboardResource>,
-    pub tile_world: ReadExpect<'a, TileWorldResource>,
+    pub mouse: ReadExpect<'a, MouseResource>,
+    pub tile_world: WriteExpect<'a, TileWorldResource>,
 
     //Read components
     pub butcherable: ReadStorage<'a, ButcherableComponent>,

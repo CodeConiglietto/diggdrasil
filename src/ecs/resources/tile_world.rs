@@ -183,7 +183,10 @@ impl TileWorldResource {
             .a_star_simple(
                 (start_loaded_x as usize, start_loaded_y as usize),
                 (end_loaded_x as usize, end_loaded_y as usize),
-                |loaded_x, loaded_y| {
+                |(prev_loaded_x, prev_loaded_y), (loaded_x, loaded_y)| {
+                    let diff_x = loaded_x as i32 - prev_loaded_x as i32;
+                    let diff_y = loaded_y as i32 - prev_loaded_y as i32;
+
                     let (buffer_x, buffer_y) = (loaded_x / CHUNK_SIZE, loaded_y / CHUNK_SIZE);
                     let (local_x, local_y) = (loaded_x % CHUNK_SIZE, loaded_y % CHUNK_SIZE);
 
@@ -192,7 +195,7 @@ impl TileWorldResource {
                         .tile_type
                         .collides()
                         .not()
-                        .then(|| 1)
+                        .then(|| 1 + diff_x.abs() as u32 + diff_y.abs() as u32)
                 },
             )
             .map(|path| {

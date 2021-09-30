@@ -14,8 +14,9 @@ impl<'a> System<'a> for InputResolutionSystem {
         let eids = data.entities;
 
         //Resources
-        let twld = data.tile_world;
+        let mut twld = data.tile_world;
         let kb = data.keyboard;
+        let ms = data.mouse;
 
         //Readable components
         let pos = data.position;
@@ -223,6 +224,23 @@ impl<'a> System<'a> for InputResolutionSystem {
                         _ => (),
                     }
                 }
+            }
+
+            let left = pos.x - MAP_X_SIZE as i32 / 2;
+            let top = pos.y - MAP_Y_SIZE as i32 / 2;
+
+            let (mouse_x, mouse_y) = ms.position;
+            let (char_mouse_x, char_mouse_y) = (
+                (mouse_x / (RENDER_SCALE * 8.0)).floor() as i32,
+                (mouse_y / (RENDER_SCALE * 8.0)).floor() as i32,
+            );
+
+            if (0..MAP_X_SIZE as i32).contains(&char_mouse_x)
+                && (0..MAP_Y_SIZE as i32).contains(&char_mouse_y)
+            {
+                let (tile_mouse_x, tile_mouse_y) = (char_mouse_x + left, char_mouse_y + top);
+
+                inc.path = twld.pathfind((pos.x, pos.y), (tile_mouse_x, tile_mouse_y));
             }
         }
     }

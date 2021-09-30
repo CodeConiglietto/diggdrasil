@@ -5,4 +5,5 @@ use specs::{Component, VecStorage};
 #[storage(VecStorage)]
 pub struct InputComponent {
     pub popup: Option<Popup>,
+    pub path: Option<Vec<(i32, i32)>>,
 }

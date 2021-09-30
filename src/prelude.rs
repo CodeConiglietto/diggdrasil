@@ -95,6 +95,7 @@ pub use crate::{
             gen_package::GenPackageResource,
             id_generator::IdGeneratorResource,
             keyboard::KeyboardResource,
+            mouse::MouseResource,
             particle_map::ParticleMapResource,
             pending_load::PendingLoadResource,
             save_marker_allocator::SaveMarkerAllocatorResource,
