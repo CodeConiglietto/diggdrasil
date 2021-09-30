@@ -9,6 +9,7 @@ pub enum Recipe {
     Spear,
     Pick,
     Axe,
+    Knife,
 }
 
 impl Recipe {
@@ -18,6 +19,7 @@ impl Recipe {
             Self::Spear => "spear",
             Self::Pick => "pick",
             Self::Axe => "axe",
+            Self::Knife => "knife",
         }
     }
 
@@ -124,6 +126,30 @@ impl Recipe {
                     },
                 },
             ],
+            Self::Knife => &[
+                RecipeIngredient {
+                    part_name: "blade",
+                    requirement: RecipeRequirement::And {
+                        a: &RecipeRequirement::Material {
+                            material: Material::Stone,
+                        },
+                        b: &RecipeRequirement::Shape {
+                            shape: MaterialShape::Rock,
+                        },
+                    },
+                },
+                RecipeIngredient {
+                    part_name: "handle",
+                    requirement: RecipeRequirement::And {
+                        a: &RecipeRequirement::Material {
+                            material: Material::Wood,
+                        },
+                        b: &RecipeRequirement::Shape {
+                            shape: MaterialShape::Stick,
+                        },
+                    },
+                },
+            ],
         }
     }
 
@@ -184,6 +210,11 @@ impl Recipe {
             .build(lazy, entities),
             Self::Axe => EquipmentBuilder::Axe {
                 head_material: Material::Stone,
+                handle_material: Material::Wood,
+            }
+            .build(lazy, entities),
+            Self::Knife => EquipmentBuilder::Knife {
+                blade_material: Material::Stone,
                 handle_material: Material::Wood,
             }
             .build(lazy, entities),

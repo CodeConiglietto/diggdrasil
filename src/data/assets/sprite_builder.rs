@@ -28,6 +28,7 @@ pub enum SpriteBuilder {
     Humanoid {
         race: Race,
     },
+    Grass,
     Tree,
     //TODO: Make single tile sprites into something more generic
     Stick,
@@ -39,6 +40,8 @@ pub enum SpriteBuilder {
     Spear,
     Pick,
     Axe,
+    Knife,
+    Deer,
 }
 
 impl SpriteBuilder {
@@ -227,6 +230,11 @@ impl SpriteBuilder {
                         }]
                     }]
                 ],
+            },
+            Self::Grass => Sprite {
+                origin_x: 0,
+                origin_y: 0,
+                contents: array![[SymbolBuilder::Grass.get_symbol(seed)]],
             },
             Self::Tree => Sprite {
                 origin_x: 2,
@@ -456,42 +464,6 @@ impl SpriteBuilder {
                         Symbol::empty(),
                         Symbol::empty()
                     ],
-                    // [Symbol {
-                    //     draw_chars: vec![GgBunnyChar {
-                    //         index: 0x02A,
-                    //         foreground: Color::new(0.0, 1.0, 0.0, 1.0),
-                    //         background: None,
-                    //         rotation: CharRotation::None,
-                    //         mirror: CharMirror::None,
-                    //     }]
-                    // }],
-                    // [Symbol {
-                    //     draw_chars: vec![GgBunnyChar {
-                    //         index: 0x07C,
-                    //         foreground: Color::new(0.5, 0.5, 0.0, 1.0),
-                    //         background: None,
-                    //         rotation: CharRotation::None,
-                    //         mirror: CharMirror::None,
-                    //     }]
-                    // }],
-                    // [Symbol {
-                    //     draw_chars: vec![GgBunnyChar {
-                    //         index: 0x07C,
-                    //         foreground: Color::new(0.5, 0.5, 0.0, 1.0),
-                    //         background: None,
-                    //         rotation: CharRotation::None,
-                    //         mirror: CharMirror::None,
-                    //     }]
-                    // }],
-                    // [Symbol {
-                    //     draw_chars: vec![GgBunnyChar {
-                    //         index: 0x07C,
-                    //         foreground: Color::new(0.5, 0.5, 0.0, 1.0),
-                    //         background: None,
-                    //         rotation: CharRotation::None,
-                    //         mirror: CharMirror::None,
-                    //     }]
-                    // }]
                 ],
             },
             Self::Stick => Sprite {
@@ -538,6 +510,16 @@ impl SpriteBuilder {
                 origin_x: 0,
                 origin_y: 0,
                 contents: array![[SymbolBuilder::Axe.get_symbol(seed)]],
+            },
+            Self::Knife => Sprite {
+                origin_x: 0,
+                origin_y: 0,
+                contents: array![[SymbolBuilder::Knife.get_symbol(seed)]],
+            },
+            Self::Deer => Sprite {
+                origin_x: 0,
+                origin_y: 0,
+                contents: array![[SymbolBuilder::Deer.get_symbol(seed)]],
             },
         }
     }

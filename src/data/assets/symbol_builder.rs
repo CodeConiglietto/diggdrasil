@@ -28,12 +28,15 @@ pub enum SymbolBuilder {
     Stick,
     Log,
     Stone,
+    Grass,
     BerryBush,
     Berry,
     CampFire,
     Spear,
     Pick,
     Axe,
+    Knife,
+    Deer,
 }
 
 impl SymbolBuilder {
@@ -140,6 +143,31 @@ impl SymbolBuilder {
                     mirror: CharMirror::None,
                 }],
             },
+            Self::Grass => {
+                let x_mirror = if (seed / 4) % 2 == 0 {
+                    CharMirror::None
+                } else {
+                    CharMirror::MirrorX
+                };
+
+                //TODO: make this a lazy static
+                let variations = [
+                    GgBunnyChar {
+                        index: 0x112,
+                        foreground: Color::new(0.0, 0.75, 0.0, 1.0),
+                        background: None,
+                        rotation: CharRotation::Rotation180,
+                        mirror: x_mirror,
+                    },
+                    //TODO: Add a million more of these
+                ];
+
+                Symbol {
+                    draw_chars: vec![
+                        variations[(seed / 8) % variations.len()],
+                    ],
+                }
+            },
             Self::BerryBush => {
                 let x_mirror = if (seed / 4) % 2 == 0 {
                     CharMirror::None
@@ -159,14 +187,14 @@ impl SymbolBuilder {
                         foreground: Color::new(0.5, 0.5, 0.0, 1.0),
                         background: None,
                         rotation: CharRotation::Rotation90,
-                        mirror: CharMirror::None,
+                        mirror: x_mirror,
                     },
                     GgBunnyChar {
                         index: 0x24A,
                         foreground: Color::new(0.5, 0.5, 0.0, 1.0),
                         background: None,
                         rotation: CharRotation::None,
-                        mirror: CharMirror::None,
+                        mirror: x_mirror,
                     },
                     GgBunnyChar {
                         index: 0x25B,
@@ -215,7 +243,7 @@ impl SymbolBuilder {
 
                 Symbol {
                     draw_chars: vec![
-                        stem_variations[seed % stem_variations.len()],
+                        stem_variations[(seed / 8) % stem_variations.len()],
                         GgBunnyChar {
                             index: 0x311,
                             foreground: Color::new(0.0, 0.75, 0.0, 1.0),
@@ -312,6 +340,60 @@ impl SymbolBuilder {
                         background: None,
                         rotation: CharRotation::Rotation270,
                         mirror: CharMirror::None,
+                    },
+                ],
+            },
+            Self::Knife => Symbol {
+                draw_chars: vec![
+                    GgBunnyChar {
+                        index: 0x02D,
+                        foreground: Color::new(0.5, 0.5, 0.0, 1.0),
+                        background: None,
+                        rotation: CharRotation::None,
+                        mirror: CharMirror::None,
+                    },
+                    GgBunnyChar {
+                        index: 0x32F,
+                        foreground: Color::new(0.5, 0.5, 0.5, 1.0),
+                        background: None,
+                        rotation: CharRotation::None,
+                        mirror: CharMirror::None,
+                    },
+                ],
+            },
+            Self::Deer => Symbol {
+                draw_chars: vec![
+                    //Head
+                    GgBunnyChar {
+                        index: 0x2C9,
+                        foreground: Color::new(0.75, 0.5, 0.0, 1.0),
+                        background: None,
+                        rotation: CharRotation::Rotation180,
+                        mirror: CharMirror::None,
+                    },
+                    //Belly
+                    GgBunnyChar {
+                        index: 0x32F,
+                        foreground: Color::new(0.75, 0.5, 0.5, 1.0),
+                        background: None,
+                        rotation: CharRotation::Rotation180,
+                        mirror: CharMirror::None,
+                    },
+                    //Tail
+                    GgBunnyChar {
+                        index: 0x381,
+                        foreground: Color::new(0.75, 0.75, 0.75, 1.0),
+                        background: None,
+                        rotation: CharRotation::Rotation270,
+                        mirror: CharMirror::None,
+                    },
+                    //Legs
+                    GgBunnyChar {
+                        index: 0x1E0,
+                        foreground: Color::new(0.75, 0.5, 0.0, 1.0),
+                        background: None,
+                        rotation: CharRotation::None,
+                        mirror: CharMirror::MirrorX,
                     },
                 ],
             },

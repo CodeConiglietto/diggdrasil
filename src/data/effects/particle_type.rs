@@ -20,7 +20,7 @@ pub enum ParticleType {
     // Blood { direction: Direction },
     // Splinter { direction: Direction },
     // Debris { direction: Direction },
-    Smoke { lifetime: usize },
+    Smoke { color_value: f32, lifetime: usize },
     Thrust { drawn: bool, direction_from_player: Direction }, 
     Swing { drawn: bool, direction_from_player: Direction, rotation_direction: RotationDirection },
 }
@@ -100,11 +100,12 @@ impl ParticleType {
                     *self
                 }
             }
-            Self::Smoke { lifetime } => {
+            Self::Smoke { color_value, lifetime } => {
                 if z == MAX_PARTICLE_HEIGHT || *lifetime >= 23 {
                     ParticleType::Finished
                 } else {
                     ParticleType::Smoke {
+                        color_value: color_value + thread_rng().gen_range(0.0..0.1) - 0.05,
                         lifetime: lifetime + 1,
                     }
                 }
@@ -169,7 +170,7 @@ impl ParticleType {
                     CharMirror::MirrorX
                 },
             },
-            Self::Smoke { lifetime } => {
+            Self::Smoke { color_value, lifetime } => {
                 let index = if *lifetime < 16 {
                     0x390 + lifetime
                 } else {
@@ -178,7 +179,7 @@ impl ParticleType {
 
                 GgBunnyChar {
                     index,
-                    foreground: Color::new(0.5, 0.5, 0.5, 1.0),
+                    foreground: Color::new(*color_value, *color_value, *color_value, 1.0),
                     background: None,
                     rotation: CharRotation::None,
                     mirror: CharMirror::None,

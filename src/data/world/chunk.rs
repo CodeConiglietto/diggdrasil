@@ -83,11 +83,12 @@ impl Chunk {
 
         for local_pos in vegetation_local_positions {
             self.spawn_entity(
-                match thread_rng().gen_range(0..=3) {
+                match thread_rng().gen_range(0..=4) {
                     0 => ItemBuilder::Stick.build(lazy, entities),
                     1 => ItemBuilder::Log.build(lazy, entities),
-                    2 => VegetationBuilder::BerryBush.build(lazy, entities),
-                    3 => VegetationBuilder::Tree.build(lazy, entities),
+                    2 => VegetationBuilder::Grass.build(lazy, entities),
+                    3 => VegetationBuilder::BerryBush.build(lazy, entities),
+                    4 => VegetationBuilder::Tree.build(lazy, entities),
                     _ => unreachable!(),
                 },
                 ((chunk_x, chunk_y), local_pos),
@@ -98,6 +99,11 @@ impl Chunk {
         for _ in 0..16 {
             self.spawn_somewhere_free(
                 || ItemBuilder::Stone.build(lazy, entities),
+                (chunk_x, chunk_y),
+                &mut world_data.position,
+            );
+            self.spawn_somewhere_free(
+                || CreatureBuilder::Deer.build(lazy, entities),
                 (chunk_x, chunk_y),
                 &mut world_data.position,
             );
