@@ -1,3 +1,5 @@
+use std::ops::Not;
+
 use specs::{Entity, WriteStorage};
 
 use crate::prelude::*;
@@ -185,13 +187,12 @@ impl TileWorldResource {
                     let (buffer_x, buffer_y) = (loaded_x / CHUNK_SIZE, loaded_y / CHUNK_SIZE);
                     let (local_x, local_y) = (loaded_x % CHUNK_SIZE, loaded_y % CHUNK_SIZE);
 
-                    match buffer[buffer_idx(buffer_x, buffer_y)].tiles[[local_x, local_y]]
+                    buffer[buffer_idx(buffer_x, buffer_y)].tiles[[local_x, local_y]]
                         .tile
                         .tile_type
-                    {
-                        TileType::Ground => Some(1),
-                        _ => None,
-                    }
+                        .collides()
+                        .not()
+                        .then(|| 1)
                 },
             )
             .map(|path| {
