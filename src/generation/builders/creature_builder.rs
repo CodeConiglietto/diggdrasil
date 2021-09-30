@@ -37,7 +37,12 @@ impl CreatureBuilder {
                         goal_stack: Vec::new(),
                     })
                     .with(HealthComponent {
-                        hit_particle: None, //TODO: Make this blood
+                        hit_particle:
+                            Some(ParticleType::Blood{
+                                x_vel: thread_rng().gen_range(-1..=1), 
+                                y_vel: thread_rng().gen_range(-1..=1), 
+                                z_vel: 1
+                            }),
                         turn_damage: 0,
                         value: 100,
                         max_value: 100,
@@ -81,7 +86,12 @@ impl CreatureBuilder {
                         goal_stack: Vec::new(),
                     })
                     .with(HealthComponent {
-                        hit_particle: None, //TODO: Make this blood
+                        hit_particle: 
+                            Some(ParticleType::Blood{ 
+                                x_vel: thread_rng().gen_range(-1..=1), 
+                                y_vel: thread_rng().gen_range(-1..=1), 
+                                z_vel: 1
+                            }),
                         turn_damage: 0,
                         value: 100,
                         max_value: 100,

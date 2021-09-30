@@ -17,7 +17,7 @@ pub enum ParticleType {
     RainSplash { lifetime: usize },
     // Snow { y_cutoff: usize },
     Leaf,
-    // Blood { direction: Direction },
+    Blood { x_vel: i32, y_vel: i32, z_vel: i32 },
     // Splinter { direction: Direction },
     // Debris { direction: Direction },
     Smoke { color_value: f32, lifetime: usize },
@@ -52,6 +52,7 @@ impl ParticleType {
                     0
                 },
             ),
+            Self::Blood { x_vel, y_vel, z_vel } => (x + x_vel, y + y_vel, z + z_vel),
             Self::Thrust { .. } => (x, y, z),
             Self::Swing { .. } => (x, y, z),
             _ => todo!(),
@@ -107,6 +108,36 @@ impl ParticleType {
                     ParticleType::Smoke {
                         color_value: color_value + thread_rng().gen_range(0.0..0.1) - 0.05,
                         lifetime: lifetime + 1,
+                    }
+                }
+            }
+            Self::Blood { x_vel, y_vel, z_vel } => {
+                if z == 1 {
+                    ParticleType::Finished
+                } else {
+                    let x_vel = 
+                        if *z_vel == -1 && thread_rng().gen::<bool>() {
+                            0
+                        } else {
+                            *x_vel
+                        };
+                    let y_vel = 
+                        if *z_vel == -1 && thread_rng().gen::<bool>() {
+                            0
+                        } else {
+                            *y_vel
+                        };
+                    let z_vel = 
+                        if *z_vel >= 0 && thread_rng().gen::<bool>() {
+                            *z_vel - 1
+                        } else {
+                            *z_vel
+                        };
+
+                    ParticleType::Blood {
+                        x_vel,
+                        y_vel,
+                        z_vel,
                     }
                 }
             }
@@ -185,6 +216,14 @@ impl ParticleType {
                     mirror: CharMirror::None,
                 }
             },
+            Self::Blood { .. } =>
+                GgBunnyChar {
+                    index: 0x391,
+                    foreground: Color::new(0.5, 0.0, 0.0, 1.0),
+                    background: None,
+                    rotation: CharRotation::None,
+                    mirror: CharMirror::None,
+                },
             Self::Thrust { direction_from_player, .. } => {
                 let (index, rotation) = match direction_from_player {
                     Direction::None => (0x00F, Rotation::None),
