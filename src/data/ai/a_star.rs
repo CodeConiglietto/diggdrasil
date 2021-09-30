@@ -176,7 +176,7 @@ impl AStar {
         travel_fn: F,
     ) -> Option<AStarPath>
     where
-        F: Fn(usize, usize) -> Option<u32>,
+        F: Fn((usize, usize), (usize, usize)) -> Option<u32>,
     {
         let (width, height) = self.visited.dim();
 
@@ -192,6 +192,8 @@ impl AStar {
         );
 
         let successors = |x, y| {
+            let travel_fn = &travel_fn;
+
             (-1..=1)
                 .flat_map(|dy| (-1..=1).map(move |dx| (dx, dy)))
                 .filter_map(move |(dy, dx)| {
@@ -201,8 +203,8 @@ impl AStar {
                     xx.and_then(|xx| yy.map(|yy| (xx, yy)))
                 })
                 .filter(|(xx, yy)| *xx < width && *yy < height)
-                .filter_map(|(xx, yy)| {
-                    travel_fn(xx, yy).map(|distance| FrontierNode {
+                .filter_map(move |(xx, yy)| {
+                    travel_fn((x, y), (xx, yy)).map(|distance| FrontierNode {
                         pos: (xx, yy),
                         distance,
                         heuristic: chebyshev((xx, yy), goal),
@@ -271,7 +273,7 @@ mod tests {
         let mut a_star = AStar::new(height, width);
 
         a_star
-            .a_star_simple(start, goal, |x, y| {
+            .a_star_simple(start, goal, |_, (x, y)| {
                 map.get((x, y)).and_then(|passable| passable.then(|| 1))
             })
             .map(|path| {

@@ -1,11 +1,18 @@
 use std::fs;
 
 use bunnyfont::ggez::{GgBunnyFont, GgBunnyFontBatch};
+use bunnyfont::{
+    char_transforms::{CharMirror, CharRotation},
+    ggez::GgBunnyChar,
+};
 use ggez::{
     conf::WindowMode,
     event::{self, KeyCode, KeyMods},
-    graphics::{self, DrawParam, FilterMode, Image},
-    input::keyboard,
+    graphics::{self, Color, DrawParam, FilterMode, Image},
+    input::{
+        keyboard,
+        mouse::{self, MouseButton},
+    },
     Context, GameResult,
 };
 use glam::*;
@@ -110,6 +117,12 @@ impl MainState {
             modifiers: KeyMods::default(),
         };
 
+        let mouse = MouseResource {
+            position: (0.0, 0.0),
+            right_button_pressed: false,
+            left_button_pressed: false,
+        };
+
         let gen_package = GenPackageResource {
             elevation_noise: Perlin::new().set_seed(thread_rng().gen()),
             fertility_noise: Perlin::new().set_seed(thread_rng().gen()),
@@ -138,6 +151,7 @@ impl MainState {
         //Assign resources to ecs world
         ecs_world.insert(gen_package);
         ecs_world.insert(keyboard);
+        ecs_world.insert(mouse);
         ecs_world.insert(tile_world);
         ecs_world.insert(particle_map);
         ecs_world.insert(IdGeneratorResource::new());
@@ -262,13 +276,21 @@ impl event::EventHandler<ggez::GameError> for MainState {
         //     .write_resource::<KeyboardResource>()
         //     .last_pressed_key = final_keypress
 
-        self.ecs_world
-            .write_resource::<KeyboardResource>()
-            .last_pressed_key = keyboard::pressed_keys(ctx).iter().next().copied();
+        {
+            let mut keyboard = self.ecs_world.write_resource::<KeyboardResource>();
 
-        self.ecs_world
-            .write_resource::<KeyboardResource>()
-            .modifiers = keyboard::active_mods(ctx);
+            keyboard.last_pressed_key = keyboard::pressed_keys(ctx).iter().next().copied();
+            keyboard.modifiers = keyboard::active_mods(ctx);
+        }
+
+        {
+            let mut mouse = self.ecs_world.write_resource::<MouseResource>();
+
+            let mouse_pos = mouse::position(ctx);
+            mouse.position = (mouse_pos.x, mouse_pos.y);
+            mouse.left_button_pressed = mouse::button_pressed(ctx, MouseButton::Left);
+            mouse.right_button_pressed = mouse::button_pressed(ctx, MouseButton::Right);
+        }
 
         self.ecs_world
             .write_resource::<ParticleMapResource>()
@@ -383,6 +405,23 @@ impl event::EventHandler<ggez::GameError> for MainState {
                         (x - left, y - z - top),
                         RENDER_SCALE,
                     );
+                }
+
+                if let Some(path) = &input.path {
+                    for (step_x, step_y) in path {
+                        GgBunnyChar {
+                            index: b'.' as usize,
+                            foreground: Color::new(0.75, 0.75, 0.0, 1.0),
+                            background: None,
+                            rotation: CharRotation::None,
+                            mirror: CharMirror::None,
+                        }
+                        .draw_to_font_batch(
+                            &mut self.font_batch,
+                            (step_x - left, step_y - top),
+                            RENDER_SCALE,
+                        );
+                    }
                 }
             }
 
