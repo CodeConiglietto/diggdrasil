@@ -10,6 +10,7 @@ pub mod death;
 pub mod digestion;
 pub mod draw;
 pub mod edible;
+pub mod field_of_view;
 pub mod health;
 pub mod id;
 pub mod input;

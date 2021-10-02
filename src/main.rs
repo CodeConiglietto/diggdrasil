@@ -1,4 +1,4 @@
-use std::fs;
+use std::{convert::TryFrom, fs};
 
 use bunnyfont::ggez::{GgBunnyFont, GgBunnyFontBatch};
 use bunnyfont::{
@@ -20,8 +20,8 @@ use itertools::Itertools;
 use noise::{Perlin, Seedable};
 use rand::prelude::*;
 use specs::{
-    BitSet, Builder, Entities, Join, LazyUpdate, Read, RunNow, World as ECSWorld,
-    WorldExt as ECSWorldExt, WriteStorage,
+    BitSet, Entities, Join, LazyUpdate, Read, RunNow, World as ECSWorld, WorldExt as ECSWorldExt,
+    WriteStorage,
 };
 use std::{env, path::PathBuf, time::Duration};
 use tui::{
@@ -61,6 +61,7 @@ struct MainState {
     health_resolution_system: HealthResolutionSystem,
     particle_emitter_system: ParticleEmitterSystem,
     particle_system: ParticleSystem,
+    field_of_view_calculation_system: FieldOfViewCalculationSystem,
     world_maintenance_system: WorldMaintenanceSystem,
     save_load_system: SaveLoadSystem,
 
@@ -98,6 +99,7 @@ impl MainState {
         ecs_world.register::<DigestionComponent>();
         ecs_world.register::<DrawComponent>();
         ecs_world.register::<EdibleComponent>();
+        ecs_world.register::<FieldOfViewComponent>();
         ecs_world.register::<HealthComponent>();
         ecs_world.register::<IdComponent>();
         ecs_world.register::<InputComponent>();
@@ -208,6 +210,7 @@ impl MainState {
             health_resolution_system: HealthResolutionSystem,
             particle_emitter_system: ParticleEmitterSystem,
             particle_system: ParticleSystem,
+            field_of_view_calculation_system: FieldOfViewCalculationSystem,
             world_maintenance_system: WorldMaintenanceSystem {
                 save_buf: Vec::new(),
                 ids: Vec::new(),
@@ -246,7 +249,7 @@ impl event::EventHandler<ggez::GameError> for MainState {
         {
             let data: InputData = self.ecs_world.system_data();
             let mut viewport = self.ecs_world.write_resource::<ViewportResource>();
-            
+
             if let Some((_input, position)) = (&data.input, &data.position).join().next() {
                 viewport.camera_world_position = (position.x, position.y);
             }
@@ -303,6 +306,8 @@ impl event::EventHandler<ggez::GameError> for MainState {
         self.health_resolution_system.run_now(&self.ecs_world);
         self.particle_emitter_system.run_now(&self.ecs_world);
         self.particle_system.run_now(&self.ecs_world);
+        self.field_of_view_calculation_system
+            .run_now(&self.ecs_world);
 
         self.ecs_world.maintain();
 
@@ -324,9 +329,10 @@ impl event::EventHandler<ggez::GameError> for MainState {
         self.font_batch.clear();
 
         let data: RenderData = self.ecs_world.system_data();
-        if let Some((input, position, inventory, manipulator, digestion, health)) = (
+        if let Some((input, position, field_of_view, inventory, manipulator, digestion, health)) = (
             &data.input,
             &data.position,
+            (&data.field_of_view).maybe(),
             (&data.inventory).maybe(),
             (&data.manipulator).maybe(),
             (&data.digestion).maybe(),
@@ -345,48 +351,67 @@ impl event::EventHandler<ggez::GameError> for MainState {
                     let world_x = left + screen_x;
                     let world_y = top + screen_y;
 
-                    if let Some(tile) = data.tile_world.get((world_x, world_y)) {
-                        if self.symbolic_view {
-                            tile.tile
-                                .get_symbolbuilder()
-                                .get_symbol(tile.tile.seed)
-                                .draw_to_font_batch(
-                                    &mut self.font_batch,
-                                    (screen_x, screen_y),
-                                    RENDER_SCALE,
-                                );
-                        } else {
-                            tile.tile
-                                .get_spritebuilder()
-                                .get_sprite(tile.tile.seed)
-                                .draw_to_font_batch(
-                                    &mut self.font_batch,
-                                    (screen_x, screen_y),
-                                    RENDER_SCALE,
-                                );
-                        }
+                    let visible = if let Some(field_of_view) = field_of_view {
+                        let radius = field_of_view.shadowcast.radius() as i32;
 
-                        for entity in tile.entities.iter() {
-                            let dc = data.draw.get(*entity).unwrap();
+                        let fov_x = usize::try_from(world_x + radius - position.x).ok();
+                        let fov_y = usize::try_from(world_y + radius - position.y).ok();
 
+                        fov_x
+                            .and_then(|fov_x| {
+                                fov_y.and_then(|fov_y| {
+                                    field_of_view.shadowcast.fov().get((fov_x, fov_y)).copied()
+                                })
+                            })
+                            .unwrap_or(false)
+                    } else {
+                        true
+                    };
+
+                    if visible {
+                        if let Some(tile) = data.tile_world.get((world_x, world_y)) {
                             if self.symbolic_view {
-                                if let Some(sym_build) = &dc.symbol_builder {
-                                    sym_build
-                                        .get_symbol(entity.id() as usize)
+                                tile.tile
+                                    .get_symbolbuilder()
+                                    .get_symbol(tile.tile.seed)
+                                    .draw_to_font_batch(
+                                        &mut self.font_batch,
+                                        (screen_x, screen_y),
+                                        RENDER_SCALE,
+                                    );
+                            } else {
+                                tile.tile
+                                    .get_spritebuilder()
+                                    .get_sprite(tile.tile.seed)
+                                    .draw_to_font_batch(
+                                        &mut self.font_batch,
+                                        (screen_x, screen_y),
+                                        RENDER_SCALE,
+                                    );
+                            }
+
+                            for entity in tile.entities.iter() {
+                                let dc = data.draw.get(*entity).unwrap();
+
+                                if self.symbolic_view {
+                                    if let Some(sym_build) = &dc.symbol_builder {
+                                        sym_build
+                                            .get_symbol(entity.id() as usize)
+                                            .draw_to_font_batch(
+                                                &mut self.font_batch,
+                                                (screen_x, screen_y),
+                                                RENDER_SCALE,
+                                            );
+                                    }
+                                } else {
+                                    dc.sprite_builder
+                                        .get_sprite(entity.id() as usize)
                                         .draw_to_font_batch(
                                             &mut self.font_batch,
                                             (screen_x, screen_y),
                                             RENDER_SCALE,
                                         );
                                 }
-                            } else {
-                                dc.sprite_builder
-                                    .get_sprite(entity.id() as usize)
-                                    .draw_to_font_batch(
-                                        &mut self.font_batch,
-                                        (screen_x, screen_y),
-                                        RENDER_SCALE,
-                                    );
                             }
                         }
                     }

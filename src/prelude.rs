@@ -10,6 +10,10 @@ pub use crate::{
             a_star::AStar,
             diet::Diet,
             disposition::Disposition,
+            shadowcast::{
+                Shadowcast,
+                ShadowcastCallbacks
+            },
         },
         assets::{
             sprite::Sprite,
@@ -83,6 +87,7 @@ pub use crate::{
             digestion::DigestionComponent,
             draw::DrawComponent,
             edible::EdibleComponent,
+            field_of_view::FieldOfViewComponent,
             health::HealthComponent,
             id::IdComponent,
             input::InputComponent,
@@ -123,6 +128,7 @@ pub use crate::{
             collision_calculation::CollisionCalculationSystem,
             collision_resolution::CollisionResolutionSystem,
             digestion_resolution::DigestionResolutionSystem,
+            field_of_view_calculation::FieldOfViewCalculationSystem,
             goal_resolution::GoalResolutionSystem,
             health_resolution::HealthResolutionSystem,
             input_resolution::InputResolutionSystem,

@@ -16,6 +16,7 @@ pub struct RenderData<'a> {
     pub digestion: ReadStorage<'a, DigestionComponent>,
     pub draw: ReadStorage<'a, DrawComponent>,
     pub edible: ReadStorage<'a, EdibleComponent>,
+    pub field_of_view: ReadStorage<'a, FieldOfViewComponent>,
     pub health: ReadStorage<'a, HealthComponent>,
     pub intended_movement: ReadStorage<'a, IntendedMovementComponent>,
     pub inventory: ReadStorage<'a, InventoryComponent>,

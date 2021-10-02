@@ -40,9 +40,9 @@ impl CreatureBuilder {
                         diet: race.get_diet(),
                         disposition: race.get_disposition(),
                     })
+                    .with(FieldOfViewComponent::new(10))
                     .with(HealthComponent {
-                        hit_particle:
-                            Some(ParticleBuilder::Blood{spawn_height: 1}),
+                        hit_particle: Some(ParticleBuilder::Blood { spawn_height: 1 }),
                         turn_damage: 0,
                         value: 100,
                         max_value: 100,
@@ -90,8 +90,7 @@ impl CreatureBuilder {
                         disposition: Disposition::Timid,
                     })
                     .with(HealthComponent {
-                        hit_particle: 
-                            Some(ParticleBuilder::Blood{spawn_height: 1}),
+                        hit_particle: Some(ParticleBuilder::Blood { spawn_height: 1 }),
                         turn_damage: 0,
                         value: 10,
                         max_value: 10,

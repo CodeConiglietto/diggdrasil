@@ -2,6 +2,7 @@ pub mod action_resolution;
 pub mod collision_calculation;
 pub mod collision_resolution;
 pub mod digestion_resolution;
+pub mod field_of_view_calculation;
 pub mod goal_resolution;
 pub mod health_resolution;
 pub mod input_resolution;
