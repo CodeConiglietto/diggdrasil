@@ -1,5 +1,7 @@
 pub mod ai_action;
 pub mod ai_goal;
+pub mod ai_perception;
+pub mod ai_personality;
 pub mod attack;
 pub mod butcherable;
 pub mod collider;

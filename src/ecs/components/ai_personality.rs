@@ -5,9 +5,7 @@ use crate::prelude::*;
 
 #[derive(Clone, Component, Serialize, Deserialize)]
 #[storage(VecStorage)]
-pub struct HealthComponent {
-    pub hit_particle: Option<ParticleBuilder>,
-    pub turn_damage: u32,
-    pub value: u32,
-    pub max_value: u32,
+pub struct AIPersonalityComponent {
+    pub diet: Diet,
+    pub disposition: Disposition,
 }

@@ -6,3 +6,5 @@ pub mod particle_map;
 pub mod pending_load;
 pub mod save_marker_allocator;
 pub mod tile_world;
+pub mod viewport;
+pub mod weather;

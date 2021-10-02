@@ -45,7 +45,7 @@ impl VegetationBuilder {
                     })
                     .with(ColliderComponent)
                     .with(HealthComponent {
-                        hit_particle: Some(ParticleType::Leaf),
+                        hit_particle: Some(ParticleBuilder::Leaf{spawn_height: 4}),
                         turn_damage: 0,
                         value: 10,
                         max_value: 10,
@@ -70,7 +70,7 @@ impl VegetationBuilder {
                     })
                     .with(ColliderComponent)
                     .with(HealthComponent {
-                        hit_particle: Some(ParticleType::Leaf),
+                        hit_particle: Some(ParticleBuilder::Leaf{spawn_height: 1}),
                         turn_damage: 0,
                         value: 10,
                         max_value: 10,

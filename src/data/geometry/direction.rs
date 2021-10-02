@@ -101,3 +101,9 @@ impl Direction {
         x.abs() != y.abs()
     }
 }
+
+impl Default for Direction {
+    fn default() -> Direction {
+        Direction::None
+    }
+}

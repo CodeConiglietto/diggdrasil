@@ -155,6 +155,7 @@ impl TileWorldResource {
         buffer_idx(buffer_x, buffer_y)
     }
 
+    ///Paths are returned backwards and should be treated as a stack
     pub fn pathfind(&mut self, start: (i32, i32), end: (i32, i32)) -> Option<Vec<(i32, i32)>> {
         let (start_x, start_y) = start;
         let (end_x, end_y) = end;
@@ -199,7 +200,7 @@ impl TileWorldResource {
                 },
             )
             .map(|path| {
-                let mut path: Vec<_> = path
+                let path: Vec<_> = path
                     .map(|(loaded_x, loaded_y)| {
                         (
                             loaded_x as i32 + loaded_offset_x,
@@ -207,8 +208,6 @@ impl TileWorldResource {
                         )
                     })
                     .collect();
-
-                path.reverse();
 
                 path
             })

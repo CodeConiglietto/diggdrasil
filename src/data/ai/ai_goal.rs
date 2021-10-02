@@ -29,6 +29,9 @@ pub enum AIGoal {
         recipe: Option<Recipe>,
         ingredients: Vec<Entity>,
     },
+    TravelPath {
+        path: Vec<(i32, i32)>,
+    },
     // MoveToTile{x: i32, y: i32},
     // KillEntity { target: Entity },
     // AttackEntity { target: Entity },
@@ -103,6 +106,9 @@ impl AIGoal {
                 //TODO: have the string print the ingredients if they exist
 
                 format!("Craft a {}", recipe_name)
+            }
+            Self::TravelPath { path } => {
+                format!("Travel to {:?}", path.last().unwrap())
             }
         }
     }

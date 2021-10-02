@@ -8,6 +8,8 @@ pub use crate::{
             ai_goal::AIGoal,
             ai_goal_status::AIGoalStatus,
             a_star::AStar,
+            diet::Diet,
+            disposition::Disposition,
         },
         assets::{
             sprite::Sprite,
@@ -41,6 +43,9 @@ pub use crate::{
             rotation::Rotation,
             rotation_direction::RotationDirection,
         },
+        item::{
+            nutrient_type::NutrientType,
+        },
         ui::{
             directions_widget::DirectionsWidget,
             popup_state::PopupState,
@@ -61,12 +66,15 @@ pub use crate::{
             tile_variant::TileVariant,
             tile::Tile,
             wall_feature::WallFeature,
+            weather_status::WeatherStatus,
         },
     },
     ecs::{
         components::{
             ai_action::AIActionComponent,
             ai_goal::AIGoalComponent,
+            ai_perception::AIPerceptionComponent,
+            ai_personality::AIPersonalityComponent,
             attack::AttackComponent,
             butcherable::ButcherableComponent,
             collider::ColliderComponent,
@@ -100,6 +108,8 @@ pub use crate::{
             pending_load::PendingLoadResource,
             save_marker_allocator::SaveMarkerAllocatorResource,
             tile_world::TileWorldResource,
+            viewport::ViewportResource,
+            weather::WeatherResource,
         },
         system_data::{
             crafting_data::CraftingData,
@@ -120,6 +130,7 @@ pub use crate::{
             particle_emitter::ParticleEmitterSystem,
             particle::ParticleSystem,
             save_load::SaveLoadSystem,
+            weather::WeatherSystem,
             world_maintenance::WorldMaintenanceSystem,
         },
     },
@@ -129,6 +140,7 @@ pub use crate::{
             equipment_builder::EquipmentBuilder,
             furniture_builder::FurnitureBuilder,
             item_builder::ItemBuilder,
+            particle_builder::ParticleBuilder,
             vegetation_builder::VegetationBuilder,
         }
     },

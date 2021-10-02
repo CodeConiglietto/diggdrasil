@@ -5,6 +5,7 @@ pub mod creatures;
 pub mod effects;
 pub mod equipment;
 pub mod geometry;
+pub mod item;
 pub mod ui;
 pub mod util;
 pub mod world;

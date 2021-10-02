@@ -95,7 +95,7 @@ impl ParticleType {
                 }
             }
             Self::Leaf => {
-                if z == 1 {
+                if z == 0 {
                     ParticleType::Finished
                 } else {
                     *self
@@ -112,7 +112,7 @@ impl ParticleType {
                 }
             }
             Self::Blood { x_vel, y_vel, z_vel } => {
-                if z == 1 {
+                if z == 0 {
                     ParticleType::Finished
                 } else {
                     let x_vel = 
@@ -219,7 +219,7 @@ impl ParticleType {
             Self::Blood { .. } =>
                 GgBunnyChar {
                     index: 0x391,
-                    foreground: Color::new(0.5, 0.0, 0.0, 1.0),
+                    foreground: Color::new(1.0, 0.0, 0.0, 1.0),
                     background: None,
                     rotation: CharRotation::None,
                     mirror: CharMirror::None,
@@ -241,7 +241,7 @@ impl ParticleType {
                     index,
                     foreground: Color::new(0.75, 0.75, 0.75, 1.0),
                     background: None,
-                    rotation,
+                    rotation, 
                     mirror: CharMirror::None,
                 }
             }

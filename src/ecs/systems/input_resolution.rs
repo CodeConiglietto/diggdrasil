@@ -242,6 +242,12 @@ impl<'a> System<'a> for InputResolutionSystem {
 
                 inc.path = twld.pathfind((pos.x, pos.y), (tile_mouse_x, tile_mouse_y));
             }
+
+            if ms.left_button_pressed {
+                if let Some(path) = &inc.path {
+                    gol.goal_stack.push(AIGoal::TravelPath{ path: path.clone() });
+                }
+            }
         }
     }
 }

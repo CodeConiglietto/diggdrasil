@@ -50,6 +50,7 @@ struct MainState {
     ecs_world: ECSWorld,
 
     //Systems in the order which they are run
+    weather_system: WeatherSystem,
     input_resolution_system: InputResolutionSystem,
     goal_resolution_system: GoalResolutionSystem,
     action_resolution_system: ActionResolutionSystem,
@@ -87,6 +88,8 @@ impl MainState {
         let mut ecs_world = ECSWorld::new();
         ecs_world.register::<AIActionComponent>();
         ecs_world.register::<AIGoalComponent>();
+        ecs_world.register::<AIPerceptionComponent>();
+        ecs_world.register::<AIPersonalityComponent>();
         ecs_world.register::<AttackComponent>();
         ecs_world.register::<ButcherableComponent>();
         ecs_world.register::<ColliderComponent>();
@@ -157,6 +160,8 @@ impl MainState {
         ecs_world.insert(IdGeneratorResource::new());
         ecs_world.insert(SaveMarkerAllocatorResource::new());
         ecs_world.insert(PendingLoadResource::new());
+        ecs_world.insert(ViewportResource::new());
+        ecs_world.insert(WeatherResource::new());
 
         let (char_width, char_height) = (8, 8);
         let (ui_width, ui_height) = (
@@ -192,6 +197,7 @@ impl MainState {
             ecs_world,
 
             //Systems in the order which they are run
+            weather_system: WeatherSystem,
             input_resolution_system: InputResolutionSystem,
             goal_resolution_system: GoalResolutionSystem,
             action_resolution_system: ActionResolutionSystem,
@@ -236,31 +242,20 @@ impl event::EventHandler<ggez::GameError> for MainState {
             self.symbolic_view = false;
         }
 
+        //Write resources
         {
             let data: InputData = self.ecs_world.system_data();
+            let mut viewport = self.ecs_world.write_resource::<ViewportResource>();
+            
             if let Some((_input, position)) = (&data.input, &data.position).join().next() {
-                let left = position.x - MAP_X_SIZE as i32 / 2;
-                let right = left + MAP_X_SIZE as i32;
-                let top = position.y - MAP_Y_SIZE as i32 / 2;
-                let bottom = top + MAP_Y_SIZE as i32;
-
-                data.lazy
-                    .create_entity(&data.entities)
-                    .with(ParticleComponent {
-                        position: (
-                            thread_rng().gen_range(left..right) as i32,
-                            thread_rng().gen_range(top..bottom) as i32,
-                            thread_rng().gen_range(0..MAX_PARTICLE_HEIGHT),
-                        ),
-                        particle_type: ParticleType::Rain {
-                            initial_angle: Direction::Left,
-                        },
-                    })
-                    .build();
+                viewport.camera_world_position = (position.x, position.y);
             }
         }
 
-        //Write resources
+        {
+            let mut weather = self.ecs_world.write_resource::<WeatherResource>();
+            weather.current_weather = WeatherStatus::Raining;
+        }
 
         // //TODO: find proper system to prevent or slow keypresses
         // let last_keypress = self
@@ -297,6 +292,7 @@ impl event::EventHandler<ggez::GameError> for MainState {
             .clear_all();
 
         //Run systems in order
+        self.weather_system.run_now(&self.ecs_world);
         self.input_resolution_system.run_now(&self.ecs_world);
         self.goal_resolution_system.run_now(&self.ecs_world);
         self.action_resolution_system.run_now(&self.ecs_world);

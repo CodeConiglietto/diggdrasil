@@ -36,13 +36,13 @@ impl CreatureBuilder {
                     .with(AIGoalComponent {
                         goal_stack: Vec::new(),
                     })
+                    .with(AIPersonalityComponent {
+                        diet: race.get_diet(),
+                        disposition: race.get_disposition(),
+                    })
                     .with(HealthComponent {
                         hit_particle:
-                            Some(ParticleType::Blood{
-                                x_vel: thread_rng().gen_range(-1..=1), 
-                                y_vel: thread_rng().gen_range(-1..=1), 
-                                z_vel: 1
-                            }),
+                            Some(ParticleBuilder::Blood{spawn_height: 1}),
                         turn_damage: 0,
                         value: 100,
                         max_value: 100,
@@ -85,16 +85,16 @@ impl CreatureBuilder {
                     .with(AIGoalComponent {
                         goal_stack: Vec::new(),
                     })
+                    .with(AIPersonalityComponent {
+                        diet: Diet::Herbivorous,
+                        disposition: Disposition::Timid,
+                    })
                     .with(HealthComponent {
                         hit_particle: 
-                            Some(ParticleType::Blood{ 
-                                x_vel: thread_rng().gen_range(-1..=1), 
-                                y_vel: thread_rng().gen_range(-1..=1), 
-                                z_vel: 1
-                            }),
+                            Some(ParticleBuilder::Blood{spawn_height: 1}),
                         turn_damage: 0,
-                        value: 100,
-                        max_value: 100,
+                        value: 10,
+                        max_value: 10,
                     })
                     .with(DigestionComponent {
                         contents: stomach_contents,

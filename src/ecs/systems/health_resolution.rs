@@ -23,20 +23,12 @@ impl<'a> System<'a> for HealthResolutionSystem {
 
             for _ in 0..hpc.turn_damage {
                 if let Some(particle) = hpc.hit_particle {
-                    lup.create_entity(&eids)
-                        .with(ParticleComponent {
-                            position: (
-                                //TODO: make these values more sane
-                                x, // + thread_rng().gen_range(-1..=1) as i32,
-                                y, // + thread_rng().gen_range(-1..=1) as i32,
-                                4, //thread_rng().gen_range(1..5),
-                            ),
-                            particle_type: particle,
-                        })
-                        .build();
+                    particle.build(&lup, &eids, (x, y));
                 }
 
                 hpc.value -= 1;
+
+                println!("New health: {}", hpc.value);
 
                 if hpc.value == 0 {
                     for dec in dec.contained_entities.drain(..) {

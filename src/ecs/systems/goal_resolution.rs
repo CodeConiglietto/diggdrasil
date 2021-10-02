@@ -36,7 +36,7 @@ impl<'a> System<'a> for GoalResolutionSystem {
         )
             .join()
         {
-            if let Some(current_goal) = gol.goal_stack.last() {
+            if let Some(current_goal) = gol.goal_stack.last_mut() {
                 // if let Some(goal) = current_goal {
                 let goal_status = match current_goal {
                     // AIGoal::Wander => {},
@@ -182,6 +182,22 @@ impl<'a> System<'a> for GoalResolutionSystem {
                         }
 
                         AIGoalStatus::Finished
+                    }
+                    AIGoal::TravelPath { path } => {
+                        let position = (pos.x, pos.y);
+
+                        let next_step = path.pop();
+
+                        if let Some(next_step) = next_step {
+                            if next_step == position || pos_is_adjacent(next_step, position) {
+                                AIGoalStatus::HasChildGoals{goals: vec![AIGoal::MoveInDirection{direction: Direction::from_positions(next_step, position)}]}
+                            } else {
+                                println!("Entity attempting to travel along path it is not adjacent to! ({:?} -> {:?})", next_step, position);
+                                AIGoalStatus::Canceled
+                            }
+                        } else {
+                            AIGoalStatus::Finished
+                        }
                     }
                     //TODO: Add better error handling and move item requests to here
                     AIGoal::StowItem { item } => {
