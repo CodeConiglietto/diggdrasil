@@ -20,12 +20,28 @@ impl<'a> System<'a> for GoalResolutionSystem {
         WriteStorage<'a, AIGoalComponent>,
         WriteStorage<'a, AIActionComponent>,
         WriteStorage<'a, InputComponent>,
+        WriteStorage<'a, PathingComponent>,
     );
 
     fn run(&mut self, data: Self::SystemData) {
-        let (eids, crd, twld, atk, edb, pos, hpc, inv, man, nam, mut gol, mut act, mut inp) = data;
+        let (
+            eids,
+            crd,
+            twld,
+            atk,
+            edb,
+            pos,
+            hpc,
+            inv,
+            man,
+            nam,
+            mut gol,
+            mut act,
+            mut inp,
+            mut pth,
+        ) = data;
 
-        for (_eid, pos, inv, man, gol, act, inp) in (
+        for (_eid, pos, inv, man, gol, act, inp, pth) in (
             &eids,
             &pos,
             (&inv).maybe(),
@@ -33,6 +49,7 @@ impl<'a> System<'a> for GoalResolutionSystem {
             &mut gol,
             &mut act,
             (&mut inp).maybe(),
+            (&mut pth).maybe(),
         )
             .join()
         {
@@ -189,7 +206,11 @@ impl<'a> System<'a> for GoalResolutionSystem {
 
                         if let Some(next_step) = next_step {
                             if next_step == position || pos_is_adjacent(next_step, position) {
-                                AIGoalStatus::HasChildGoals{goals: vec![AIGoal::MoveInDirection{direction: Direction::from_positions(next_step, position)}]}
+                                AIGoalStatus::HasChildGoals {
+                                    goals: vec![AIGoal::MoveInDirection {
+                                        direction: Direction::from_positions(next_step, position),
+                                    }],
+                                }
                             } else {
                                 println!("Entity attempting to travel along path it is not adjacent to! ({:?} -> {:?})", next_step, position);
                                 AIGoalStatus::Canceled
@@ -198,18 +219,25 @@ impl<'a> System<'a> for GoalResolutionSystem {
                             AIGoalStatus::Finished
                         }
                     }
-                    AIGoal::TravelToPosition{ target_pos } => {
+                    AIGoal::TravelToPosition { target_pos } => {
                         let this_pos = (pos.x, pos.y);
 
                         if this_pos == *target_pos {
                             AIGoalStatus::Finished
                         } else {
-                            let path = twld.pathfind(this_pos, *target_pos);
+                            if let Some(pth) = pth {
+                                let path = pth.pathfind(&*twld, this_pos, *target_pos);
 
-                            if let Some(path) = path {
-                                AIGoalStatus::HasChildGoals{goals: vec![AIGoal::TravelPath{path}]}
+                                if let Some(path) = path {
+                                    AIGoalStatus::HasChildGoals {
+                                        goals: vec![AIGoal::TravelPath { path }],
+                                    }
+                                } else {
+                                    println!("Entity cannot path to {:?}", target_pos);
+                                    AIGoalStatus::Canceled
+                                }
                             } else {
-                                println!("Entity cannot path to {:?}", target_pos);
+                                println!("Entity tried to pathfind without knowing how to");
                                 AIGoalStatus::Canceled
                             }
                         }

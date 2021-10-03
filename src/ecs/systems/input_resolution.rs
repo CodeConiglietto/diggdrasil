@@ -14,7 +14,7 @@ impl<'a> System<'a> for InputResolutionSystem {
         let eids = data.entities;
 
         //Resources
-        let mut twld = data.tile_world;
+        let twld = data.tile_world;
         let kb = data.keyboard;
         let ms = data.mouse;
 
@@ -24,10 +24,13 @@ impl<'a> System<'a> for InputResolutionSystem {
 
         //Writable components
         let mut gol = data.ai_goal;
+        let mut pth = data.pathing;
         let mut inc = data.input;
         let mut inv = data.inventory;
 
-        for (eid, pos, inc, gol) in (&eids, &pos, &mut inc, &mut gol).join() {
+        for (eid, pos, inc, gol, pth) in
+            (&eids, &pos, &mut inc, &mut gol, (&mut pth).maybe()).join()
+        {
             debug!("Key pressed: {:?}", kb.last_pressed_key);
             //skip input if player already has goal that they are completing.
             //Add keypress to interrupt player goal (space?)
@@ -240,12 +243,15 @@ impl<'a> System<'a> for InputResolutionSystem {
             {
                 let (tile_mouse_x, tile_mouse_y) = (char_mouse_x + left, char_mouse_y + top);
 
-                inc.path = twld.pathfind((pos.x, pos.y), (tile_mouse_x, tile_mouse_y));
+                if let Some(pth) = pth {
+                    inc.path = pth.pathfind(&*twld, (pos.x, pos.y), (tile_mouse_x, tile_mouse_y));
+                }
             }
 
             if ms.left_button_pressed {
                 if let Some(path) = &inc.path {
-                    gol.goal_stack.push(AIGoal::TravelPath{ path: path.clone() });
+                    gol.goal_stack
+                        .push(AIGoal::TravelPath { path: path.clone() });
                 }
             }
         }

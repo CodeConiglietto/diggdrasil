@@ -99,6 +99,7 @@ pub use crate::{
             name::NameComponent,
             particle::ParticleComponent,
             particle_emitter::ParticleEmitterComponent,
+            pathing::PathingComponent,
             position::PositionComponent,
             save_marker::SaveMarkerComponent,
             to_save::ToSaveComponent,

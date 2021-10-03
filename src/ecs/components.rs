@@ -22,6 +22,7 @@ pub mod material;
 pub mod name;
 pub mod particle;
 pub mod particle_emitter;
+pub mod pathing;
 pub mod position;
 pub mod save_marker;
 pub mod to_save;

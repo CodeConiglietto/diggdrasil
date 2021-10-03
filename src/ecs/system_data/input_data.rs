@@ -10,7 +10,7 @@ pub struct InputData<'a> {
     //Resources
     pub keyboard: ReadExpect<'a, KeyboardResource>,
     pub mouse: ReadExpect<'a, MouseResource>,
-    pub tile_world: WriteExpect<'a, TileWorldResource>,
+    pub tile_world: ReadExpect<'a, TileWorldResource>,
 
     //Read components
     pub butcherable: ReadStorage<'a, ButcherableComponent>,
@@ -31,4 +31,5 @@ pub struct InputData<'a> {
     pub ai_goal: WriteStorage<'a, AIGoalComponent>,
     pub input: WriteStorage<'a, InputComponent>,
     pub inventory: WriteStorage<'a, InventoryComponent>,
+    pub pathing: WriteStorage<'a, PathingComponent>,
 }
