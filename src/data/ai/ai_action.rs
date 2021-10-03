@@ -29,6 +29,9 @@ pub enum AIAction {
     EatItemFromInventory {
         item: Entity,
     },
+    EatEntityFromGround {
+        entity: Entity,
+    },
     BuildAtLocation {
         x: i32,
         y: i32,

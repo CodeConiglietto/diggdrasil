@@ -7,6 +7,12 @@ pub enum AIGoal {
     MoveInDirection {
         direction: Direction,
     },
+    TravelPath {
+        path: Vec<(i32, i32)>,
+    },
+    TravelToPosition {
+        target_pos: (i32, i32),
+    },
     StowItem {
         item: Entity,
     },
@@ -29,9 +35,8 @@ pub enum AIGoal {
         recipe: Option<Recipe>,
         ingredients: Vec<Entity>,
     },
-    TravelPath {
-        path: Vec<(i32, i32)>,
-    },
+    FulfilHunger,
+    FleeDanger,
     // MoveToTile{x: i32, y: i32},
     // KillEntity { target: Entity },
     // AttackEntity { target: Entity },
@@ -107,9 +112,8 @@ impl AIGoal {
 
                 format!("Craft a {}", recipe_name)
             }
-            Self::TravelPath { path } => {
-                format!("Travel to {:?}", path.last().unwrap())
-            }
+            Self::FulfilHunger => String::from("Fulfil hunger"),
+            Self::FleeDanger => String::from("Flee from danger"),
         }
     }
 }

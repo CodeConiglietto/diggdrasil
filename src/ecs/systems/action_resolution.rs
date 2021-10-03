@@ -218,6 +218,27 @@ impl<'a> System<'a> for ActionResolutionSystem {
                         }
                         None
                     }
+                    AIAction::EatEntityFromGround { entity } => {
+                        if let Some(dig) = dig.get_mut(eid) {
+                            if let Some(this_pos) = pos.get(eid) {
+                                if let Some(entity_pos) = pos.get(entity) {
+                                    if pos_is_adjacent(this_pos.get_pos_tuple(), entity_pos.get_pos_tuple()) {
+                                        twld.despawn_entity(entity, &mut pos);
+                                        dig.insert(entity);
+                                    } else {
+                                        println!("Entity attempting to eat entity from ground that it cannot reach!");
+                                    }
+                                } else {
+                                    println!("Entity attempting to eat entity from ground that has no position component!");
+                                }
+                            } else {
+                                println!("Entity attempting to eat from ground despite having no position component!");
+                            }
+                        } else {
+                            println!("Entity attempting to eat from ground despite having no digestion component!");
+                        }
+                        None
+                    }
                     AIAction::BuildAtLocation {
                         x,
                         y,

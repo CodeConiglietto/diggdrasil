@@ -37,7 +37,6 @@ impl<'a> System<'a> for GoalResolutionSystem {
             .join()
         {
             if let Some(current_goal) = gol.goal_stack.last_mut() {
-                // if let Some(goal) = current_goal {
                 let goal_status = match current_goal {
                     // AIGoal::Wander => {},
                     AIGoal::MoveInDirection { direction } => {
@@ -198,6 +197,27 @@ impl<'a> System<'a> for GoalResolutionSystem {
                         } else {
                             AIGoalStatus::Finished
                         }
+                    }
+                    AIGoal::TravelToPosition{ target_pos } => {
+                        let this_pos = (pos.x, pos.y);
+
+                        if this_pos == *target_pos {
+                            AIGoalStatus::Finished
+                        } else {
+                            let path = twld.pathfind(this_pos, *target_pos);
+
+                            if let Some(path) = path {
+                                AIGoalStatus::HasChildGoals{goals: vec![AIGoal::TravelPath{path}]}
+                            } else {
+                                println!("Entity cannot path to {:?}", target_pos);
+                                AIGoalStatus::Canceled
+                            }
+                        }
+                        //If this position is adjacent:
+                        //-Create child goal "Move in direction"
+                        //If position is pathable:
+                        //-calculate path to position
+                        //-create child goal "Travel path" with calculated path
                     }
                     //TODO: Add better error handling and move item requests to here
                     AIGoal::StowItem { item } => {
@@ -523,8 +543,23 @@ impl<'a> System<'a> for GoalResolutionSystem {
                         }
                         AIGoalStatus::Finished
                     }
+                    AIGoal::FulfilHunger => {
+                        //Find nearest edible item
+                        //If found in inventory:
+                        //-Create child goal "Eat item"
+                        //If found in world:
+                        //-Create child goal "Eat item"
+                        //If found on entity but requires harvest:
+                        //-Create child goals "Harvest" with entity and "Eat item" with item
+                        todo!()
+                    }
+                    AIGoal::FleeDanger => {
+                        //Find average position of all threats
+                        //Get direction from this average position
+                        //Move in the opposite direction
+                        todo!()
+                    }
                 };
-                // }
 
                 println!("Goal stack size: {}", gol.goal_stack.len());
                 println!("Goal status is: {:?}", goal_status);
