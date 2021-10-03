@@ -41,6 +41,7 @@ impl CreatureBuilder {
                         disposition: race.get_disposition(),
                     })
                     .with(FieldOfViewComponent::new(12))
+                    .with(PathingComponent::default())
                     .with(HealthComponent {
                         hit_particle: Some(ParticleBuilder::Blood { spawn_height: 1 }),
                         turn_damage: 0,
@@ -63,9 +64,7 @@ impl CreatureBuilder {
                     .build()
             }
             Self::Deer => {
-                let stomach_contents = vec![
-                    ItemBuilder::Berry.build(lazy, entities),
-                ];
+                let stomach_contents = vec![ItemBuilder::Berry.build(lazy, entities)];
                 lazy.create_entity(entities)
                     .with(VelocityComponent { x: 0, y: 0 })
                     .with(IntendedMovementComponent {
@@ -89,6 +88,7 @@ impl CreatureBuilder {
                         disposition: Disposition::Timid,
                     })
                     .with(FieldOfViewComponent::new(5))
+                    .with(PathingComponent::default())
                     .with(HealthComponent {
                         hit_particle: Some(ParticleBuilder::Blood { spawn_height: 1 }),
                         turn_damage: 0,

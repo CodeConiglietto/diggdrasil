@@ -111,6 +111,7 @@ impl MainState {
         ecs_world.register::<NameComponent>();
         ecs_world.register::<ParticleComponent>();
         ecs_world.register::<ParticleEmitterComponent>();
+        ecs_world.register::<PathingComponent>();
         ecs_world.register::<PositionComponent>();
         ecs_world.register::<SaveMarkerComponent>();
         ecs_world.register::<ToSaveComponent>();
@@ -329,7 +330,16 @@ impl event::EventHandler<ggez::GameError> for MainState {
         self.font_batch.clear();
 
         let data: RenderData = self.ecs_world.system_data();
-        if let Some((input, position, field_of_view, inventory, manipulator, digestion, health)) = (
+        if let Some((
+            input,
+            position,
+            field_of_view,
+            inventory,
+            manipulator,
+            digestion,
+            health,
+            ai_goal,
+        )) = (
             &data.input,
             &data.position,
             (&data.field_of_view).maybe(),
@@ -337,6 +347,7 @@ impl event::EventHandler<ggez::GameError> for MainState {
             (&data.manipulator).maybe(),
             (&data.digestion).maybe(),
             (&data.health).maybe(),
+            (&data.ai_goal).maybe(),
         )
             .join()
             .next()
@@ -544,13 +555,15 @@ impl event::EventHandler<ggez::GameError> for MainState {
                     }
 
                     if let Some(manipulator) = manipulator {
-                        let (manipulator_pane, _rest) = Layout::default()
+                        let (manipulator_pane, rest) = Layout::default()
                             .direction(LayoutDirection::Vertical)
                             .constraints([Constraint::Length(3), Constraint::Min(0)])
                             .split(right_pane)
                             .into_iter()
                             .collect_tuple()
                             .unwrap();
+
+                        right_pane = rest;
 
                         let list = List::new(vec![if let Some(item) = &manipulator.held_item {
                             ListItem::new(data.name.get(*item).unwrap().name.as_str())
@@ -561,6 +574,34 @@ impl event::EventHandler<ggez::GameError> for MainState {
                         let block = Block::default().title("Held").borders(Borders::ALL);
 
                         f.render_widget(list.block(block), manipulator_pane);
+                    }
+
+                    if let Some(ai_goal) = ai_goal {
+                        let (ai_goal_pane, _rest) = Layout::default()
+                            .direction(LayoutDirection::Vertical)
+                            .constraints([
+                                Constraint::Length(
+                                    (ai_goal.goal_stack.len() as u16).min(10).max(2) + 2,
+                                ),
+                                Constraint::Min(0),
+                            ])
+                            .split(right_pane)
+                            .into_iter()
+                            .collect_tuple()
+                            .unwrap();
+
+                        let list = List::new(
+                            ai_goal
+                                .goal_stack
+                                .iter()
+                                .rev()
+                                .map(|goal| ListItem::new(goal.get_textual_representation(&data)))
+                                .collect::<Vec<_>>(),
+                        );
+
+                        let block = Block::default().title("Goals").borders(Borders::ALL);
+
+                        f.render_widget(list.block(block), ai_goal_pane);
                     }
 
                     if let Some(health) = health {

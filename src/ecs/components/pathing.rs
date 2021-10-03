@@ -81,3 +81,9 @@ impl PathingComponent {
             })
     }
 }
+
+impl Default for PathingComponent {
+    fn default() -> Self {
+        Self::new()
+    }
+}
