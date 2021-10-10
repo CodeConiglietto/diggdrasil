@@ -1,35 +1,45 @@
+use rand::prelude::*;
 use specs::prelude::*;
 
 use crate::prelude::*;
 
-pub struct FulfilGungerGoal {
+pub struct FulfilHungerGoal {
     //Child goals and data here
+    eat_food_goal: Option<EatGoal>,
 }
 
 impl AIGoalTrait for FulfilHungerGoal {
     fn resolve(&mut self, parent_entity: Entity, data: GoalData) -> AIGoalResult {
         //TODO: add some greed or stomach size percentage to determine whether the creature is sated or not
-        if let Some(dig) = dig {
-            if dig.get_total_nutrition(&edb) >= 100 {
+        if let Some(dig) = data.digestion.get(parent_entity) {
+            if dig.get_total_nutrition(&data.edible) >= 100 {
                 Self::success()
             } else {
                 let mut food = None;
                 
-                if let Some(inv) = inv {
-                    food = inv.items.iter().filter_map(|item| *item).find(|item| edb.get(*item).is_some());
+                if let Some(inv) = data.inventory.get(parent_entity) {
+                    food = inv.items.iter().filter_map(|item| *item).find(|item| data.edible.get(*item).is_some());
                 }
 
                 if food.is_none() {
-                    if let Some(perc) = perc {
+                    if let Some(perc) = data.perception.get(parent_entity) {
                         food = perc.food.choose(&mut thread_rng()).copied();
                     }
                 }
 
-                if food.is_some() {
-                    AIGoalStatus::HasChildGoals{ goals: vec![AIGoal::Eat{ target: food }] }
+                if let Some(food) = food {
+                    self.eat_food_goal
+                        .get_or_insert_with(
+                            || EatGoal{
+                                target: food,
+                                eat_from_inventory_goal: None,
+                                eat_from_ground_goal: None,
+                            }
+                            )
+                            .resolve(parent_entity, data)
                 } else {
                     //TODO: change this to be a search for food goal
-                    AIGoalStatus::HasChildGoals{ goals: vec![AIGoal::Wander] }
+                    WanderGoal{}.resolve(parent_entity, data)
                 }
 
                 //TODO:

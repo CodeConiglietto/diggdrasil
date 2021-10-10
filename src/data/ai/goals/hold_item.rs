@@ -4,46 +4,17 @@ use crate::prelude::*;
 
 pub struct HoldItemGoal {
     //Child goals and data here
+    pub item: Entity,
 }
 
 impl AIGoalTrait for HoldItemGoal {
     fn resolve(&mut self, parent_entity: Entity, data: GoalData) -> AIGoalResult {
-        if let Some(man) = man {
+        if let Some(man) = data.manipulator.get(parent_entity) {
             if let Some(held) = man.held_item {
                 //TODO: make this stow, drop, or sheath the held item
-                AIGoalStatus::HasChildGoals {
-                    goals: vec![AIGoal::StowItem { item: held }],
-                }
+                StowItemGoal{item: held}.resolve(parent_entity, data)
             } else {
-                if let Some(item) = item {
-                    Self::action(AIAction::HoldItemFromInventory { item: *item });
-                } else {
-                    if let Some(inp) = inp {
-                        if let Some(inv) = inv {
-                            let item_goals = inv
-                                .items
-                                .iter()
-                                .enumerate()
-                                .filter_map(|(i, slot)| {
-                                    slot.map(|item| {
-                                        (
-                                            i,
-                                            None,
-                                            AIGoal::HoldItem { item: Some(item) },
-                                        )
-                                    })
-                                })
-                                .map(PopupListItem::from)
-                                .collect();
-
-                            inp.popup = Some(Popup::list(
-                                format!("Hold what?",),
-                                item_goals,
-                            ));
-                        }
-                    }
-                }
-                Self::success()
+                Self::action(AIAction::HoldItemFromInventory { item: self.item })
             }
         } else {
             println!("Entity attempting to equip item does not have a manipulator component");
