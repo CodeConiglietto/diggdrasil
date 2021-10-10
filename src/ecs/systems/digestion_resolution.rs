@@ -17,7 +17,7 @@ impl<'a> System<'a> for DigestionResolutionSystem {
         let (eids, mut hpc, mut dig, mut edc) = data;
 
         for (hpc, dig) in (&mut hpc, &mut dig).join() {
-            if thread_rng().gen::<bool> () {
+            if thread_rng().gen::<bool>() {
                 if let Some(edible) = dig.contents.first() {
                     let mut nutrient = edc.get_mut(*edible).unwrap();
 

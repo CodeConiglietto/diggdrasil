@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Serialize, Deserialize)]
 pub enum Disposition {
-    Timid, 
+    Timid,
     Neutral,
-    Agressive
+    Agressive,
 }

@@ -47,7 +47,9 @@ impl InventoryComponent {
     }
 
     pub fn contains(&self, item: Entity) -> bool {
-        self.items.iter().any(|checked_item| *checked_item == Some(item))
+        self.items
+            .iter()
+            .any(|checked_item| *checked_item == Some(item))
     }
 }
 

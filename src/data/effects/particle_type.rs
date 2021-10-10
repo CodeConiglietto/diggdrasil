@@ -13,16 +13,34 @@ use crate::prelude::*;
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
 pub enum ParticleType {
     Finished,
-    Rain { initial_angle: Direction },
-    RainSplash { lifetime: usize },
+    Rain {
+        initial_angle: Direction,
+    },
+    RainSplash {
+        lifetime: usize,
+    },
     // Snow { y_cutoff: usize },
     Leaf,
-    Blood { x_vel: i32, y_vel: i32, z_vel: i32 },
+    Blood {
+        x_vel: i32,
+        y_vel: i32,
+        z_vel: i32,
+    },
     // Splinter { direction: Direction },
     // Debris { direction: Direction },
-    Smoke { color_value: f32, lifetime: usize },
-    Thrust { drawn: bool, direction_from_player: Direction }, 
-    Swing { drawn: bool, direction_from_player: Direction, rotation_direction: RotationDirection },
+    Smoke {
+        color_value: f32,
+        lifetime: usize,
+    },
+    Thrust {
+        drawn: bool,
+        direction_from_player: Direction,
+    },
+    Swing {
+        drawn: bool,
+        direction_from_player: Direction,
+        rotation_direction: RotationDirection,
+    },
 }
 
 impl ParticleType {
@@ -52,7 +70,11 @@ impl ParticleType {
                     0
                 },
             ),
-            Self::Blood { x_vel, y_vel, z_vel } => (x + x_vel, y + y_vel, z + z_vel),
+            Self::Blood {
+                x_vel,
+                y_vel,
+                z_vel,
+            } => (x + x_vel, y + y_vel, z + z_vel),
             Self::Thrust { .. } => (x, y, z),
             Self::Swing { .. } => (x, y, z),
             _ => todo!(),
@@ -101,7 +123,10 @@ impl ParticleType {
                     *self
                 }
             }
-            Self::Smoke { color_value, lifetime } => {
+            Self::Smoke {
+                color_value,
+                lifetime,
+            } => {
                 if z == MAX_PARTICLE_HEIGHT || *lifetime >= 23 {
                     ParticleType::Finished
                 } else {
@@ -111,28 +136,29 @@ impl ParticleType {
                     }
                 }
             }
-            Self::Blood { x_vel, y_vel, z_vel } => {
+            Self::Blood {
+                x_vel,
+                y_vel,
+                z_vel,
+            } => {
                 if z == 0 {
                     ParticleType::Finished
                 } else {
-                    let x_vel = 
-                        if *z_vel == -1 && thread_rng().gen::<bool>() {
-                            0
-                        } else {
-                            *x_vel
-                        };
-                    let y_vel = 
-                        if *z_vel == -1 && thread_rng().gen::<bool>() {
-                            0
-                        } else {
-                            *y_vel
-                        };
-                    let z_vel = 
-                        if *z_vel >= 0 && thread_rng().gen::<bool>() {
-                            *z_vel - 1
-                        } else {
-                            *z_vel
-                        };
+                    let x_vel = if *z_vel == -1 && thread_rng().gen::<bool>() {
+                        0
+                    } else {
+                        *x_vel
+                    };
+                    let y_vel = if *z_vel == -1 && thread_rng().gen::<bool>() {
+                        0
+                    } else {
+                        *y_vel
+                    };
+                    let z_vel = if *z_vel >= 0 && thread_rng().gen::<bool>() {
+                        *z_vel - 1
+                    } else {
+                        *z_vel
+                    };
 
                     ParticleType::Blood {
                         x_vel,
@@ -141,8 +167,34 @@ impl ParticleType {
                     }
                 }
             }
-            Self::Thrust { drawn, direction_from_player } => if *drawn { ParticleType::Finished } else { Self::Thrust{drawn: true, direction_from_player: *direction_from_player} },
-            Self::Swing { drawn, direction_from_player, rotation_direction } => if *drawn { ParticleType::Finished } else { Self::Swing{drawn: true, direction_from_player: *direction_from_player, rotation_direction: *rotation_direction} },
+            Self::Thrust {
+                drawn,
+                direction_from_player,
+            } => {
+                if *drawn {
+                    ParticleType::Finished
+                } else {
+                    Self::Thrust {
+                        drawn: true,
+                        direction_from_player: *direction_from_player,
+                    }
+                }
+            }
+            Self::Swing {
+                drawn,
+                direction_from_player,
+                rotation_direction,
+            } => {
+                if *drawn {
+                    ParticleType::Finished
+                } else {
+                    Self::Swing {
+                        drawn: true,
+                        direction_from_player: *direction_from_player,
+                        rotation_direction: *rotation_direction,
+                    }
+                }
+            }
             _ => *self,
         }
     }
@@ -201,7 +253,10 @@ impl ParticleType {
                     CharMirror::MirrorX
                 },
             },
-            Self::Smoke { color_value, lifetime } => {
+            Self::Smoke {
+                color_value,
+                lifetime,
+            } => {
                 let index = if *lifetime < 16 {
                     0x390 + lifetime
                 } else {
@@ -215,16 +270,18 @@ impl ParticleType {
                     rotation: CharRotation::None,
                     mirror: CharMirror::None,
                 }
+            }
+            Self::Blood { .. } => GgBunnyChar {
+                index: 0x391,
+                foreground: Color::new(1.0, 0.0, 0.0, 1.0),
+                background: None,
+                rotation: CharRotation::None,
+                mirror: CharMirror::None,
             },
-            Self::Blood { .. } =>
-                GgBunnyChar {
-                    index: 0x391,
-                    foreground: Color::new(1.0, 0.0, 0.0, 1.0),
-                    background: None,
-                    rotation: CharRotation::None,
-                    mirror: CharMirror::None,
-                },
-            Self::Thrust { direction_from_player, .. } => {
+            Self::Thrust {
+                direction_from_player,
+                ..
+            } => {
                 let (index, rotation) = match direction_from_player {
                     Direction::None => (0x00F, Rotation::None),
                     Direction::UpLeft => (0x30D, Rotation::None),
@@ -241,11 +298,14 @@ impl ParticleType {
                     index,
                     foreground: Color::new(0.75, 0.75, 0.75, 1.0),
                     background: None,
-                    rotation, 
+                    rotation,
                     mirror: CharMirror::None,
                 }
             }
-            Self::Swing { direction_from_player, .. } => {
+            Self::Swing {
+                direction_from_player,
+                ..
+            } => {
                 let (index, rotation) = match direction_from_player {
                     Direction::None => (0x00F, Rotation::None),
                     Direction::UpLeft => (0x30D, Rotation::None),

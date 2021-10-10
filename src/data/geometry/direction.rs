@@ -1,7 +1,7 @@
 use ggez::input::keyboard::KeyCode;
 use serde::{Deserialize, Serialize};
-use strum::EnumIter;
 use std::cmp::Ordering;
+use strum::EnumIter;
 
 #[derive(Debug, Clone, Copy, EnumIter, Serialize, Deserialize, PartialEq)]
 pub enum Direction {
@@ -25,9 +25,9 @@ impl Direction {
             (Ordering::Greater, Ordering::Less) => Direction::UpRight,
             (Ordering::Greater, Ordering::Equal) => Direction::Right,
             (Ordering::Greater, Ordering::Greater) => Direction::DownRight,
-            (Ordering::Equal, Ordering::Greater) => Direction::Down ,
-            (Ordering::Less, Ordering::Greater) => Direction::DownLeft ,
-            (Ordering::Less, Ordering::Equal) => Direction::Left ,
+            (Ordering::Equal, Ordering::Greater) => Direction::Down,
+            (Ordering::Less, Ordering::Greater) => Direction::DownLeft,
+            (Ordering::Less, Ordering::Equal) => Direction::Left,
         }
     }
 

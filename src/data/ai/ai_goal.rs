@@ -41,8 +41,12 @@ pub enum AIGoal {
     FulfilHunger,
     FleeDanger,
     GroupWithAllies,
-    KillEntity { target: Entity },
-    AttackEntity { target: Entity },
+    KillEntity {
+        target: Entity,
+    },
+    AttackEntity {
+        target: Entity,
+    },
 }
 
 impl AIGoal {
@@ -122,7 +126,7 @@ impl AIGoal {
                 } else {
                     "something"
                 };
- 
+
                 //TODO: have the string print the ingredients if they exist
 
                 format!("Craft a {}", recipe_name)
@@ -130,8 +134,10 @@ impl AIGoal {
             Self::FulfilHunger => String::from("Fulfil hunger"),
             Self::FleeDanger => String::from("Flee from danger"),
             Self::GroupWithAllies => String::from("Group with similar creatures"),
-            Self::AttackEntity{target} => format!("Attack {}", data.name.get(*target).unwrap().name),
-            Self::KillEntity{target} => format!("Kill {}", data.name.get(*target).unwrap().name),
+            Self::AttackEntity { target } => {
+                format!("Attack {}", data.name.get(*target).unwrap().name)
+            }
+            Self::KillEntity { target } => format!("Kill {}", data.name.get(*target).unwrap().name),
         }
     }
 }

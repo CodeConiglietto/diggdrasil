@@ -18,7 +18,10 @@ impl FurnitureBuilder {
                     symbol_builder: Some(SymbolBuilder::CampFire),
                 })
                 .with(ParticleEmitterComponent {
-                    particle_type: ParticleType::Smoke { color_value: 0.5, lifetime: 0 },
+                    particle_type: ParticleType::Smoke {
+                        color_value: 0.5,
+                        lifetime: 0,
+                    },
                 })
                 .build(),
         }

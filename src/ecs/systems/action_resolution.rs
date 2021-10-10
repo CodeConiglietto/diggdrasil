@@ -77,7 +77,13 @@ impl<'a> System<'a> for ActionResolutionSystem {
                                 lup.create_entity(&eids)
                                     .with(ParticleComponent {
                                         position: (attack_x, attack_y, 0),
-                                        particle_type: ParticleType::Thrust { drawn: false, direction_from_player: Direction::from_positions((offset_x, offset_y), (0, 0)) },
+                                        particle_type: ParticleType::Thrust {
+                                            drawn: false,
+                                            direction_from_player: Direction::from_positions(
+                                                (offset_x, offset_y),
+                                                (0, 0),
+                                            ),
+                                        },
                                     })
                                     .build();
 
@@ -97,7 +103,11 @@ impl<'a> System<'a> for ActionResolutionSystem {
                         let this_pos = pos.get(eid).unwrap();
 
                         //Will not allow entity to attack a target on the same tile
-                        if pos_is_adjacent((this_pos.x, this_pos.y), (target_pos.x, target_pos.y), false) {
+                        if pos_is_adjacent(
+                            (this_pos.x, this_pos.y),
+                            (target_pos.x, target_pos.y),
+                            false,
+                        ) {
                             //Will crash if attempting to attack a target that has no health component
                             if let Some(target_hp) = &mut hpc.get_mut(target) {
                                 if target_hp.value > 0 {
@@ -223,7 +233,11 @@ impl<'a> System<'a> for ActionResolutionSystem {
                         if let Some(dig) = dig.get_mut(eid) {
                             if let Some(this_pos) = pos.get(eid) {
                                 if let Some(entity_pos) = pos.get(target) {
-                                    if pos_is_adjacent(this_pos.get_pos_tuple(), entity_pos.get_pos_tuple(), true) {
+                                    if pos_is_adjacent(
+                                        this_pos.get_pos_tuple(),
+                                        entity_pos.get_pos_tuple(),
+                                        true,
+                                    ) {
                                         twld.despawn_entity(target, &mut pos);
                                         dig.insert(target);
                                     } else {

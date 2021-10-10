@@ -163,11 +163,9 @@ impl SymbolBuilder {
                 ];
 
                 Symbol {
-                    draw_chars: vec![
-                        variations[(seed / 8) % variations.len()],
-                    ],
+                    draw_chars: vec![variations[(seed / 8) % variations.len()]],
                 }
-            },
+            }
             Self::BerryBush => {
                 let x_mirror = if (seed / 4) % 2 == 0 {
                     CharMirror::None

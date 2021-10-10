@@ -21,9 +21,19 @@ impl<'a> System<'a> for WeatherSystem {
         match weat.current_weather {
             WeatherStatus::Clear => (),
             WeatherStatus::Raining => {
-                ParticleBuilder::Rain{wind_direction: weat.wind_direction}.build(&lup, &eids, (thread_rng().gen_range(left..right) as i32, thread_rng().gen_range(top..bottom) as i32));
+                ParticleBuilder::Rain {
+                    wind_direction: weat.wind_direction,
+                }
+                .build(
+                    &lup,
+                    &eids,
+                    (
+                        thread_rng().gen_range(left..right) as i32,
+                        thread_rng().gen_range(top..bottom) as i32,
+                    ),
+                );
             }
-            _=>todo!(),
+            _ => todo!(),
         }
     }
 }

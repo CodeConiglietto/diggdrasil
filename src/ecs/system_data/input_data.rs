@@ -27,7 +27,7 @@ pub struct InputData<'a> {
     pub position: ReadStorage<'a, PositionComponent>,
     pub velocity: ReadStorage<'a, VelocityComponent>,
 
-    //Written components
+    //Write components
     pub ai_goal: WriteStorage<'a, AIGoalComponent>,
     pub input: WriteStorage<'a, InputComponent>,
     pub inventory: WriteStorage<'a, InventoryComponent>,

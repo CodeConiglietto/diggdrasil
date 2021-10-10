@@ -1,7 +1,10 @@
 pub mod a_star;
 pub mod ai_action;
 pub mod ai_goal;
+pub mod ai_goal_result;
 pub mod ai_goal_status;
+pub mod ai_goal_trait;
 pub mod diet;
 pub mod disposition;
+pub mod goals;
 pub mod shadowcast;
