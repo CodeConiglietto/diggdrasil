@@ -4,6 +4,7 @@ use crate::prelude::*;
 
 pub struct StowItemGoal {
     //Child goals and data here
+    item: Entity,
 }
 
 impl AIGoalTrait for StowItemGoal {

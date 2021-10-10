@@ -4,6 +4,7 @@ use crate::prelude::*;
 
 pub struct MoveInDirectionGoal {
     //Child goals and data here
+    pub direction: Direction
 }
 
 impl AIGoalTrait for MoveInDirectionGoal {

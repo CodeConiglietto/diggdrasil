@@ -4,18 +4,18 @@ use crate::prelude::*;
 
 pub struct EatGoal {
     //Child goals and data here
-    target: Entity,
-    eat_from_inventory_goal: Option<EatItemFromInventoryGoal>,
+    pub target: Entity,
+    pub eat_from_inventory_goal: Option<EatItemFromInventoryGoal>,
     //TODO
     // eat_from_harvestable_goal: EatFromHarvestableGoal,
-    eat_from_ground_goal: Option<EatFromGroundGoal>,
+    pub eat_from_ground_goal: Option<EatFromGroundGoal>,
 }
 
 impl AIGoalTrait for EatGoal {
     fn resolve(&mut self, parent_entity: Entity, data: GoalData) -> AIGoalResult {
         let this_pos = data.pos.get(parent_entity).unwrap();
         
-        if let Some(target_pos) = data.position.get(*target) {
+        if let Some(target_pos) = data.position.get(self.target) {
             //We can assume that the item exists in the world
             if pos_is_adjacent(this_pos.get_pos_tuple(), target_pos.get_pos_tuple(), true) {
                 Self::action(AIAction::EatFromGround { target: self.target })
