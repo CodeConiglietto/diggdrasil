@@ -101,9 +101,8 @@ impl<'a> System<'a> for InputResolutionSystem {
                         KeyCode::G => {
                             if let Some(inv) = inv.get(eid) {
                                 if inv.any_slot_free() {
-                                    let PositionComponent { x, y } = pos;
                                     let mut pickup_goals: Vec<_> = twld
-                                        .get((*x, *y))
+                                        .get(pos.pos)
                                         .unwrap()
                                         .entities
                                         .iter()
@@ -202,21 +201,15 @@ impl<'a> System<'a> for InputResolutionSystem {
                         }
                         KeyCode::B => {
                             //TODO: ensure player has some way to manipulate objects, otherwise they can't build :(
-                            let pos_x = pos.x;
-                            let pos_y = pos.y;
+                            let pos = pos.pos;
 
                             inc.popup = Some(Popup::directions(
                                 String::from("Build where?"),
                                 Directions::all(),
-                                move |dir| {
-                                    let (dx, dy) = dir.get_offset();
-
-                                    AIGoal::Build {
-                                        x: pos_x + dx,
-                                        y: pos_y + dy,
-                                        tile_type: None,
-                                        consumed_entity: None,
-                                    }
+                                move |dir| AIGoal::Build {
+                                    pos: pos + dir.get_offset(),
+                                    tile_type: None,
+                                    consumed_entity: None,
                                 },
                             ));
                         }
@@ -229,22 +222,21 @@ impl<'a> System<'a> for InputResolutionSystem {
                 }
             }
 
-            let left = pos.x - MAP_X_SIZE as i32 / 2;
-            let top = pos.y - MAP_Y_SIZE as i32 / 2;
-
+            let offset = MAP_X_SIZE as i32 / 2;
+            let top_left = pos.pos - IPosition::new(offset, offset);
             let (mouse_x, mouse_y) = ms.position;
-            let (char_mouse_x, char_mouse_y) = (
+            let char_mouse = IPosition::new(
                 (mouse_x / (RENDER_SCALE * 8.0)).floor() as i32,
                 (mouse_y / (RENDER_SCALE * 8.0)).floor() as i32,
             );
 
-            if (0..MAP_X_SIZE as i32).contains(&char_mouse_x)
-                && (0..MAP_Y_SIZE as i32).contains(&char_mouse_y)
+            if (0..MAP_X_SIZE as i32).contains(&char_mouse.x)
+                && (0..MAP_Y_SIZE as i32).contains(&char_mouse.y)
             {
-                let (tile_mouse_x, tile_mouse_y) = (char_mouse_x + left, char_mouse_y + top);
+                let tile_mouse = top_left + char_mouse;
 
                 if let Some(pth) = pth {
-                    inc.path = pth.pathfind(&*twld, (pos.x, pos.y), (tile_mouse_x, tile_mouse_y));
+                    inc.path = pth.pathfind(&*twld, pos.pos, tile_mouse);
                 }
             }
 

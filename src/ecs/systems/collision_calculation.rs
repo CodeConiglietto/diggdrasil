@@ -18,10 +18,10 @@ impl<'a> System<'a> for CollisionCalculationSystem {
         let (twld, pos, imc, coc, mut col) = data;
 
         for (pos, imc, col) in (&pos, &imc, &mut col).join() {
-            if imc.x_delta != 0 || imc.y_delta != 0 {
-                let (new_x, new_y) = (pos.x + imc.x_delta, pos.y + imc.y_delta);
+            if imc.delta != IPosition::ZERO {
+                let new_pos = pos.pos + imc.delta;
 
-                if let Some(chunk_tile) = twld.get((new_x, new_y)) {
+                if let Some(chunk_tile) = twld.get(new_pos) {
                     if chunk_tile.tile.tile_type.collides() {
                         col.tile_collision = Some(chunk_tile.tile);
                     }

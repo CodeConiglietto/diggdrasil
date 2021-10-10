@@ -15,26 +15,27 @@ pub struct Chunk {
 impl Chunk {
     pub fn generate(
         &mut self,
-        (chunk_x, chunk_y): (i32, i32),
+        chunk_pos: IPosition,
         gen_package: &GenPackageResource,
         world_data: &mut WorldData,
     ) {
         let mut vegetation_local_positions = Vec::new();
 
-        for ((local_x, local_y), chunk_tile) in self.tiles.indexed_iter_mut() {
-            let (x, y) = local_to_global_position((chunk_x, chunk_y), (local_x, local_y));
+        for (local_pos, chunk_tile) in self.tiles.indexed_iter_mut() {
+            let local_pos = UPosition::from_idx(local_pos).unwrap();
+            let pos = IPosition::global_from_local(chunk_pos, local_pos);
 
             let fertility = gen_package
                 .fertility_noise
-                .get([x as f64 * 0.05, y as f64 * 0.05])
+                .get([pos.x as f64 * 0.05, pos.y as f64 * 0.05])
                 .abs();
 
             chunk_tile.tile = Tile {
                 seed: thread_rng().gen::<usize>(),
-                fertility: (fertility * 256 as f64) as u8,
+                fertility: (fertility * 256.0) as u8,
                 tile_type: if gen_package
                     .elevation_noise
-                    .get([x as f64 * 0.05, y as f64 * 0.05])
+                    .get([pos.x as f64 * 0.05, pos.y as f64 * 0.05])
                     > 0.25
                 {
                     TileType::Wall {
@@ -42,7 +43,7 @@ impl Chunk {
                     }
                 } else {
                     if fertility > thread_rng().gen_range(0.0..=2.0) {
-                        vegetation_local_positions.push((local_x, local_y));
+                        vegetation_local_positions.push(local_pos);
                     }
 
                     TileType::Ground
@@ -51,10 +52,7 @@ impl Chunk {
             };
 
             if !chunk_tile.entities.is_empty() {
-                warn!(
-                    "Regenerating over chunk ({},{}) with entities in it!",
-                    chunk_x, chunk_y
-                );
+                warn!("Regenerating over chunk {} with entities in it!", chunk_pos);
                 chunk_tile.entities.clear();
             }
         }
@@ -91,7 +89,7 @@ impl Chunk {
                     4 => VegetationBuilder::Tree.build(lazy, entities),
                     _ => unreachable!(),
                 },
-                ((chunk_x, chunk_y), local_pos),
+                (chunk_pos, local_pos),
                 &mut world_data.position,
             )
         }
@@ -99,7 +97,7 @@ impl Chunk {
         for _ in 0..16 {
             self.spawn_somewhere_free(
                 || ItemBuilder::Stone.build(lazy, entities),
-                (chunk_x, chunk_y),
+                chunk_pos,
                 &mut world_data.position,
             );
         }
@@ -107,7 +105,7 @@ impl Chunk {
         for _ in 0..4 {
             self.spawn_somewhere_free(
                 || CreatureBuilder::Deer.build(lazy, entities),
-                (chunk_x, chunk_y),
+                chunk_pos,
                 &mut world_data.position,
             );
         }
@@ -116,42 +114,44 @@ impl Chunk {
     fn spawn_entity(
         &mut self,
         entity: Entity,
-        (chunk_pos, (local_x, local_y)): ((i32, i32), (usize, usize)),
+        (chunk_pos, local_pos): (IPosition, UPosition),
         position_component: &mut WriteStorage<PositionComponent>,
     ) {
-        let (x, y) = local_to_global_position(chunk_pos, (local_x, local_y));
+        let pos = IPosition::global_from_local(chunk_pos, local_pos);
 
         assert!(
             position_component
-                .insert(entity, PositionComponent { x, y })
+                .insert(entity, PositionComponent { pos })
                 .unwrap()
                 .is_none(),
             "Cannot spawn entity that already has a position!"
         );
 
-        self.tiles[[local_x, local_y]].entities.push(entity);
+        self.tiles[local_pos.to_idx().unwrap()]
+            .entities
+            .push(entity);
     }
 
     fn spawn_somewhere_free<F>(
         &mut self,
         f: F,
-        chunk_pos: (i32, i32),
+        chunk_pos: IPosition,
         position_component: &mut WriteStorage<PositionComponent>,
     ) where
         F: FnOnce() -> Entity,
     {
         for _ in 0..10 {
-            let (local_x, local_y) = (
-                thread_rng().gen_range(0..CHUNK_SIZE),
-                thread_rng().gen_range(0..CHUNK_SIZE),
+            let local_pos = UPosition::new(
+                thread_rng().gen_range(0..CHUNK_SIZE as u32),
+                thread_rng().gen_range(0..CHUNK_SIZE as u32),
             );
 
-            let chunk_tile = &self.tiles[[local_x, local_y]];
+            let chunk_tile = &self.tiles[local_pos.to_idx().unwrap()];
 
             match chunk_tile.tile.tile_type {
                 TileType::Ground => {
                     if chunk_tile.entities.is_empty() {
-                        self.spawn_entity(f(), (chunk_pos, (local_x, local_y)), position_component);
+                        self.spawn_entity(f(), (chunk_pos, local_pos), position_component);
                         return;
                     }
                 }

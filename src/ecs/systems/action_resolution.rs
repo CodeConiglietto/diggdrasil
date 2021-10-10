@@ -43,9 +43,8 @@ impl<'a> System<'a> for ActionResolutionSystem {
                 println!("Current action is: {:?}", action);
 
                 act.current_action = match action {
-                    AIAction::MoveInDirection { x, y } => {
-                        imc.x_delta = x;
-                        imc.y_delta = y;
+                    AIAction::MoveInDirection { offset } => {
+                        imc.delta = offset;
                         imc.controlled = true;
                         None
                     }
@@ -62,10 +61,10 @@ impl<'a> System<'a> for ActionResolutionSystem {
                             .unwrap_or_else(|| attack.attack_type.get_offsets(&direction, None));
 
                         if attack_offsets.len() > 0 {
-                            let (offset_x, offset_y) = attack_offsets.pop().unwrap();
-                            let attack_pos = (offset_x + this_pos.x, offset_y + this_pos.y);
-                            let (attack_x, attack_y) = attack_pos;
+                            let offset = attack_offsets.pop().unwrap();
+                            let attack_pos = offset + this_pos.pos;
                             let attack_tile = twld.get(attack_pos);
+
                             if let Some(attack_tile) = attack_tile {
                                 for entity in &attack_tile.entities {
                                     if let Some(target_hp) = &mut hpc.get_mut(*entity) {
@@ -76,12 +75,13 @@ impl<'a> System<'a> for ActionResolutionSystem {
 
                                 lup.create_entity(&eids)
                                     .with(ParticleComponent {
-                                        position: (attack_x, attack_y, 0),
+                                        position: attack_pos,
+                                        height: 0,
                                         particle_type: ParticleType::Thrust {
                                             drawn: false,
                                             direction_from_player: Direction::from_positions(
-                                                (offset_x, offset_y),
-                                                (0, 0),
+                                                offset,
+                                                IPosition::ZERO,
                                             ),
                                         },
                                     })
@@ -103,11 +103,7 @@ impl<'a> System<'a> for ActionResolutionSystem {
                         let this_pos = pos.get(eid).unwrap();
 
                         //Will not allow entity to attack a target on the same tile
-                        if pos_is_adjacent(
-                            (this_pos.x, this_pos.y),
-                            (target_pos.x, target_pos.y),
-                            false,
-                        ) {
+                        if this_pos.pos.is_adjacent(target_pos.pos) {
                             //Will crash if attempting to attack a target that has no health component
                             if let Some(target_hp) = &mut hpc.get_mut(target) {
                                 if target_hp.value > 0 {
@@ -127,9 +123,7 @@ impl<'a> System<'a> for ActionResolutionSystem {
                         if let Some(inventory) = inv.get_mut(eid) {
                             if let Some(entity_position) = pos.get(eid) {
                                 if let Some(item_position) = pos.get(item) {
-                                    if entity_position.x == item_position.x
-                                        && entity_position.y == item_position.y
-                                    {
+                                    if entity_position.pos == item_position.pos {
                                         if inventory.insert(item) {
                                             twld.despawn_entity(item, &mut pos);
                                         } else {
@@ -181,11 +175,7 @@ impl<'a> System<'a> for ActionResolutionSystem {
                         if let Some(inventory) = inv.get_mut(eid) {
                             if let Some(entity_position) = pos.get(eid) {
                                 inventory.remove(item);
-                                twld.spawn_entity(
-                                    item,
-                                    (entity_position.x, entity_position.y),
-                                    &mut pos,
-                                );
+                                twld.spawn_entity(item, entity_position.pos, &mut pos);
                             } else {
                                 println!(
                                     "Entity attempting to drop an item despite having no position!"
@@ -233,11 +223,7 @@ impl<'a> System<'a> for ActionResolutionSystem {
                         if let Some(dig) = dig.get_mut(eid) {
                             if let Some(this_pos) = pos.get(eid) {
                                 if let Some(entity_pos) = pos.get(target) {
-                                    if pos_is_adjacent(
-                                        this_pos.get_pos_tuple(),
-                                        entity_pos.get_pos_tuple(),
-                                        true,
-                                    ) {
+                                    if this_pos.pos.is_adjacent_or_same(entity_pos.pos) {
                                         twld.despawn_entity(target, &mut pos);
                                         dig.insert(target);
                                     } else {
@@ -255,14 +241,13 @@ impl<'a> System<'a> for ActionResolutionSystem {
                         None
                     }
                     AIAction::BuildAtLocation {
-                        x,
-                        y,
+                        pos: build_pos,
                         tile_type,
                         consumed_entity,
                     } => {
-                        if let Some(chunk_tile) = twld.get((x, y)) {
+                        if let Some(chunk_tile) = twld.get(build_pos) {
                             if let Some(pos) = pos.get(eid) {
-                                if pos_is_adjacent((x, y), (pos.x, pos.y), false) {
+                                if pos.pos.is_adjacent(build_pos) {
                                     if chunk_tile
                                         .tile
                                         .tile_type
@@ -284,19 +269,24 @@ impl<'a> System<'a> for ActionResolutionSystem {
                                                         tile_type.get_build_requirements(),
                                                     ) {
                                                         // Actually do it
-                                                        twld.get_mut((x, y)).unwrap().tile = Tile {
-                                                            seed: thread_rng().gen::<usize>(),
-                                                            fertility: chunk_tile.tile.fertility,
-                                                            tile_type,
-                                                            tile_variant:
-                                                                TileVariant::get_from_neighbours(
-                                                                    twld.get_neighbours((x, y)),
-                                                                ),
-                                                        };
+                                                        twld.get_mut(build_pos).unwrap().tile =
+                                                            Tile {
+                                                                seed: thread_rng().gen::<usize>(),
+                                                                fertility: chunk_tile
+                                                                    .tile
+                                                                    .fertility,
+                                                                tile_type,
+                                                                tile_variant:
+                                                                    TileVariant::get_from_neighbours(
+                                                                        twld.get_neighbours(
+                                                                            build_pos,
+                                                                        ),
+                                                                    ),
+                                                            };
 
-                                                        twld.refresh_tile_and_adjacent_variants((
-                                                            x, y,
-                                                        ));
+                                                        twld.refresh_tile_and_adjacent_variants(
+                                                            build_pos,
+                                                        );
 
                                                         // tile.tile_type = *tile_type;
                                                         inv.items[item_index] = None;
@@ -357,11 +347,7 @@ impl<'a> System<'a> for ActionResolutionSystem {
                                             eids.delete(item).unwrap();
                                         }
 
-                                        twld.spawn_entity(
-                                            crafted_entity,
-                                            (ent_pos.x, ent_pos.y),
-                                            &mut pos,
-                                        );
+                                        twld.spawn_entity(crafted_entity, ent_pos.pos, &mut pos);
                                     }
 
                                     Err(err) => println!("Crafting error: {}", err),

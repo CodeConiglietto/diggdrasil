@@ -1,17 +1,23 @@
+use std::convert::TryFrom;
+
 use ndarray::{s, Array2, ArrayView2, ArrayViewMut2, Axis};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
+use crate::prelude::*;
+
 pub struct Shadowcast {
-    radius: usize,
+    radius: u32,
     fov: Array2<bool>,
-    frontier: Vec<(usize, (f32, f32))>,
+    frontier: Vec<(u32, (f32, f32))>,
 }
 
 impl Shadowcast {
-    pub fn new(radius: usize) -> Self {
+    pub fn new(radius: u32) -> Self {
+        let size = usize::try_from(radius).unwrap() * 2 + 1;
+
         Self {
             radius,
-            fov: Array2::default((radius * 2 + 1, radius * 2 + 1)),
+            fov: Array2::default((size, size)),
             frontier: Vec::new(),
         }
     }
@@ -20,7 +26,7 @@ impl Shadowcast {
         self.fov.view()
     }
 
-    pub fn radius(&self) -> usize {
+    pub fn radius(&self) -> u32 {
         self.radius
     }
 
@@ -29,56 +35,65 @@ impl Shadowcast {
         T: ShadowcastCallbacks,
     {
         let radius = self.radius;
+        let sradius = usize::try_from(radius).unwrap();
 
         self.fov.fill(false);
-        self.fov[[radius, radius]] = true;
+        self.fov[[sradius, sradius]] = true;
 
         if radius == 0 {
             return;
         }
 
-        let mut top_left = self.fov.slice_mut(s![..=radius, ..=radius]);
+        let mut top_left = self.fov.slice_mut(s![..=sradius, ..=sradius]);
         top_left.invert_axis(Axis(0));
         top_left.invert_axis(Axis(1));
         shadowcast_quadrant(
             radius,
             top_left,
             &mut self.frontier,
-            &mut WrapCallbacks(callbacks, |x, y| (radius - x, radius - y)),
+            &mut WrapCallbacks(callbacks, |pos: UPosition| {
+                UPosition::new(radius - pos.x, radius - pos.y)
+            }),
         );
 
-        let mut top_right = self.fov.slice_mut(s![radius.., ..=radius]);
+        let mut top_right = self.fov.slice_mut(s![sradius.., ..=sradius]);
         top_right.invert_axis(Axis(1));
         shadowcast_quadrant(
             radius,
             top_right,
             &mut self.frontier,
-            &mut WrapCallbacks(callbacks, |x, y| (x + radius, radius - y)),
+            &mut WrapCallbacks(callbacks, |pos: UPosition| {
+                UPosition::new(pos.x + radius, radius - pos.y)
+            }),
         );
 
-        let mut bottom_left = self.fov.slice_mut(s![..=radius, radius..]);
+        let mut bottom_left = self.fov.slice_mut(s![..=sradius, sradius..]);
         bottom_left.invert_axis(Axis(0));
         shadowcast_quadrant(
             radius,
             bottom_left,
             &mut self.frontier,
-            &mut WrapCallbacks(callbacks, |x, y| (radius - x, y + radius)),
+            &mut WrapCallbacks(callbacks, |pos: UPosition| {
+                UPosition::new(radius - pos.x, pos.y + radius)
+            }),
         );
 
-        let bottom_right = self.fov.slice_mut(s![radius.., radius..]);
+        let bottom_right = self.fov.slice_mut(s![sradius.., sradius..]);
         shadowcast_quadrant(
             radius,
             bottom_right,
             &mut self.frontier,
-            &mut WrapCallbacks(callbacks, |x, y| (x + radius, y + radius)),
+            &mut WrapCallbacks(callbacks, |pos: UPosition| {
+                UPosition::new(pos.x + radius, pos.y + radius)
+            }),
         );
     }
 }
 
 fn shadowcast_quadrant<T>(
-    radius: usize,
+    radius: u32,
     mut quadrant: ArrayViewMut2<bool>,
-    frontier: &mut Vec<(usize, (f32, f32))>,
+    frontier: &mut Vec<(u32, (f32, f32))>,
     callbacks: &mut T,
 ) where
     T: ShadowcastCallbacks,
@@ -88,14 +103,14 @@ fn shadowcast_quadrant<T>(
         radius,
         quadrant.view_mut().permuted_axes((1, 0)),
         frontier,
-        &mut WrapCallbacks(callbacks, |x, y| (y, x)),
+        &mut WrapCallbacks(callbacks, |pos: UPosition| UPosition::new(pos.y, pos.x)),
     )
 }
 
 fn shadowcast_octant<T>(
-    radius: usize,
+    radius: u32,
     mut quadrant: ArrayViewMut2<bool>,
-    frontier: &mut Vec<(usize, (f32, f32))>,
+    frontier: &mut Vec<(u32, (f32, f32))>,
     callbacks: &mut T,
 ) where
     T: ShadowcastCallbacks,
@@ -110,8 +125,8 @@ fn shadowcast_octant<T>(
 
         let mut last_top = None;
 
-        let top = (top_slope * (x as f32 - 0.5) + 0.5).floor().max(0.0) as usize;
-        let bottom = ((bottom_slope * (x as f32 + 0.5) - 0.5).ceil() as usize).min(x);
+        let top = (top_slope * (x as f32 - 0.5) + 0.5).floor().max(0.0) as u32;
+        let bottom = ((bottom_slope * (x as f32 + 0.5) - 0.5).ceil() as u32).min(x);
 
         for y in top..=bottom {
             if (x * x) + (y * y) > (radius * radius) {
@@ -119,11 +134,11 @@ fn shadowcast_octant<T>(
                 break;
             }
 
-            callbacks.on_visible(x, y);
-            quadrant[[x, y]] = true;
+            callbacks.on_visible(UPosition::new(x, y));
+            quadrant[[usize::try_from(x).unwrap(), usize::try_from(y).unwrap()]] = true;
 
-            if next_x < width {
-                if callbacks.is_visible(x, y) {
+            if usize::try_from(next_x).unwrap() < width {
+                if callbacks.is_visible(UPosition::new(x, y)) {
                     last_top = Some(last_top.unwrap_or(y));
                 } else {
                     // Recurse
@@ -143,7 +158,7 @@ fn shadowcast_octant<T>(
         }
 
         // Recurse any leftover visible tiles
-        if next_x < width {
+        if usize::try_from(next_x).unwrap() < width {
             if let Some(last_top) = last_top.take() {
                 let next_top_slope = if last_top == top {
                     top_slope
@@ -159,9 +174,8 @@ fn shadowcast_octant<T>(
 }
 
 pub trait ShadowcastCallbacks {
-    fn is_visible(&mut self, x: usize, y: usize) -> bool;
-
-    fn on_visible(&mut self, _x: usize, _y: usize) {}
+    fn is_visible(&mut self, pos: UPosition) -> bool;
+    fn on_visible(&mut self, _pos: UPosition) {}
 }
 
 struct WrapCallbacks<'a, T, F>(&'a mut T, F);
@@ -169,22 +183,20 @@ struct WrapCallbacks<'a, T, F>(&'a mut T, F);
 impl<'a, T, F> ShadowcastCallbacks for WrapCallbacks<'a, T, F>
 where
     T: ShadowcastCallbacks,
-    F: Fn(usize, usize) -> (usize, usize),
+    F: Fn(UPosition) -> UPosition,
 {
-    fn is_visible(&mut self, x: usize, y: usize) -> bool {
-        let (x, y) = (self.1)(x, y);
-        self.0.is_visible(x, y)
+    fn is_visible(&mut self, pos: UPosition) -> bool {
+        self.0.is_visible((self.1)(pos))
     }
 
-    fn on_visible(&mut self, x: usize, y: usize) {
-        let (x, y) = (self.1)(x, y);
-        self.0.on_visible(x, y)
+    fn on_visible(&mut self, pos: UPosition) {
+        self.0.on_visible((self.1)(pos));
     }
 }
 
 #[derive(Serialize, Deserialize)]
 pub struct ShadowcastData {
-    radius: usize,
+    radius: u32,
 }
 
 impl Serialize for Shadowcast {

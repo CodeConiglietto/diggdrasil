@@ -5,6 +5,7 @@ use crate::prelude::*;
 #[derive(Component)]
 #[storage(VecStorage)]
 pub struct ParticleComponent {
-    pub position: (i32, i32, i32), //z is height
+    pub position: IPosition,
+    pub height: i32,
     pub particle_type: ParticleType,
 }

@@ -1,5 +1,6 @@
-use crate::prelude::*;
 use specs::{Entities, Join, ReadStorage, System, WriteExpect, WriteStorage};
+
+use crate::prelude::*;
 
 pub struct MovementResolutionSystem;
 
@@ -16,14 +17,13 @@ impl<'a> System<'a> for MovementResolutionSystem {
         let (eids, mut twld, col, mut imc, mut pos) = data;
 
         for (eid, col, imc, pos) in (&eids, &col, &mut imc, &mut pos).join() {
-            if imc.x_delta != 0 || imc.y_delta != 0 {
+            if imc.delta != IPosition::ZERO {
                 //Take current position
                 //Remove entity from entity map at current position
 
-                let new_x = pos.x + imc.x_delta;
-                let new_y = pos.y + imc.y_delta;
+                let new_pos = pos.pos + imc.delta;
 
-                if let Some(new_chunk_tile) = twld.get_mut((new_x, new_y)) {
+                if let Some(new_chunk_tile) = twld.get_mut(new_pos) {
                     if !col.tile_collision.is_some() && col.entity_collisions.is_empty() {
                         //Apply intended movement delta
 
@@ -31,7 +31,7 @@ impl<'a> System<'a> for MovementResolutionSystem {
                         //If new position is outside the entity map, unload it
                         new_chunk_tile.entities.push(eid);
 
-                        let chunk_tile = twld.get_mut((pos.x, pos.y)).unwrap();
+                        let chunk_tile = twld.get_mut(pos.pos).unwrap();
                         //Remove entity from its previous position
                         let index = chunk_tile
                             .entities
@@ -43,15 +43,13 @@ impl<'a> System<'a> for MovementResolutionSystem {
 
                         chunk_tile.entities.remove(index);
 
-                        pos.x = new_x;
-                        pos.y = new_y;
+                        pos.pos = new_pos;
                     }
                 } else {
                     println!("Entity trying to move into unloaded tile!");
                 }
 
-                imc.x_delta = 0;
-                imc.y_delta = 0;
+                imc.delta = IPosition::ZERO;
             }
         }
     }

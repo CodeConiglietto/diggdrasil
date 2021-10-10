@@ -5,10 +5,6 @@ use serde::{Deserialize, Serialize};
 
 use crate::prelude::*;
 
-pub fn pos_is_adjacent((ax, ay): (i32, i32), (bx, by): (i32, i32), allow_same: bool) -> bool {
-    (ax - bx).abs() == 1 || (ay - by).abs() == 1 || (allow_same && ax == bx && ay == by)
-}
-
 //TODO: find a good way to do this better
 pub fn get_random_transforms_from_seed(seed: usize) -> (Rotation, Mirror) {
     (
@@ -149,34 +145,11 @@ pub fn index_to_letter(index: usize) -> Option<char> {
     Some(c)
 }
 
-pub fn global_to_local_position((x, y): (i32, i32)) -> ((i32, i32), (usize, usize)) {
-    (
-        (
-            x.div_euclid(CHUNK_SIZE as i32),
-            y.div_euclid(CHUNK_SIZE as i32),
-        ),
-        (
-            x.rem_euclid(CHUNK_SIZE as i32) as usize,
-            y.rem_euclid(CHUNK_SIZE as i32) as usize,
-        ),
-    )
-}
-
-pub fn local_to_global_position(
-    (chunk_x, chunk_y): (i32, i32),
-    (local_x, local_y): (usize, usize),
-) -> (i32, i32) {
-    (
-        chunk_x * CHUNK_SIZE as i32 + local_x as i32,
-        chunk_y * CHUNK_SIZE as i32 + local_y as i32,
-    )
-}
-
 pub fn save_path() -> PathBuf {
     if let Ok(manifest_dir) = env::var("CARGO_MANIFEST_DIR") {
         PathBuf::from(manifest_dir)
     } else {
-        PathBuf::from(env::current_dir().unwrap())
+        env::current_dir().unwrap()
     }
     .join("saves")
 }

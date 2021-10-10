@@ -115,7 +115,7 @@ impl<'a> System<'a> for SaveLoadSystem {
 
                     if let Some(position) = &mut position {
                         tile_world
-                            .get_mut((position.x, position.y))
+                            .get_mut(position.pos)
                             .unwrap()
                             .entities
                             .push(loaded_entity);

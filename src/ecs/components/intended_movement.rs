@@ -1,10 +1,11 @@
 use serde::{Deserialize, Serialize};
 use specs::{Component, VecStorage};
 
+use crate::prelude::*;
+
 #[derive(Clone, Component, Debug, Serialize, Deserialize)]
 #[storage(VecStorage)]
 pub struct IntendedMovementComponent {
-    pub x_delta: i32,
-    pub y_delta: i32,
+    pub delta: IPosition,
     pub controlled: bool,
 }

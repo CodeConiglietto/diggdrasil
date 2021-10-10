@@ -9,14 +9,7 @@ pub struct TileVariant {
 }
 
 impl TileVariant {
-    pub fn get_from_neighbours(
-        (u, d, l, r): (
-            Option<TileType>,
-            Option<TileType>,
-            Option<TileType>,
-            Option<TileType>,
-        ),
-    ) -> TileVariant {
+    pub fn get_from_neighbours([u, d, l, r]: [Option<TileType>; 4]) -> TileVariant {
         let neighbours = (
             if let Some(u) = u { u.connects() } else { false },
             if let Some(d) = d { d.connects() } else { false },

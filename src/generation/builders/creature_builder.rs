@@ -23,8 +23,7 @@ impl CreatureBuilder {
                 lazy.create_entity(entities)
                     .with(VelocityComponent { x: 0, y: 0 })
                     .with(IntendedMovementComponent {
-                        x_delta: 0,
-                        y_delta: 0,
+                        delta: IPosition::ZERO,
                         controlled: true,
                     })
                     .with(ColliderComponent)
@@ -71,8 +70,7 @@ impl CreatureBuilder {
                 lazy.create_entity(entities)
                     .with(VelocityComponent { x: 0, y: 0 })
                     .with(IntendedMovementComponent {
-                        x_delta: 0,
-                        y_delta: 0,
+                        delta: IPosition::ZERO,
                         controlled: true,
                     })
                     .with(ColliderComponent)

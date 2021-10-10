@@ -44,26 +44,30 @@ pub enum ParticleType {
 }
 
 impl ParticleType {
-    pub fn get_new_position(&self, (x, y, z): (i32, i32, i32)) -> (i32, i32, i32) {
+    pub fn get_new_position(&self, pos: IPosition, z: i32) -> (IPosition, i32) {
         match self {
-            Self::Rain { .. } => (x - 1, y, z - 1),
-            Self::RainSplash { .. } => (x, y, z),
+            Self::Rain { .. } => (pos - IPosition::new(1, 0), z - 1),
+            Self::RainSplash { .. } => (pos, z),
             Self::Leaf => (
-                x + thread_rng().gen_range(-1..=1),
-                y + thread_rng().gen_range(-1..=1),
+                pos + IPosition::new(
+                    thread_rng().gen_range(-1..=1),
+                    thread_rng().gen_range(-1..=1),
+                ),
                 z - thread_rng().gen_range(0..=1),
             ),
             Self::Smoke { .. } => (
-                x + if thread_rng().gen_range(0..=4) == 0 {
-                    thread_rng().gen_range(-1..=1)
-                } else {
-                    0
-                },
-                y + if thread_rng().gen_range(0..=4) == 0 {
-                    thread_rng().gen_range(-1..=1)
-                } else {
-                    0
-                },
+                pos + IPosition::new(
+                    if thread_rng().gen_range(0..=4) == 0 {
+                        thread_rng().gen_range(-1..=1)
+                    } else {
+                        0
+                    },
+                    if thread_rng().gen_range(0..=4) == 0 {
+                        thread_rng().gen_range(-1..=1)
+                    } else {
+                        0
+                    },
+                ),
                 z + if thread_rng().gen_range(0..=3) != 0 {
                     1
                 } else {
@@ -74,26 +78,22 @@ impl ParticleType {
                 x_vel,
                 y_vel,
                 z_vel,
-            } => (x + x_vel, y + y_vel, z + z_vel),
-            Self::Thrust { .. } => (x, y, z),
-            Self::Swing { .. } => (x, y, z),
+            } => (pos + IPosition::new(*x_vel, *y_vel), z + z_vel),
+            Self::Thrust { .. } => (pos, z),
+            Self::Swing { .. } => (pos, z),
             _ => todo!(),
         }
     }
 
     //change this to use an option with none if there are no changes
-    pub fn get_new_state(
-        &self,
-        (x, y, z): (i32, i32, i32),
-        (player_x, player_y): (i32, i32),
-    ) -> ParticleType {
-        let left = player_x - MAP_X_SIZE as i32 / 2;
+    pub fn get_new_state(&self, pos: IPosition, z: i32, player_pos: IPosition) -> ParticleType {
+        let left = player_pos.x - MAP_X_SIZE as i32 / 2;
         let right = left + MAP_X_SIZE as i32;
-        let top = player_y - MAP_Y_SIZE as i32 / 2;
+        let top = player_pos.y - MAP_Y_SIZE as i32 / 2;
         let bottom = top + MAP_Y_SIZE as i32;
 
-        if !(left..right).contains(&x)
-            || !(top..bottom).contains(&y)
+        if !(left..right).contains(&pos.x)
+            || !(top..bottom).contains(&pos.y)
             || !(0..=MAX_PARTICLE_HEIGHT).contains(&z)
         {
             return Self::Finished;

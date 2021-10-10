@@ -59,28 +59,6 @@ impl<'a> System<'a> for GoalResolutionSystem {
                     AIGoal::MoveInDirection { direction } => {}
                     AIGoal::TravelPath { path } => {}
                     AIGoal::TravelToPosition { target_pos } => {}
-                    //TODO: Add better error handling and move item requests to here
-                    AIGoal::StowItem { item } => {}
-                    AIGoal::DropItem { item } => {}
-                    //TODO: allow player to hold item from ground
-                    AIGoal::HoldItem { item } => {}
-                    //TODO: allow player to eat items from the ground
-                    AIGoal::Eat { target } => {}
-                    AIGoal::Build {
-                        x,
-                        y,
-                        tile_type,
-                        consumed_entity,
-                    } => {}
-                    AIGoal::Craft {
-                        recipe,
-                        ingredients,
-                    } => {}
-                    AIGoal::FulfilHunger => {}
-                    AIGoal::FleeDanger => {}
-                    AIGoal::GroupWithAllies => {}
-                    AIGoal::AttackEntity { target } => {}
-                    AIGoal::KillEntity { target } => {}
                 };
 
                 println!("Goal stack size: {}", gol.goal_stack.len());

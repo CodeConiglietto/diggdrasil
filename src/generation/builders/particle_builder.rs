@@ -12,19 +12,21 @@ pub enum ParticleBuilder {
 }
 
 impl ParticleBuilder {
-    pub fn build(&self, lazy: &LazyUpdate, entities: &EntitiesRes, (x, y): (i32, i32)) -> Entity {
+    pub fn build(&self, lazy: &LazyUpdate, entities: &EntitiesRes, position: IPosition) -> Entity {
         match self {
             Self::Leaf { spawn_height } => lazy
                 .create_entity(&entities)
                 .with(ParticleComponent {
-                    position: (x, y, *spawn_height),
+                    position,
+                    height: *spawn_height,
                     particle_type: ParticleType::Leaf,
                 })
                 .build(),
             Self::Rain { wind_direction } => lazy
                 .create_entity(&entities)
                 .with(ParticleComponent {
-                    position: (x, y, thread_rng().gen_range(0..MAX_PARTICLE_HEIGHT)),
+                    position,
+                    height: thread_rng().gen_range(0..MAX_PARTICLE_HEIGHT),
                     particle_type: ParticleType::Rain {
                         initial_angle: *wind_direction,
                     },
@@ -33,7 +35,8 @@ impl ParticleBuilder {
             Self::Blood { spawn_height } => lazy
                 .create_entity(&entities)
                 .with(ParticleComponent {
-                    position: (x, y, *spawn_height),
+                    position,
+                    height: *spawn_height,
                     particle_type: ParticleType::Blood {
                         x_vel: thread_rng().gen_range(-1..=1),
                         y_vel: thread_rng().gen_range(-1..=1),

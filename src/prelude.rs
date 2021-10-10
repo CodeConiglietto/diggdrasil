@@ -63,6 +63,11 @@ pub use crate::{
             attack_type::AttackType,
         },
         geometry::{
+            position::{
+                Position,
+                IPosition,
+                UPosition,
+            },
             axis::Axis,
             direction::Direction,
             directions::Directions,

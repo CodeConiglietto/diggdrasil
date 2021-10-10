@@ -1,15 +1,17 @@
+use std::convert::TryFrom;
+
 use specs::{Entity, WriteStorage};
 
 use crate::prelude::*;
 
 pub struct TileWorldResource {
-    pub offset: (i32, i32),
+    pub offset: IPosition,
     pub buffer: [Chunk; 9],
 }
 
 impl TileWorldResource {
     pub fn new(gen_package: &GenPackageResource, world_data: &mut WorldData) -> Self {
-        let (offset_x, offset_y) = (-1i32, -1i32);
+        let offset = IPosition::new(-1, -1);
         let mut buffer = [
             Chunk::default(),
             Chunk::default(),
@@ -22,63 +24,59 @@ impl TileWorldResource {
             Chunk::default(),
         ];
 
-        for buffer_x in 0..3usize {
-            for buffer_y in 0..3usize {
-                let (chunk_x, chunk_y) = (buffer_x as i32 + offset_x, buffer_y as i32 + offset_y);
-                buffer[Self::buffer_idx(buffer_x, buffer_y)].generate(
-                    (chunk_x, chunk_y),
+        for buffer_x in 0..3 {
+            for buffer_y in 0..3 {
+                let buffer_pos = UPosition::new(buffer_x, buffer_y);
+                let chunk_pos = IPosition::try_from(buffer_pos).unwrap() + offset;
+
+                buffer[Self::buffer_idx(buffer_pos).unwrap()].generate(
+                    chunk_pos,
                     gen_package,
                     world_data,
                 );
             }
         }
 
-        let mut world = Self {
-            offset: (offset_x, offset_y),
-            buffer,
-        };
+        let mut world = Self { offset, buffer };
 
-        let (left, top) = local_to_global_position((offset_x, offset_y), (0, 0));
-        let (right, bottom) = local_to_global_position((offset_x + 3, offset_y + 3), (0, 0));
+        let top_left = IPosition::global_from_local(offset, UPosition::ZERO);
+        let bottom_right =
+            IPosition::global_from_local(offset + IPosition::new(3, 3), UPosition::ZERO);
 
-        for x in left..right {
-            for y in top..bottom {
-                world.refresh_tile_variant((x, y))
+        for x in top_left.x..bottom_right.x {
+            for y in top_left.y..bottom_right.y {
+                world.refresh_tile_variant(IPosition::new(x, y))
             }
         }
 
         world
     }
 
-    pub fn get(&self, pos: (i32, i32)) -> Option<&ChunkTile> {
-        let ((chunk_x, chunk_y), (local_x, local_y)) = global_to_local_position(pos);
-        let (offset_x, offset_y) = self.offset;
+    pub fn get(&self, pos: IPosition) -> Option<&ChunkTile> {
+        let (chunk_pos, local_pos) = pos.global_to_local();
+        let buffer_pos = chunk_pos - self.offset;
 
-        let (buffer_x, buffer_y) = ((chunk_x - offset_x), (chunk_y - offset_y));
-
-        let loaded = (0..3).contains(&buffer_x) && (0..3).contains(&buffer_y);
+        let loaded = (0..3).contains(&buffer_pos.x) && (0..3).contains(&buffer_pos.y);
 
         loaded.then(|| {
-            &self.buffer[Self::buffer_idx(buffer_x as usize, buffer_y as usize)].tiles
-                [[local_x, local_y]]
+            &self.buffer[Self::buffer_idx(UPosition::try_from(buffer_pos).unwrap()).unwrap()].tiles
+                [local_pos.to_idx().unwrap()]
         })
     }
 
-    pub fn get_mut(&mut self, pos: (i32, i32)) -> Option<&mut ChunkTile> {
-        let ((chunk_x, chunk_y), (local_x, local_y)) = global_to_local_position(pos);
-        let (offset_x, offset_y) = self.offset;
+    pub fn get_mut(&mut self, pos: IPosition) -> Option<&mut ChunkTile> {
+        let (chunk_pos, local_pos) = pos.global_to_local();
+        let buffer_pos = chunk_pos - self.offset;
 
-        let (buffer_x, buffer_y) = ((chunk_x - offset_x), (chunk_y - offset_y));
-
-        let loaded = (0..3).contains(&buffer_x) && (0..3).contains(&buffer_y);
+        let loaded = (0..3).contains(&buffer_pos.x) && (0..3).contains(&buffer_pos.y);
 
         loaded.then(move || {
-            &mut self.buffer[Self::buffer_idx(buffer_x as usize, buffer_y as usize)].tiles
-                [[local_x, local_y]]
+            &mut self.buffer[Self::buffer_idx(UPosition::try_from(buffer_pos).unwrap()).unwrap()]
+                .tiles[local_pos.to_idx().unwrap()]
         })
     }
 
-    pub fn refresh_tile_variant(&mut self, pos: (i32, i32)) {
+    pub fn refresh_tile_variant(&mut self, pos: IPosition) {
         let neighbours = self.get_neighbours(pos);
 
         if let Some(chunk_tile) = self.get_mut(pos) {
@@ -88,47 +86,41 @@ impl TileWorldResource {
         }
     }
 
-    pub fn refresh_tile_and_adjacent_variants(&mut self, (x, y): (i32, i32)) {
-        self.refresh_tile_variant((x, y - 1));
-        self.refresh_tile_variant((x - 1, y));
-        self.refresh_tile_variant((x, y));
-        self.refresh_tile_variant((x + 1, y));
-        self.refresh_tile_variant((x, y + 1));
+    pub fn refresh_tile_and_adjacent_variants(&mut self, pos: IPosition) {
+        self.refresh_tile_variant(pos.up());
+        self.refresh_tile_variant(pos.left());
+        self.refresh_tile_variant(pos);
+        self.refresh_tile_variant(pos.right());
+        self.refresh_tile_variant(pos.down());
     }
 
     //Get neighbour tile types in (u, d, l, r) order
-    pub fn get_neighbours(
-        &self,
-        (x, y): (i32, i32),
-    ) -> (
-        Option<TileType>,
-        Option<TileType>,
-        Option<TileType>,
-        Option<TileType>,
-    ) {
-        (
-            self.get((x, y - 1)).map(|tile| tile.tile.tile_type),
-            self.get((x, y + 1)).map(|tile| tile.tile.tile_type),
-            self.get((x - 1, y)).map(|tile| tile.tile.tile_type),
-            self.get((x + 1, y)).map(|tile| tile.tile.tile_type),
-        )
+    pub fn get_neighbours(&self, pos: IPosition) -> [Option<TileType>; 4] {
+        [
+            self.get(pos.up()).map(|tile| tile.tile.tile_type),
+            self.get(pos.down()).map(|tile| tile.tile.tile_type),
+            self.get(pos.left()).map(|tile| tile.tile.tile_type),
+            self.get(pos.right()).map(|tile| tile.tile.tile_type),
+        ]
     }
 
     pub fn spawn_entity(
         &mut self,
         entity: Entity,
-        (x, y): (i32, i32),
+        pos: IPosition,
         position_component: &mut WriteStorage<PositionComponent>,
     ) {
-        assert!(
-            position_component
-                .insert(entity, PositionComponent { x, y })
-                .unwrap()
-                .is_none(),
-            "Cannot spawn entity that already has a position!"
-        );
+        if let Some(previous_pos) = position_component
+            .insert(entity, PositionComponent { pos })
+            .unwrap()
+        {
+            panic!(
+                "Cannot spawn entity at {} that already has a position {}!",
+                pos, previous_pos.pos
+            );
+        }
 
-        self.get_mut((x, y)).unwrap().entities.push(entity);
+        self.get_mut(pos).unwrap().entities.push(entity);
     }
 
     pub fn despawn_entity(
@@ -136,8 +128,11 @@ impl TileWorldResource {
         entity: Entity,
         position_component: &mut WriteStorage<PositionComponent>,
     ) {
-        let pos = position_component.remove(entity).unwrap();
-        let entities = &mut self.get_mut((pos.x, pos.y)).unwrap().entities;
+        let pos = position_component
+            .remove(entity)
+            .expect("Trying to despawn entity with no position");
+
+        let entities = &mut self.get_mut(pos.pos).unwrap().entities;
 
         let (index, _item) = entities
             .iter()
@@ -147,7 +142,7 @@ impl TileWorldResource {
         entities.remove(index);
     }
 
-    pub fn buffer_idx(buffer_x: usize, buffer_y: usize) -> usize {
-        buffer_y * 3 + buffer_x
+    pub fn buffer_idx(buffer_pos: UPosition) -> Result<usize, <usize as TryFrom<u32>>::Error> {
+        Ok(usize::try_from(buffer_pos.y)? * 3 + usize::try_from(buffer_pos.x)?)
     }
 }

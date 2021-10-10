@@ -1,3 +1,5 @@
+use std::convert::TryFrom;
+
 use specs::prelude::*;
 
 use crate::prelude::*;
@@ -31,37 +33,36 @@ impl<'a> System<'a> for FieldOfViewCalculationSystem {
 }
 
 struct FieldOfViewCallbacks<'a> {
-    radius: usize,
+    radius: u32,
     tile_world: &'a TileWorldResource,
     position: &'a PositionComponent,
     ai_perception: Option<&'a mut AIPerceptionComponent>,
 }
 
 impl<'a> FieldOfViewCallbacks<'a> {
-    fn fov_to_world_pos(&self, fov_x: usize, fov_y: usize) -> (i32, i32) {
-        (
-            fov_x as i32 - self.radius as i32 + self.position.x,
-            fov_y as i32 - self.radius as i32 + self.position.y,
-        )
+    fn fov_to_world_pos(&self, fov_pos: UPosition) -> IPosition {
+        IPosition::try_from(fov_pos).unwrap()
+            - IPosition::try_from(UPosition::new(self.radius, self.radius)).unwrap()
+            + self.position.pos
     }
 }
 
 impl<'a> ShadowcastCallbacks for FieldOfViewCallbacks<'a> {
-    fn is_visible(&mut self, fov_x: usize, fov_y: usize) -> bool {
-        let (x, y) = self.fov_to_world_pos(fov_x, fov_y);
+    fn is_visible(&mut self, fov_pos: UPosition) -> bool {
+        let pos = self.fov_to_world_pos(fov_pos);
 
-        if let Some(chunk_tile) = self.tile_world.get((x, y)) {
+        if let Some(chunk_tile) = self.tile_world.get(pos) {
             !chunk_tile.tile.tile_type.collides()
         } else {
             false
         }
     }
 
-    fn on_visible(&mut self, fov_x: usize, fov_y: usize) {
-        let (x, y) = self.fov_to_world_pos(fov_x, fov_y);
+    fn on_visible(&mut self, fov_pos: UPosition) {
+        let pos = self.fov_to_world_pos(fov_pos);
 
         if let Some(ai_perception) = &mut self.ai_perception {
-            if let Some(chunk_tile) = self.tile_world.get((x, y)) {
+            if let Some(chunk_tile) = self.tile_world.get(pos) {
                 for entity in chunk_tile.entities.iter() {
                     ai_perception.all.push(*entity);
                 }

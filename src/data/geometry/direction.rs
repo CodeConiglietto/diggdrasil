@@ -3,6 +3,8 @@ use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
 use strum::EnumIter;
 
+use crate::prelude::*;
+
 #[derive(Debug, Clone, Copy, EnumIter, Serialize, Deserialize, PartialEq)]
 pub enum Direction {
     None,
@@ -17,8 +19,8 @@ pub enum Direction {
 }
 
 impl Direction {
-    pub fn from_positions((ax, ay): (i32, i32), (bx, by): (i32, i32)) -> Self {
-        match (ax.cmp(&bx), ay.cmp(&by)) {
+    pub fn from_positions(a: IPosition, b: IPosition) -> Self {
+        match (a.x.cmp(&b.x), a.y.cmp(&b.y)) {
             (Ordering::Equal, Ordering::Equal) => Direction::None,
             (Ordering::Less, Ordering::Less) => Direction::UpLeft,
             (Ordering::Equal, Ordering::Less) => Direction::Up,
@@ -47,17 +49,17 @@ impl Direction {
         }
     }
 
-    pub fn get_offset(&self) -> (i32, i32) {
+    pub fn get_offset(&self) -> IPosition {
         match self {
-            Direction::None => (0, 0),
-            Direction::UpLeft => (-1, -1),
-            Direction::Up => (0, -1),
-            Direction::UpRight => (1, -1),
-            Direction::Right => (1, 0),
-            Direction::DownRight => (1, 1),
-            Direction::Down => (0, 1),
-            Direction::DownLeft => (-1, 1),
-            Direction::Left => (-1, 0),
+            Direction::None => IPosition::new(0, 0),
+            Direction::UpLeft => IPosition::new(-1, -1),
+            Direction::Up => IPosition::new(0, -1),
+            Direction::UpRight => IPosition::new(1, -1),
+            Direction::Right => IPosition::new(1, 0),
+            Direction::DownRight => IPosition::new(1, 1),
+            Direction::Down => IPosition::new(0, 1),
+            Direction::DownLeft => IPosition::new(-1, 1),
+            Direction::Left => IPosition::new(-1, 0),
         }
     }
 
@@ -90,15 +92,15 @@ impl Direction {
     }
 
     pub fn is_diagonal(&self) -> bool {
-        let (x, y) = self.get_offset();
+        let offset = self.get_offset();
 
-        x.abs() == 1 && y.abs() == 1
+        offset.x.abs() == 1 && offset.y.abs() == 1
     }
 
     pub fn is_orthogonal(&self) -> bool {
-        let (x, y) = self.get_offset();
+        let offset = self.get_offset();
 
-        x.abs() != y.abs()
+        offset.x.abs() != offset.y.abs()
     }
 }
 

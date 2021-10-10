@@ -16,11 +16,10 @@ impl<'a> System<'a> for ParticleEmitterSystem {
         let (eids, lup, pos, pec) = data;
 
         for (pos, pec) in (&pos, &pec).join() {
-            let PositionComponent { x, y } = pos;
-
             lup.create_entity(&eids)
                 .with(ParticleComponent {
-                    position: (*x, *y, 1),
+                    position: pos.pos,
+                    height: 1,
                     particle_type: pec.particle_type,
                 })
                 .build();

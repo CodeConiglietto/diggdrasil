@@ -1,5 +1,6 @@
 use std::{
     borrow::Cow,
+    convert::TryFrom,
     fs::{self, File},
     io::Read,
     path::PathBuf,
@@ -40,50 +41,39 @@ impl<'a> System<'a> for WorldMaintenanceSystem {
         assert!((&to_save).join().next().is_none());
 
         if let Some((_input, position)) = (&input, &world_data.position).join().next() {
-            let center_pos = (position.x, position.y);
+            let (center_chunk_pos, _) = position.pos.global_to_local();
+            let new_offset = center_chunk_pos - IPosition::new(1, 1);
 
-            let (offset_x, offset_y) = twld.offset;
+            if twld.offset != new_offset {
+                let offset_diff = new_offset - twld.offset;
 
-            let ((center_chunk_x, center_chunk_y), _) = global_to_local_position(center_pos);
-            let (new_offset_x, new_offset_y) = (center_chunk_x - 1, center_chunk_y - 1);
-            let (offset_diff_x, offset_diff_y) = (new_offset_x - offset_x, new_offset_y - offset_y);
-
-            if (offset_x, offset_y) != (new_offset_x, new_offset_y) {
                 // Relocate chunks
-                for x in 0..3i32 {
-                    let buffer_x = if offset_diff_x > 0 { x } else { 2 - x };
+                for x in 0..3 {
+                    let buffer_x = if offset_diff.x > 0 { x } else { 2 - x };
 
-                    for y in 0..3i32 {
-                        let buffer_y = if offset_diff_y > 0 { y } else { 2 - y };
+                    for y in 0..3 {
+                        let buffer_y = if offset_diff.y > 0 { y } else { 2 - y };
+                        let buffer_upos = UPosition::new(buffer_x, buffer_y);
+                        let buffer_ipos = IPosition::try_from(buffer_upos).unwrap();
+                        let chunk_pos = buffer_ipos + twld.offset;
+                        let new_chunk_pos = buffer_ipos + new_offset;
 
-                        let (chunk_x, chunk_y) =
-                            (buffer_x as i32 + offset_x, buffer_y as i32 + offset_y);
+                        let from_buffer_pos = buffer_ipos + offset_diff;
+                        let to_buffer_pos = buffer_ipos - offset_diff;
 
-                        let (new_chunk_x, new_chunk_y) = (
-                            buffer_x as i32 + new_offset_x,
-                            buffer_y as i32 + new_offset_y,
-                        );
-
-                        let (from_buffer_x, from_buffer_y) =
-                            (buffer_x + offset_diff_x, buffer_y + offset_diff_y);
-                        let (to_buffer_x, to_buffer_y) =
-                            (buffer_x - offset_diff_x, buffer_y - offset_diff_y);
-
-                        let unload =
-                            !(0..3).contains(&to_buffer_x) || !(0..3).contains(&to_buffer_y);
-                        let relocate =
-                            (0..3).contains(&from_buffer_x) && (0..3).contains(&from_buffer_y);
+                        let unload = !(0..3).contains(&to_buffer_pos.x)
+                            || !(0..3).contains(&to_buffer_pos.y);
+                        let relocate = (0..3).contains(&from_buffer_pos.x)
+                            && (0..3).contains(&from_buffer_pos.y);
 
                         if unload {
                             debug!(
-                                "Saving chunk ({},{}) from buffer index ({},{})",
-                                chunk_x, chunk_y, buffer_x, buffer_y
+                                "Saving chunk {} from buffer index {}",
+                                chunk_pos, buffer_upos
                             );
 
-                            let chunk = &mut twld.buffer[TileWorldResource::buffer_idx(
-                                buffer_x as usize,
-                                buffer_y as usize,
-                            )];
+                            let chunk = &mut twld.buffer
+                                [TileWorldResource::buffer_idx(buffer_upos).unwrap()];
 
                             self.ids.clear();
                             for chunk_tile in chunk.tiles.iter_mut() {
@@ -107,7 +97,7 @@ impl<'a> System<'a> for WorldMaintenanceSystem {
                                 ids: Cow::Borrowed(&self.ids),
                             };
 
-                            let filename = chunk_filename((chunk_x, chunk_y));
+                            let filename = chunk_filename(chunk_pos);
 
                             self.save_buf.clear();
                             serialize_data(&saved_chunk, &mut self.save_buf);
@@ -117,33 +107,28 @@ impl<'a> System<'a> for WorldMaintenanceSystem {
 
                         if relocate {
                             trace!(
-                                "Relocating chunk ({},{}) from buffer index ({},{}) to ({}, {})",
-                                new_chunk_x,
-                                new_chunk_y,
-                                from_buffer_x,
-                                from_buffer_y,
-                                buffer_x,
-                                buffer_y,
+                                "Relocating chunk {} from buffer index {} to {}",
+                                new_chunk_pos,
+                                from_buffer_pos,
+                                buffer_upos,
                             );
                             twld.buffer.swap(
-                                TileWorldResource::buffer_idx(buffer_x as usize, buffer_y as usize),
+                                TileWorldResource::buffer_idx(buffer_upos).unwrap(),
                                 TileWorldResource::buffer_idx(
-                                    from_buffer_x as usize,
-                                    from_buffer_y as usize,
-                                ),
+                                    UPosition::try_from(from_buffer_pos).unwrap(),
+                                )
+                                .unwrap(),
                             );
                         } else {
-                            let filename = chunk_filename((new_chunk_x, new_chunk_y));
+                            let filename = chunk_filename(new_chunk_pos);
                             if filename.exists() {
                                 debug!(
-                                    "Loading chunk ({},{}) at buffer index ({}, {}) from file",
-                                    new_chunk_x, new_chunk_y, buffer_x, buffer_y
+                                    "Loading chunk {} at buffer index {} from file",
+                                    new_chunk_pos, buffer_upos
                                 );
 
-                                let chunk = &mut twld.buffer[TileWorldResource::buffer_idx(
-                                    buffer_x as usize,
-                                    buffer_y as usize,
-                                )];
+                                let chunk = &mut twld.buffer
+                                    [TileWorldResource::buffer_idx(buffer_upos).unwrap()];
 
                                 self.save_buf.clear();
                                 {
@@ -157,35 +142,30 @@ impl<'a> System<'a> for WorldMaintenanceSystem {
                                 pending_load.ids.extend(saved_chunk.ids.iter().copied());
                             } else {
                                 debug!(
-                                    "Generating chunk ({},{}) at buffer index ({},{})",
-                                    new_chunk_x, new_chunk_y, buffer_x, buffer_y
+                                    "Generating chunk {} at buffer index {}",
+                                    new_chunk_pos, buffer_upos
                                 );
 
-                                twld.buffer[TileWorldResource::buffer_idx(
-                                    buffer_x as usize,
-                                    buffer_y as usize,
-                                )]
-                                .generate(
-                                    (new_chunk_x, new_chunk_y),
-                                    &gpac,
-                                    &mut world_data,
-                                );
+                                twld.buffer[TileWorldResource::buffer_idx(buffer_upos).unwrap()]
+                                    .generate(new_chunk_pos, &gpac, &mut world_data);
                             }
                         }
                     }
                 }
 
-                twld.offset = (new_offset_x, new_offset_y);
+                twld.offset = new_offset;
 
                 // TODO Optimize this to only recompute variants on new chunks and tiles adjacent to them rather than everywhere
 
-                let (left, top) = local_to_global_position((new_offset_x, new_offset_y), (0, 0));
-                let (right, bottom) =
-                    local_to_global_position((new_offset_x + 3, new_offset_y + 3), (0, 0));
+                let top_left = IPosition::global_from_local(new_offset, UPosition::ZERO);
+                let bottom_right = IPosition::global_from_local(
+                    new_offset + IPosition::new(3, 3),
+                    UPosition::ZERO,
+                );
 
-                for x in left..right {
-                    for y in top..bottom {
-                        twld.refresh_tile_variant((x, y));
+                for x in top_left.x..bottom_right.x {
+                    for y in top_left.y..bottom_right.y {
+                        twld.refresh_tile_variant(IPosition::new(x, y));
                     }
                 }
             }
@@ -193,6 +173,6 @@ impl<'a> System<'a> for WorldMaintenanceSystem {
     }
 }
 
-fn chunk_filename((chunk_x, chunk_y): (i32, i32)) -> PathBuf {
-    save_path().join(format!("c_{:+04}_{:+04}.bin", chunk_x, chunk_y))
+fn chunk_filename(chunk_pos: IPosition) -> PathBuf {
+    save_path().join(format!("c_{:+04}_{:+04}.bin", chunk_pos.x, chunk_pos.y))
 }

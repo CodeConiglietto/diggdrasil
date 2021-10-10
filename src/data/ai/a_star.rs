@@ -2,16 +2,13 @@ use std::{cmp::Ordering, collections::BinaryHeap, convert::TryFrom};
 
 use ndarray::{Array2, ArrayView2};
 
+use crate::prelude::*;
+
 #[derive(Debug, Clone)]
 pub enum VisitedNode {
     Unvisited,
-    Visited {
-        distance: u32,
-    },
-    VisitedFrom {
-        distance: u32,
-        previous: (usize, usize),
-    },
+    Visited { distance: u32 },
+    VisitedFrom { distance: u32, previous: UPosition },
 }
 
 impl VisitedNode {
@@ -29,7 +26,7 @@ impl VisitedNode {
         }
     }
 
-    pub fn previous(&self) -> Option<(usize, usize)> {
+    pub fn previous(&self) -> Option<UPosition> {
         match self {
             Self::Unvisited | Self::Visited { .. } => None,
             Self::VisitedFrom { previous, .. } => Some(*previous),
@@ -39,7 +36,7 @@ impl VisitedNode {
 
 #[derive(Debug, Clone)]
 pub struct FrontierNode {
-    pub pos: (usize, usize),
+    pub pos: UPosition,
     pub distance: u32,
     pub heuristic: u32,
 }
@@ -73,15 +70,15 @@ impl Ord for FrontierNode {
 
 pub struct AStarPath<'a> {
     a_star: &'a AStar,
-    current: Option<(usize, usize)>,
+    current: Option<UPosition>,
 }
 
 impl<'a> Iterator for AStarPath<'a> {
-    type Item = (usize, usize);
+    type Item = UPosition;
 
     fn next(&mut self) -> Option<Self::Item> {
         self.current.map(|current| {
-            self.current = self.a_star.visited[current].previous();
+            self.current = self.a_star.visited[current.to_idx().unwrap()].previous();
             current
         })
     }
@@ -106,8 +103,8 @@ impl AStar {
         self.frontier.clear();
     }
 
-    pub fn add_to_frontier(&mut self, node: FrontierNode, previous: Option<(usize, usize)>) {
-        self.visited[node.pos] = if let Some(previous) = previous {
+    pub fn add_to_frontier(&mut self, node: FrontierNode, previous: Option<UPosition>) {
+        self.visited[node.pos.to_idx().unwrap()] = if let Some(previous) = previous {
             VisitedNode::VisitedFrom {
                 distance: node.distance,
                 previous,
@@ -127,24 +124,25 @@ impl AStar {
 
     pub fn a_star<S, I, G>(&mut self, mut successors: S, mut goal: G) -> Option<FrontierNode>
     where
-        S: FnMut(usize, usize) -> I,
+        S: FnMut(UPosition) -> I,
         I: IntoIterator<Item = FrontierNode>,
-        G: FnMut(usize, usize) -> bool,
+        G: FnMut(UPosition) -> bool,
     {
         while let Some(current) = self.frontier.pop() {
-            if goal(current.pos.0, current.pos.1) {
+            if goal(current.pos) {
                 return Some(current);
             }
 
-            for successor in successors(current.pos.0, current.pos.1) {
+            for successor in successors(current.pos) {
                 let distance = current.distance + successor.distance;
 
-                let better_path =
-                    if let Some(visited_distance) = &self.visited[successor.pos].distance() {
-                        distance < *visited_distance
-                    } else {
-                        true
-                    };
+                let better_path = if let Some(visited_distance) =
+                    &self.visited[successor.pos.to_idx().unwrap()].distance()
+                {
+                    distance < *visited_distance
+                } else {
+                    true
+                };
 
                 if better_path {
                     self.add_to_frontier(
@@ -162,7 +160,7 @@ impl AStar {
         None
     }
 
-    pub fn extract_path(&self, end: (usize, usize)) -> AStarPath {
+    pub fn extract_path(&self, end: UPosition) -> AStarPath {
         AStarPath {
             a_star: self,
             current: Some(end),
@@ -171,12 +169,12 @@ impl AStar {
 
     pub fn a_star_simple<F>(
         &mut self,
-        start: (usize, usize),
-        goal: (usize, usize),
+        start: UPosition,
+        goal: UPosition,
         travel_fn: F,
     ) -> Option<AStarPath>
     where
-        F: Fn((usize, usize), (usize, usize)) -> Option<u32>,
+        F: Fn(UPosition, UPosition) -> Option<u32>,
     {
         let (width, height) = self.visited.dim();
 
@@ -191,34 +189,34 @@ impl AStar {
             None,
         );
 
-        let successors = |x, y| {
+        let successors = |pos| {
             let travel_fn = &travel_fn;
 
             (-1..=1)
-                .flat_map(|dy| (-1..=1).map(move |dx| (dx, dy)))
-                .filter_map(move |(dy, dx)| {
-                    let xx = usize::try_from(x as i64 + dx).ok();
-                    let yy = usize::try_from(y as i64 + dy).ok();
-
-                    xx.and_then(|xx| yy.map(|yy| (xx, yy)))
+                .flat_map(|dy| (-1..=1).map(move |dx| IPosition::new(dx, dy)))
+                .filter_map(move |diff| {
+                    UPosition::try_from(IPosition::try_from(pos).unwrap() + diff).ok()
                 })
-                .filter(|(xx, yy)| *xx < width && *yy < height)
-                .filter_map(move |(xx, yy)| {
-                    travel_fn((x, y), (xx, yy)).map(|distance| FrontierNode {
-                        pos: (xx, yy),
+                .filter(|dpos| {
+                    usize::try_from(dpos.x).unwrap() < width
+                        && usize::try_from(dpos.y).unwrap() < height
+                })
+                .filter_map(move |dpos| {
+                    travel_fn(pos, dpos).map(|distance| FrontierNode {
+                        pos: dpos,
                         distance,
-                        heuristic: chebyshev((xx, yy), goal),
+                        heuristic: chebyshev(dpos, goal),
                     })
                 })
         };
 
-        self.a_star(successors, |x, y| (x, y) == goal)
+        self.a_star(successors, |pos| pos == goal)
             .map(move |result| self.extract_path(result.pos))
     }
 }
 
-fn chebyshev((x1, y1): (usize, usize), (x2, y2): (usize, usize)) -> u32 {
-    ((x2 as isize - x1 as isize).abs() as u32).max((y2 as isize - y1 as isize).abs() as u32)
+fn chebyshev(a: UPosition, b: UPosition) -> u32 {
+    ((b.x as isize - a.x as isize).abs() as u32).max((b.y as isize - a.y as isize).abs() as u32)
 }
 
 #[cfg(test)]
@@ -230,14 +228,17 @@ mod tests {
     #[test]
     fn test_2d_path_1() {
         let map = test_map();
-        check_path(map.view(), &a_star_2d(map.view(), (0, 0), (19, 9)).unwrap());
+        check_path(
+            map.view(),
+            &a_star_2d(map.view(), UPosition::new(0, 0), UPosition::new(19, 9)).unwrap(),
+        );
     }
 
     #[test]
     fn test_2d_path_1_rev() {
         let map = test_map();
-        let path = a_star_2d(map.view(), (0, 0), (19, 9)).unwrap();
-        let rev_path = a_star_2d(map.view(), (19, 9), (0, 0)).unwrap();
+        let path = a_star_2d(map.view(), UPosition::new(0, 0), UPosition::new(19, 9)).unwrap();
+        let rev_path = a_star_2d(map.view(), UPosition::new(19, 9), UPosition::new(0, 0)).unwrap();
 
         check_path(map.view(), &path);
         check_path(map.view(), &rev_path);
@@ -248,14 +249,17 @@ mod tests {
     #[test]
     fn test_2d_path_2() {
         let map = test_map();
-        check_path(map.view(), &a_star_2d(map.view(), (0, 2), (19, 9)).unwrap());
+        check_path(
+            map.view(),
+            &a_star_2d(map.view(), UPosition::new(0, 2), UPosition::new(19, 9)).unwrap(),
+        );
     }
 
     #[test]
     fn test_2d_path_2_rev() {
         let map = test_map();
-        let path = a_star_2d(map.view(), (0, 2), (19, 9)).unwrap();
-        let rev_path = a_star_2d(map.view(), (19, 9), (0, 2)).unwrap();
+        let path = a_star_2d(map.view(), UPosition::new(0, 2), UPosition::new(19, 9)).unwrap();
+        let rev_path = a_star_2d(map.view(), UPosition::new(19, 9), UPosition::new(0, 2)).unwrap();
 
         check_path(map.view(), &path);
         check_path(map.view(), &rev_path);
@@ -265,16 +269,17 @@ mod tests {
 
     fn a_star_2d(
         map: ArrayView2<bool>,
-        start: (usize, usize),
-        goal: (usize, usize),
-    ) -> Option<Vec<(usize, usize)>> {
+        start: UPosition,
+        goal: UPosition,
+    ) -> Option<Vec<UPosition>> {
         let (height, width) = map.dim();
 
         let mut a_star = AStar::new(height, width);
 
         a_star
-            .a_star_simple(start, goal, |_, (x, y)| {
-                map.get((x, y)).and_then(|passable| passable.then(|| 1))
+            .a_star_simple(start, goal, |_, pos| {
+                map.get(pos.to_idx().unwrap())
+                    .and_then(|passable| passable.then(|| 1))
             })
             .map(|path| {
                 let mut path: Vec<_> = path.collect();
@@ -310,12 +315,13 @@ mod tests {
         map.map(|v| *v > 0)
     }
 
-    fn check_path(map: ArrayView2<bool>, path: &[(usize, usize)]) {
+    fn check_path(map: ArrayView2<bool>, path: &[UPosition]) {
         let mut display = map.map(|v| if *v { ' ' } else { '█' });
 
-        for (x, y) in path.iter() {
-            assert!(map[[*x, *y]]);
-            display[[*x, *y]] = '.';
+        for pos in path.iter() {
+            let idx = pos.to_idx().unwrap();
+            assert!(map[idx]);
+            display[idx] = '.';
         }
 
         println!("{:?}", path);

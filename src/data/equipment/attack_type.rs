@@ -28,7 +28,7 @@ impl AttackType {
         &self,
         attack_direction: &Direction,
         swing_direction: Option<RotationDirection>,
-    ) -> Vec<(i32, i32)> {
+    ) -> Vec<IPosition> {
         match self {
             Self::Stab => Self::LinearAttack { thrust_range: 1 }
                 .get_offsets(attack_direction, swing_direction),
@@ -41,11 +41,11 @@ impl AttackType {
             Self::Twirl => Self::RotationalAttack { swing_angle: 8 }
                 .get_offsets(attack_direction, swing_direction),
             Self::LinearAttack { thrust_range } => {
-                let (adx, ady) = attack_direction.get_offset();
+                let offset = attack_direction.get_offset();
 
                 (1..(*thrust_range + 1) as i32)
                     .rev()
-                    .map(|i| (adx * i, ady * i))
+                    .map(|i| offset * i)
                     .collect()
             }
             Self::RotationalAttack { swing_angle } => {
@@ -66,7 +66,7 @@ impl AttackType {
                                 i
                             };
 
-                        (IWave::Sin.get_value(angle), IWave::Cos.get_value(angle))
+                        IPosition::new(IWave::Sin.get_value(angle), IWave::Cos.get_value(angle))
                     })
                     .collect()
             }

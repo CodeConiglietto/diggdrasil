@@ -10,7 +10,7 @@ pub struct FieldOfViewComponent {
 }
 
 impl FieldOfViewComponent {
-    pub fn new(radius: usize) -> Self {
+    pub fn new(radius: u32) -> Self {
         Self {
             shadowcast: Shadowcast::new(radius),
         }

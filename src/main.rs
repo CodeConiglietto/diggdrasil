@@ -152,7 +152,7 @@ impl MainState {
 
             let player = CreatureBuilder::Humanoid { race: Race::Human }.build(&lazy, &entities);
             input.insert(player, InputComponent::default()).unwrap();
-            tile_world.spawn_entity(player, (16, 16), &mut position);
+            tile_world.spawn_entity(player, IPosition::new(16, 16), &mut position);
         }
 
         //Assign resources to ecs world
@@ -254,7 +254,7 @@ impl event::EventHandler<ggez::GameError> for MainState {
             let mut viewport = self.ecs_world.write_resource::<ViewportResource>();
 
             if let Some((_input, position)) = (&data.input, &data.position).join().next() {
-                viewport.camera_world_position = (position.x, position.y);
+                viewport.camera_world_position = position.pos;
             }
         }
 
@@ -355,27 +355,31 @@ impl event::EventHandler<ggez::GameError> for MainState {
             .join()
             .next()
         {
-            let left = position.x - MAP_X_SIZE as i32 / 2;
-            let top = position.y - MAP_Y_SIZE as i32 / 2;
+            let offset = MAP_X_SIZE as i32 / 2;
+            let top_left = position.pos - IPosition::new(offset, offset);
 
             for (screen_y, particles) in
                 (0..(MAP_Y_SIZE as i32)).zip_eq(data.particle_map.contents.iter())
             {
                 for screen_x in 0..(MAP_X_SIZE as i32) {
-                    let world_x = left + screen_x;
-                    let world_y = top + screen_y;
+                    let screen_pos = IPosition::new(screen_x, screen_y);
+                    let world_pos = top_left + screen_pos;
 
                     let visible = if let Some(field_of_view) = field_of_view {
-                        let radius = field_of_view.shadowcast.radius() as i32;
+                        let radius = i32::try_from(field_of_view.shadowcast.radius()).unwrap();
 
-                        let fov_x = usize::try_from(world_x + radius - position.x).ok();
-                        let fov_y = usize::try_from(world_y + radius - position.y).ok();
+                        let fov_pos = UPosition::try_from(
+                            world_pos + IPosition::new(radius, radius) - position.pos,
+                        )
+                        .ok();
 
-                        fov_x
-                            .and_then(|fov_x| {
-                                fov_y.and_then(|fov_y| {
-                                    field_of_view.shadowcast.fov().get((fov_x, fov_y)).copied()
-                                })
+                        fov_pos
+                            .and_then(|fov_pos| {
+                                field_of_view
+                                    .shadowcast
+                                    .fov()
+                                    .get(fov_pos.to_idx().unwrap())
+                                    .copied()
                             })
                             .unwrap_or(false)
                     } else {
@@ -383,7 +387,7 @@ impl event::EventHandler<ggez::GameError> for MainState {
                     };
 
                     if visible {
-                        if let Some(tile) = data.tile_world.get((world_x, world_y)) {
+                        if let Some(tile) = data.tile_world.get(world_pos) {
                             if self.symbolic_view {
                                 tile.tile
                                     .get_symbolbuilder()
@@ -433,17 +437,16 @@ impl event::EventHandler<ggez::GameError> for MainState {
 
                 for particle in particles.iter() {
                     let pac = data.particle.get(*particle).unwrap();
-                    let (x, y, z) = pac.position;
 
                     pac.particle_type.get_char().draw_to_font_batch(
                         &mut self.font_batch,
-                        (x - left, y - z - top),
+                        (pac.position - top_left - IPosition::new(0, pac.height)).as_tuple(),
                         RENDER_SCALE,
                     );
                 }
 
                 if let Some(path) = &input.path {
-                    for (step_x, step_y) in path {
+                    for step in path {
                         GgBunnyChar {
                             index: b'.' as usize,
                             foreground: Color::new(0.75, 0.75, 0.0, 1.0),
@@ -453,7 +456,7 @@ impl event::EventHandler<ggez::GameError> for MainState {
                         }
                         .draw_to_font_batch(
                             &mut self.font_batch,
-                            (step_x - left, step_y - top),
+                            (*step - top_left).as_tuple(),
                             RENDER_SCALE,
                         );
                     }

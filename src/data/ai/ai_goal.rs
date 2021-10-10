@@ -11,10 +11,10 @@ pub enum AIGoal {
         direction: Direction,
     },
     TravelPath {
-        path: Vec<(i32, i32)>,
+        path: Vec<IPosition>,
     },
     TravelToPosition {
-        target_pos: (i32, i32),
+        target_pos: IPosition,
     },
     StowItem {
         item: Entity,
@@ -29,8 +29,7 @@ pub enum AIGoal {
         target: Option<Entity>,
     },
     Build {
-        x: i32,
-        y: i32,
+        pos: IPosition,
         tile_type: Option<TileType>,
         consumed_entity: Option<Entity>,
     },
@@ -96,8 +95,7 @@ impl AIGoal {
                 format!("Eat {}", consumed_entity_name)
             }
             Self::Build {
-                x,
-                y,
+                pos,
                 tile_type,
                 consumed_entity,
             } => {
@@ -116,8 +114,8 @@ impl AIGoal {
                 };
 
                 format!(
-                    "Build {} at ({}, {}) from {}",
-                    tile_name, x, y, consumed_entity_name
+                    "Build {} at {} from {}",
+                    tile_name, pos, consumed_entity_name
                 )
             }
             Self::Craft { recipe, .. } => {

@@ -27,7 +27,7 @@ impl<'a> System<'a> for WeatherSystem {
                 .build(
                     &lup,
                     &eids,
-                    (
+                    IPosition::new(
                         thread_rng().gen_range(left..right) as i32,
                         thread_rng().gen_range(top..bottom) as i32,
                     ),

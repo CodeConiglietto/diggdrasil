@@ -18,11 +18,11 @@ impl<'a> System<'a> for HealthResolutionSystem {
         let (eids, lup, mut twld, mut hpc, mut pos, mut dec) = data;
 
         for (eid, hpc, dec) in (&eids, &mut hpc, &mut dec).join() {
-            let PositionComponent { x, y } = *(pos.get(eid).unwrap());
+            let position = pos.get(eid).unwrap().pos;
 
             for _ in 0..hpc.turn_damage {
                 if let Some(particle) = hpc.hit_particle {
-                    particle.build(&lup, &eids, (x, y));
+                    particle.build(&lup, &eids, position);
                 }
 
                 hpc.value -= 1;
@@ -31,7 +31,7 @@ impl<'a> System<'a> for HealthResolutionSystem {
 
                 if hpc.value == 0 {
                     for dec in dec.contained_entities.drain(..) {
-                        twld.spawn_entity(dec, (x, y), &mut pos);
+                        twld.spawn_entity(dec, position, &mut pos);
                     }
 
                     twld.despawn_entity(eid, &mut pos);

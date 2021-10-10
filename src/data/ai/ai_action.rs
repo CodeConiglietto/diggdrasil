@@ -5,13 +5,12 @@ use crate::prelude::*;
 #[derive(Clone, Debug)]
 pub enum AIAction {
     MoveInDirection {
-        x: i32,
-        y: i32,
+        offset: IPosition,
     },
     AttackInDirection {
         direction: Direction,
         attack: Attack,
-        attack_offsets: Option<Vec<(i32, i32)>>,
+        attack_offsets: Option<Vec<IPosition>>,
     },
     AttackEntity {
         target: Entity,
@@ -33,8 +32,7 @@ pub enum AIAction {
         target: Entity,
     },
     BuildAtLocation {
-        x: i32,
-        y: i32,
+        pos: IPosition,
         tile_type: TileType,
         consumed_entity: Entity,
     },
