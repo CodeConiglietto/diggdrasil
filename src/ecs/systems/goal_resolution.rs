@@ -3,47 +3,20 @@ use rand::prelude::*;
 use specs::prelude::*;
 use strum::IntoEnumIterator;
 
+use crate::prelude::*;
+
 pub struct GoalResolutionSystem;
 
 impl<'a> System<'a> for GoalResolutionSystem {
-    type SystemData = GoalData;
+    type SystemData = (
+        Entities<'a>,
+        WriteStorage<'a, AIGoalComponent>,
+        WriteStorage<'a, AIActionComponent>,
+        GoalData<'a>,
+    );
 
-    fn run(&mut self, data: Self::SystemData) {
-        let (
-            eids,
-            crd,
-            twld,
-            atk,
-            edb,
-            dig,
-            pos,
-            hpc,
-            inv,
-            man,
-            nam,
-            perc,
-            pers,
-            mut gol,
-            mut act,
-            mut inp,
-            mut pth,
-        ) = data;
-
-        for (eid, this_pos, inv, dig, man, perc, _pers, gol, act, inp, pth) in (
-            &eids,
-            &pos,
-            (&inv).maybe(),
-            (&dig).maybe(),
-            (&man).maybe(),
-            (&perc).maybe(),
-            (&pers).maybe(),
-            &mut gol,
-            &mut act,
-            (&mut inp).maybe(),
-            (&mut pth).maybe(),
-        )
-            .join()
-        {
+    fn run(&mut self, (eids, gol, act, data): Self::SystemData) {
+        for (eid, gol, act) in (&eids, &mut gol, &mut act).join() {
             //Check for latest goal in stack
             //Attempt to resolve goal
             //match result

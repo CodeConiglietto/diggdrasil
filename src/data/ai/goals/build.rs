@@ -11,15 +11,14 @@ pub struct BuildGoal {
 
 impl AIGoalTrait for BuildGoal {
     fn resolve(&mut self, parent_entity: Entity, data: GoalData) -> AIGoalResult {
-        let (x, y) = data.position.get(parent_entity).unwrap();
+        let pos = data.position.get(parent_entity).unwrap().pos;
 
-        if let Some(chunk_tile) = data.tile_world.get((*x, *y)) {
+        if let Some(chunk_tile) = data.tile_world.get(pos) {
             if let Some(inv) = data.inventory.get(parent_entity) {
                 if let Some(tile_type) = self.tile_type {
                     if let Some(consumed_entity) = self.consumed_entity {
                         Self::action(AIAction::BuildAtLocation {
-                            x: *x,
-                            y: *y,
+                            pos,
                             tile_type: tile_type,
                             consumed_entity: consumed_entity,
                         })
@@ -138,7 +137,9 @@ impl AIGoalTrait for BuildGoal {
                     // }
                 }
             } else {
-                println!("Entity trying to find building material doesn't have inventory component");
+                println!(
+                    "Entity trying to find building material doesn't have inventory component"
+                );
                 panic!()
             }
         } else {

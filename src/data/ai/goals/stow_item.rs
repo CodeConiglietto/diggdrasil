@@ -3,24 +3,30 @@ use specs::prelude::*;
 use crate::prelude::*;
 
 pub struct StowItemGoal {
-    //Child goals and data here
     item: Entity,
 }
 
 impl AIGoalTrait for StowItemGoal {
     fn resolve(&mut self, parent_entity: Entity, data: GoalData) -> AIGoalResult {
-        if let Some(man) = man {
-            if let Some(held_item) = man.held_item {
-                if held_item == *item {
+        if let Some(inventory) = data.inventory.get(parent_entity) {
+            if inventory.items.iter().any(|item| *item == Some(self.item)) {
+                return Self::success();
+            }
+        } else {
+            println!("Entity tried to stow item without an inventory");
+            return Self::failure();
+        }
+
+        if let Some(manipulator) = data.manipulator.get(parent_entity) {
+            if let Some(held_item) = manipulator.held_item {
+                if held_item == self.item {
                     //Our item is held
-                    act.current_action = Some(AIAction::StowHeldItem);
+                    return Self::action(AIAction::StowHeldItem);
                 }
             }
         }
-        //If we're not holding the item to stow, then try from the ground
-        if act.current_action.is_none() {
-            act.current_action = Some(AIAction::StowItemFromGround { item: *item });
-        }
-        Self::success()
+
+        // If we're not holding the item to stow, then try from the ground
+        Self::action(AIAction::StowItemFromGround { item: self.item })
     }
 }

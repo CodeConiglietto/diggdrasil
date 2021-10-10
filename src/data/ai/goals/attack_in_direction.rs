@@ -3,7 +3,7 @@ use specs::prelude::*;
 
 use crate::prelude::*;
 
-pub struct AttackInDirectionGoal{
+pub struct AttackInDirectionGoal {
     //Child goals and data here
     direction: Direction,
 }
@@ -17,20 +17,17 @@ impl AIGoalTrait for AttackInDirectionGoal {
         //-Attack using natural attack
         //else
         //-fail
-        
+
         if let Some(man) = data.manipulator.get(parent_entity) {
             if let Some(wep) = man.held_item {
                 if let Some(atk) = data.attack.get(wep) {
-                    let attack = atk
-                        .available_attacks
-                        .choose(&mut thread_rng())
-                        .unwrap();
+                    let attack = atk.available_attacks.choose(&mut thread_rng()).unwrap();
 
                     Self::action(AIAction::AttackInDirection {
-                            direction: self.direction,
-                            attack: attack.clone(),
-                            attack_offsets: None,
-                        })
+                        direction: self.direction,
+                        attack: attack.clone(),
+                        attack_offsets: None,
+                    })
                 } else {
                     println!("Entity attempting to attack using a weapon that has no attacks!");
                     Self::failure()
