@@ -102,6 +102,9 @@ impl Chunk {
                 (chunk_x, chunk_y),
                 &mut world_data.position,
             );
+        }
+
+        for _ in 0..4 {
             self.spawn_somewhere_free(
                 || CreatureBuilder::Deer.build(lazy, entities),
                 (chunk_x, chunk_y),

@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use strum::EnumIter;
 use std::cmp::Ordering;
 
-#[derive(Debug, Clone, Copy, EnumIter, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, EnumIter, Serialize, Deserialize, PartialEq)]
 pub enum Direction {
     None,
     UpLeft,

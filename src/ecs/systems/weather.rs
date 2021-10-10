@@ -11,11 +11,10 @@ impl<'a> System<'a> for WeatherSystem {
         Read<'a, LazyUpdate>,
         ReadExpect<'a, ViewportResource>,
         ReadExpect<'a, WeatherResource>,
-        WriteExpect<'a, ParticleMapResource>,
     );
 
     fn run(&mut self, data: Self::SystemData) {
-        let (eids, lup, view, weat, mut pmap) = data;
+        let (eids, lup, view, weat) = data;
 
         let (left, right, top, bottom) = view.get_viewport_bounds();
 

@@ -12,11 +12,14 @@ impl<'a> System<'a> for GoalResolutionSystem {
         ReadExpect<'a, TileWorldResource>,
         ReadStorage<'a, AttackComponent>,
         ReadStorage<'a, EdibleComponent>,
+        ReadStorage<'a, DigestionComponent>,
         ReadStorage<'a, PositionComponent>,
         ReadStorage<'a, HealthComponent>,
         ReadStorage<'a, InventoryComponent>,
         ReadStorage<'a, ManipulatorComponent>,
         ReadStorage<'a, NameComponent>,
+        ReadStorage<'a, AIPerceptionComponent>,
+        ReadStorage<'a, AIPersonalityComponent>,
         WriteStorage<'a, AIGoalComponent>,
         WriteStorage<'a, AIActionComponent>,
         WriteStorage<'a, InputComponent>,
@@ -30,22 +33,28 @@ impl<'a> System<'a> for GoalResolutionSystem {
             twld,
             atk,
             edb,
+            dig,
             pos,
             hpc,
             inv,
             man,
             nam,
+            perc,
+            pers,
             mut gol,
             mut act,
             mut inp,
             mut pth,
         ) = data;
 
-        for (_eid, pos, inv, man, gol, act, inp, pth) in (
+        for (eid, this_pos, inv, dig, man, perc, _pers, gol, act, inp, pth) in (
             &eids,
             &pos,
             (&inv).maybe(),
+            (&dig).maybe(),
             (&man).maybe(),
+            (&perc).maybe(),
+            (&pers).maybe(),
             &mut gol,
             &mut act,
             (&mut inp).maybe(),
@@ -54,51 +63,70 @@ impl<'a> System<'a> for GoalResolutionSystem {
             .join()
         {
             if let Some(current_goal) = gol.goal_stack.last_mut() {
+                println!("Entity resolving goal: {:?}", current_goal);
                 let goal_status = match current_goal {
-                    // AIGoal::Wander => {},
+                    AIGoal::Wander => {
+                        act.current_action = Some(AIAction::MoveInDirection { x: thread_rng().gen_range(-1..=1), y: thread_rng().gen_range(-1..=1) });
+                        AIGoalStatus::Finished
+                    },
+                    AIGoal::AttackInDirection { direction } => {
+                        if let Some(man) = man {
+                            if let Some(wep) = man.held_item {
+                                if let Some(atk) = atk.get(wep) {
+                                    let attack = atk
+                                        .available_attacks
+                                        .choose(&mut thread_rng())
+                                        .unwrap();
+
+                                    act.current_action =
+                                        Some(AIAction::AttackInDirection {
+                                            direction: *direction,
+                                            attack: attack.clone(),
+                                            attack_offsets: None,
+                                        });
+
+                                    AIGoalStatus::Finished
+                                } else {
+                                    println!("Entity attempting to attack using a weapon that has no attacks!");
+                                    AIGoalStatus::Canceled
+                                }
+                            } else {
+                                //TODO: add a basic attack to creatures, and use this here instead
+                                // act.current_action =
+                                //     Some(AIAction::AttackEntity {
+                                //         target: *entity,
+                                //     });
+                                println!("Entity attempting to attack without a weapon!");
+                                AIGoalStatus::Canceled
+                            }
+                        } else {
+                            println!("Entity attempting to attack without the ability to hold a weapon!");
+                            AIGoalStatus::Canceled
+                        }
+                    }
                     AIGoal::MoveInDirection { direction } => {
                         let (x, y) = direction.get_offset();
-                        let (new_x, new_y) = (pos.x + x, pos.y + y);
+                        let (new_x, new_y) = (this_pos.x + x, this_pos.y + y);
 
                         if let Some(chunk_tile) = twld.get((new_x, new_y)) {
                             if !chunk_tile.tile.tile_type.collides() {
+                                let mut final_status = AIGoalStatus::Canceled;
                                 //Try attack an entity on the tile
                                 if !chunk_tile.entities.is_empty() {
                                     for entity in chunk_tile.entities.iter() {
+                                        //TODO: Check if hostile
                                         if hpc.get(*entity).is_some() {
-                                            if let Some(man) = man {
-                                                if let Some(wep) = man.held_item {
-                                                    if let Some(atk) = atk.get(wep) {
-                                                        let attack = atk
-                                                            .available_attacks
-                                                            .choose(&mut thread_rng())
-                                                            .unwrap();
-
-                                                        act.current_action =
-                                                            Some(AIAction::AttackInDirection {
-                                                                direction: *direction,
-                                                                attack: attack.clone(),
-                                                                attack_offsets: None,
-                                                            });
-                                                        // act.current_action =
-                                                        //     Some(AIAction::AttackEntity { target: *entity });
-                                                        break;
-                                                    }
-                                                } else {
-                                                    //TODO: add a basic attack to creatures, and use this here instead
-                                                    act.current_action =
-                                                        Some(AIAction::AttackEntity {
-                                                            target: *entity,
-                                                        });
-                                                }
-                                            }
+                                            final_status = AIGoalStatus::HasChildGoals{goals: vec![AIGoal::AttackInDirection{direction: *direction}]};
                                         }
                                     }
                                 }
 
                                 if act.current_action.is_none() {
                                     act.current_action = Some(AIAction::MoveInDirection { x, y });
+                                    final_status = AIGoalStatus::Finished;
                                 }
+
+                                final_status
                             } else {
                                 if x.abs() == 1 && y.abs() == 1 {
                                     //Movement is diagonal
@@ -120,7 +148,7 @@ impl<'a> System<'a> for GoalResolutionSystem {
                                             }
                                         }
 
-                                        let (new_x, new_y) = (pos.x + dx, pos.y + dy);
+                                        let (new_x, new_y) = (this_pos.x + dx, this_pos.y + dy);
 
                                         if let Some(chunk_tile) = twld.get((new_x, new_y)) {
                                             if !chunk_tile.tile.tile_type.collides() {
@@ -147,7 +175,7 @@ impl<'a> System<'a> for GoalResolutionSystem {
 
                                         for val in x_vals.iter() {
                                             let (dx, dy) = (*val, y);
-                                            let (new_x, new_y) = (pos.x + val, pos.y + y);
+                                            let (new_x, new_y) = (this_pos.x + val, this_pos.y + y);
 
                                             if let Some(chunk_tile) = twld.get((new_x, new_y)) {
                                                 if !chunk_tile.tile.tile_type.collides() {
@@ -174,7 +202,7 @@ impl<'a> System<'a> for GoalResolutionSystem {
 
                                         for val in y_vals.iter() {
                                             let (dx, dy) = (x, *val);
-                                            let (new_x, new_y) = (pos.x + dx, pos.y + dy);
+                                            let (new_x, new_y) = (this_pos.x + dx, this_pos.y + dy);
 
                                             if let Some(chunk_tile) = twld.get((new_x, new_y)) {
                                                 if !chunk_tile.tile.tile_type.collides() {
@@ -192,20 +220,21 @@ impl<'a> System<'a> for GoalResolutionSystem {
                                         }
                                     }
                                 }
+                                AIGoalStatus::Finished
                             }
                         } else {
                             println!("Entity attempting to move into unloaded tile!");
+                            AIGoalStatus::Canceled
                         }
-
-                        AIGoalStatus::Finished
                     }
                     AIGoal::TravelPath { path } => {
-                        let position = (pos.x, pos.y);
+                        let position = (this_pos.x, this_pos.y);
 
+                        //TODO: use bresenham if target position is in FOV view
                         let next_step = path.pop();
 
                         if let Some(next_step) = next_step {
-                            if next_step == position || pos_is_adjacent(next_step, position) {
+                            if next_step == position || pos_is_adjacent(next_step, position, false) {
                                 AIGoalStatus::HasChildGoals {
                                     goals: vec![AIGoal::MoveInDirection {
                                         direction: Direction::from_positions(next_step, position),
@@ -220,7 +249,7 @@ impl<'a> System<'a> for GoalResolutionSystem {
                         }
                     }
                     AIGoal::TravelToPosition { target_pos } => {
-                        let this_pos = (pos.x, pos.y);
+                        let this_pos = (this_pos.x, this_pos.y);
 
                         if this_pos == *target_pos {
                             AIGoalStatus::Finished
@@ -313,10 +342,30 @@ impl<'a> System<'a> for GoalResolutionSystem {
                         }
                     }
                     //TODO: allow player to eat items from the ground
-                    AIGoal::EatItem { item } => {
-                        if let Some(item) = item {
-                            act.current_action =
-                                Some(AIAction::EatItemFromInventory { item: *item });
+                    AIGoal::Eat { target } => {
+                        if let Some(target) = target {
+                            if let Some(target_pos) = pos.get(*target) {
+                                //We can assume that the item exists in the world
+                                if pos_is_adjacent(this_pos.get_pos_tuple(), target_pos.get_pos_tuple(), true) {
+                                    act.current_action = Some(AIAction::EatFromGround { target: *target });
+                                    AIGoalStatus::Finished
+                                } else {
+                                    AIGoalStatus::HasChildGoals { goals: vec![AIGoal::TravelToPosition{target_pos: target_pos.get_pos_tuple()}] }
+                                }
+                            } else if let Some(inv) = inv {
+                                if inv.contains(*target) {
+                                    act.current_action =
+                                        Some(AIAction::EatItemFromInventory { item: *target });
+
+                                    AIGoalStatus::Finished
+                                } else {
+                                    println!("Entity attempting to eat item that is neither in the world or in its inventory!");
+                                    AIGoalStatus::Canceled
+                                }
+                            } else {
+                                println!("Entity without inventory attempting to eat item that is not in the world!");
+                                AIGoalStatus::Canceled
+                            }
                         } else {
                             if let Some(inp) = inp {
                                 if let Some(inv) = inv {
@@ -328,7 +377,7 @@ impl<'a> System<'a> for GoalResolutionSystem {
                                             slot.and_then(|item| {
                                                 //Only allow the player to choose things that are actually edible
                                                 edb.get(item).map(|_| {
-                                                    (i, None, AIGoal::EatItem { item: Some(item) })
+                                                    (i, None, AIGoal::Eat { target: Some(item) })
                                                 })
                                             })
                                         })
@@ -339,8 +388,8 @@ impl<'a> System<'a> for GoalResolutionSystem {
                                         Some(Popup::list(format!("Eat what?",), item_goals));
                                 }
                             }
+                            AIGoalStatus::Finished
                         }
-                        AIGoalStatus::Finished
                     }
                     AIGoal::Build {
                         x,
@@ -572,20 +621,92 @@ impl<'a> System<'a> for GoalResolutionSystem {
                         AIGoalStatus::Finished
                     }
                     AIGoal::FulfilHunger => {
-                        //Find nearest edible item
-                        //If found in inventory:
-                        //-Create child goal "Eat item"
-                        //If found in world:
-                        //-Create child goal "Eat item"
-                        //If found on entity but requires harvest:
-                        //-Create child goals "Harvest" with entity and "Eat item" with item
-                        todo!()
+                        //TODO: add some greed or stomach size percentage to determine whether the creature is sated or not
+                        if let Some(dig) = dig {
+                            if dig.get_total_nutrition(&edb) >= 100 {
+                                AIGoalStatus::Finished
+                            } else {
+                                let mut food = None;
+                                
+                                if let Some(inv) = inv {
+                                    food = inv.items.iter().filter_map(|item| *item).find(|item| edb.get(*item).is_some());
+                                }
+
+                                if food.is_none() {
+                                    if let Some(perc) = perc {
+                                        food = perc.food.choose(&mut thread_rng()).copied();
+                                    }
+                                }
+
+                                if food.is_some() {
+                                    AIGoalStatus::HasChildGoals{ goals: vec![AIGoal::Eat{ target: food }] }
+                                } else {
+                                    //TODO: change this to be a search for food goal
+                                    AIGoalStatus::HasChildGoals{ goals: vec![AIGoal::Wander] }
+                                }
+
+                                //TODO:
+                                //If food is found on entity but requires harvest:
+                                //-Create child goals "Harvest" with entity and "Eat item" with item
+                            }
+                        } else {
+                            println!("Entity is attempting to fulfil its hunger despite not having a digestion component!");
+                            AIGoalStatus::Canceled
+                        }
                     }
                     AIGoal::FleeDanger => {
-                        //Find average position of all threats
-                        //Get direction from this average position
-                        //Move in the opposite direction
+                        if let Some(this_perc) = perc {
+                            if this_perc.threats.len() > 0 {
+                                //The average position of threats
+                                //TODO: make this scale depending on how far away the threats are
+                                let (mut ax, mut ay) = (0, 0);
+                                for threat in &this_perc.threats {
+                                    if let Some(threat_pos) = pos.get(*threat) {
+                                        ax += threat_pos.x;
+                                        ay += threat_pos.y;
+                                    }
+                                }
+
+                                AIGoalStatus::HasChildGoals{goals: vec![AIGoal::MoveInDirection{direction: Direction::from_positions((ax, ay), this_pos.get_pos_tuple())}]}
+                            } else {
+                                println!("Entity has no threats to flee from!");
+                                AIGoalStatus::Finished
+                            }
+                        } else {
+                            println!("Entity attempting to flee danger has no perception component!");
+                            AIGoalStatus::Canceled
+                        }
+                    }
+                    AIGoal::GroupWithAllies => {
+                        //Find a nearby ally (Closest? Random that you can see?)
+                        //Determine a comfortable distance to that ally
+                        //If you're outside that distance, move towards that ally
                         todo!()
+                    }
+                    AIGoal::AttackEntity {target} => {
+                        let this_pos = pos.get(eid).unwrap().get_pos_tuple();
+                        let target_pos = pos.get(*target).unwrap().get_pos_tuple();
+                        if pos_is_adjacent(this_pos, target_pos, true) {
+                            AIGoalStatus::HasChildGoals{ goals: vec![AIGoal::AttackInDirection{ direction: Direction::from_positions(this_pos, target_pos)}] }
+                        } else {
+                            //TODO: make this move to a position adjacent to the entity
+                            AIGoalStatus::HasChildGoals{ goals: vec![AIGoal::TravelToPosition{target_pos}] }
+                        }
+                    }
+                    AIGoal::KillEntity {target} => {
+                        //If the entity has a health greater than 0
+                        //Create child goal "AttackEntity" with target
+                        if let Some(target_hpc) = hpc.get(*target) {
+                            if target_hpc.value > 0 {
+                                AIGoalStatus::HasChildGoals{goals: vec![AIGoal::AttackEntity{target: *target}]}
+                            } else {
+                                println!("Entity attempting to attack another entity that is already dead!");
+                                AIGoalStatus::Finished
+                            }
+                        } else {
+                            println!("Entity attempting to kill another entity that does not have any health!");
+                            AIGoalStatus::Canceled
+                        }
                     }
                 };
 
@@ -601,9 +722,13 @@ impl<'a> System<'a> for GoalResolutionSystem {
                     }
                     AIGoalStatus::Continuing => (),
                 }
-
-                //Assume goal is resolved for now
-                // gol.current_goal = None;
+            } else {
+                // println!("No goal, falling back on default behaviour");
+                // if let Some(pers) = pers.get(eid) {
+                //     if let Some(default_goal) = pers.get_default_goal(inp.is_some()) {
+                //         gol.goal_stack.push(default_goal);
+                //     }
+                // }
             }
         }
     }

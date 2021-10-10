@@ -1,10 +1,13 @@
 use crate::prelude::*;
 use specs::prelude::*;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum AIGoal {
-    // Wander,
+    Wander,
     MoveInDirection {
+        direction: Direction,
+    },
+    AttackInDirection {
         direction: Direction,
     },
     TravelPath {
@@ -22,8 +25,8 @@ pub enum AIGoal {
     HoldItem {
         item: Option<Entity>,
     },
-    EatItem {
-        item: Option<Entity>,
+    Eat {
+        target: Option<Entity>,
     },
     Build {
         x: i32,
@@ -37,18 +40,30 @@ pub enum AIGoal {
     },
     FulfilHunger,
     FleeDanger,
-    // MoveToTile{x: i32, y: i32},
-    // KillEntity { target: Entity },
-    // AttackEntity { target: Entity },
-    // AcquireFood,
-    // FleeDanger
+    GroupWithAllies,
+    KillEntity { target: Entity },
+    AttackEntity { target: Entity },
 }
 
 impl AIGoal {
     pub fn get_textual_representation(&self, data: &RenderData) -> String {
         match self {
+            Self::Wander => String::from("Wander"),
             Self::MoveInDirection { direction } => {
                 format!("Move towards {:?}", direction)
+            }
+            Self::AttackInDirection { direction } => {
+                format!("Attack towards {:?}", direction)
+            }
+            Self::TravelPath { path } => {
+                if let Some(dest) = path.first() {
+                    format!("Travel to {:?}", dest)
+                } else {
+                    String::from("Travel somewhere")
+                }
+            }
+            Self::TravelToPosition { target_pos } => {
+                format!("Travel to {:?}", target_pos)
             }
             Self::StowItem { item } => {
                 format!("Stow {}", data.name.get(*item).unwrap().name)
@@ -66,9 +81,9 @@ impl AIGoal {
 
                 format!("Hold {}", consumed_entity_name)
             }
-            Self::EatItem { item } => {
+            Self::Eat { target } => {
                 let consumed_entity_name =
-                    if let Some(name_component) = item.map(|e| data.name.get(e).unwrap()) {
+                    if let Some(name_component) = target.map(|e| data.name.get(e).unwrap()) {
                         &name_component.name
                     } else {
                         "something"
@@ -107,13 +122,16 @@ impl AIGoal {
                 } else {
                     "something"
                 };
-
+ 
                 //TODO: have the string print the ingredients if they exist
 
                 format!("Craft a {}", recipe_name)
             }
             Self::FulfilHunger => String::from("Fulfil hunger"),
             Self::FleeDanger => String::from("Flee from danger"),
+            Self::GroupWithAllies => String::from("Group with similar creatures"),
+            Self::AttackEntity{target} => format!("Attack {}", data.name.get(*target).unwrap().name),
+            Self::KillEntity{target} => format!("Kill {}", data.name.get(*target).unwrap().name),
         }
     }
 }

@@ -52,6 +52,7 @@ struct MainState {
     //Systems in the order which they are run
     weather_system: WeatherSystem,
     input_resolution_system: InputResolutionSystem,
+    perception_resolution_system: PerceptionResolutionSystem,
     goal_resolution_system: GoalResolutionSystem,
     action_resolution_system: ActionResolutionSystem,
     collision_calculation_system: CollisionCalculationSystem,
@@ -202,6 +203,7 @@ impl MainState {
             //Systems in the order which they are run
             weather_system: WeatherSystem,
             input_resolution_system: InputResolutionSystem,
+            perception_resolution_system: PerceptionResolutionSystem,
             goal_resolution_system: GoalResolutionSystem,
             action_resolution_system: ActionResolutionSystem,
             collision_calculation_system: CollisionCalculationSystem,
@@ -298,6 +300,7 @@ impl event::EventHandler<ggez::GameError> for MainState {
         //Run systems in order
         self.weather_system.run_now(&self.ecs_world);
         self.input_resolution_system.run_now(&self.ecs_world);
+        self.perception_resolution_system.run_now(&self.ecs_world);
         self.goal_resolution_system.run_now(&self.ecs_world);
         self.action_resolution_system.run_now(&self.ecs_world);
         self.collision_calculation_system.run_now(&self.ecs_world);

@@ -1,4 +1,4 @@
-use specs::{Builder, Entities, Join, LazyUpdate, ReadExpect, System, WriteExpect, WriteStorage};
+use specs::{Entities, Join, LazyUpdate, ReadExpect, System, WriteExpect, WriteStorage};
 
 use crate::prelude::*;
 
@@ -14,7 +14,6 @@ impl<'a> System<'a> for HealthResolutionSystem {
         WriteStorage<'a, DeathComponent>,
     );
 
-    //This makes black magic
     fn run(&mut self, data: Self::SystemData) {
         let (eids, lup, mut twld, mut hpc, mut pos, mut dec) = data;
 

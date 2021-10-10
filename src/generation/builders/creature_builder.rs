@@ -16,7 +16,9 @@ impl CreatureBuilder {
                 //TODO: create stomach contents from something representative of the race
                 let stomach_contents = vec![
                     ItemBuilder::Berry.build(lazy, entities),
-                    ItemBuilder::Berry.build(lazy, entities),
+                    // ItemBuilder::Berry.build(lazy, entities),
+                    // ItemBuilder::Berry.build(lazy, entities),
+                    // ItemBuilder::Berry.build(lazy, entities),
                 ];
                 lazy.create_entity(entities)
                     .with(VelocityComponent { x: 0, y: 0 })
@@ -40,6 +42,7 @@ impl CreatureBuilder {
                         diet: race.get_diet(),
                         disposition: race.get_disposition(),
                     })
+                    .with(AIPerceptionComponent::default())
                     .with(FieldOfViewComponent::new(12))
                     .with(PathingComponent::default())
                     .with(HealthComponent {
@@ -87,6 +90,7 @@ impl CreatureBuilder {
                         diet: Diet::Herbivorous,
                         disposition: Disposition::Timid,
                     })
+                    .with(AIPerceptionComponent::default())
                     .with(FieldOfViewComponent::new(5))
                     .with(PathingComponent::default())
                     .with(HealthComponent {

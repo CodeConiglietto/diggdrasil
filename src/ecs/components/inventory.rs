@@ -45,6 +45,10 @@ impl InventoryComponent {
 
         false
     }
+
+    pub fn contains(&self, item: Entity) -> bool {
+        self.items.iter().any(|checked_item| *checked_item == Some(item))
+    }
 }
 
 #[derive(Serialize, Deserialize)]

@@ -198,7 +198,7 @@ impl<'a> System<'a> for InputResolutionSystem {
                             }
                         }
                         KeyCode::E => {
-                            gol.goal_stack.push(AIGoal::EatItem { item: None });
+                            gol.goal_stack.push(AIGoal::Eat { target: None });
                         }
                         KeyCode::B => {
                             //TODO: ensure player has some way to manipulate objects, otherwise they can't build :(

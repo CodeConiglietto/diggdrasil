@@ -73,7 +73,7 @@ impl ItemBuilder {
                 })
                 .with(ItemComponent)
                 .with(EdibleComponent {
-                    nutrient_value: 1000,
+                    nutrient_value: 100,
                 })
                 .with(NameComponent {
                     name: String::from("berry"),

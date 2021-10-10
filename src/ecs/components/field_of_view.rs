@@ -1,4 +1,3 @@
-use ndarray::Array2;
 use serde::{Deserialize, Serialize};
 use specs::{Component, VecStorage};
 

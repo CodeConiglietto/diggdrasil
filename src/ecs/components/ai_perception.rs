@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use specs::{Component, Entity, VecStorage};
 
-#[derive(Clone, Component, Serialize, Deserialize)]
+#[derive(Clone, Default, Component, Serialize, Deserialize)]
 #[storage(VecStorage)]
 pub struct AIPerceptionComponent {
     #[serde(skip)]

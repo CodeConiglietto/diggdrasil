@@ -136,6 +136,7 @@ pub use crate::{
             movement_resolution::MovementResolutionSystem,
             particle_emitter::ParticleEmitterSystem,
             particle::ParticleSystem,
+            perception_resolution::PerceptionResolutionSystem,
             save_load::SaveLoadSystem,
             weather::WeatherSystem,
             world_maintenance::WorldMaintenanceSystem,

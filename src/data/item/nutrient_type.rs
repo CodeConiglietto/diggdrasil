@@ -1,7 +1,5 @@
 use serde::{Deserialize, Serialize};
 
-use crate::prelude::*;
-
 #[derive(Clone, Serialize, Deserialize)]
 pub enum NutrientType {
     Plant,//Plants

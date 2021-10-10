@@ -5,8 +5,8 @@ use serde::{Deserialize, Serialize};
 
 use crate::prelude::*;
 
-pub fn pos_is_adjacent((ax, ay): (i32, i32), (bx, by): (i32, i32)) -> bool {
-    (ax - bx).abs() == 1 || (ay - by).abs() == 1
+pub fn pos_is_adjacent((ax, ay): (i32, i32), (bx, by): (i32, i32), allow_same: bool) -> bool {
+    (ax - bx).abs() == 1 || (ay - by).abs() == 1 || (allow_same && ax == bx && ay == by)
 }
 
 //TODO: find a good way to do this better

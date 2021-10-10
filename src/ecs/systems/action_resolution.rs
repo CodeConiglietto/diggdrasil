@@ -96,7 +96,8 @@ impl<'a> System<'a> for ActionResolutionSystem {
                         let target_pos = pos.get(target).unwrap();
                         let this_pos = pos.get(eid).unwrap();
 
-                        if pos_is_adjacent((this_pos.x, this_pos.y), (target_pos.x, target_pos.y)) {
+                        //Will not allow entity to attack a target on the same tile
+                        if pos_is_adjacent((this_pos.x, this_pos.y), (target_pos.x, target_pos.y), false) {
                             //Will crash if attempting to attack a target that has no health component
                             if let Some(target_hp) = &mut hpc.get_mut(target) {
                                 if target_hp.value > 0 {
@@ -218,13 +219,13 @@ impl<'a> System<'a> for ActionResolutionSystem {
                         }
                         None
                     }
-                    AIAction::EatEntityFromGround { entity } => {
+                    AIAction::EatFromGround { target } => {
                         if let Some(dig) = dig.get_mut(eid) {
                             if let Some(this_pos) = pos.get(eid) {
-                                if let Some(entity_pos) = pos.get(entity) {
-                                    if pos_is_adjacent(this_pos.get_pos_tuple(), entity_pos.get_pos_tuple()) {
-                                        twld.despawn_entity(entity, &mut pos);
-                                        dig.insert(entity);
+                                if let Some(entity_pos) = pos.get(target) {
+                                    if pos_is_adjacent(this_pos.get_pos_tuple(), entity_pos.get_pos_tuple(), true) {
+                                        twld.despawn_entity(target, &mut pos);
+                                        dig.insert(target);
                                     } else {
                                         println!("Entity attempting to eat entity from ground that it cannot reach!");
                                     }
@@ -247,7 +248,7 @@ impl<'a> System<'a> for ActionResolutionSystem {
                     } => {
                         if let Some(chunk_tile) = twld.get((x, y)) {
                             if let Some(pos) = pos.get(eid) {
-                                if pos_is_adjacent((x, y), (pos.x, pos.y)) {
+                                if pos_is_adjacent((x, y), (pos.x, pos.y), false) {
                                     if chunk_tile
                                         .tile
                                         .tile_type
