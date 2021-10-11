@@ -1,14 +1,16 @@
+pub mod arm_self;
 pub mod attack_entity;
 pub mod attack_in_direction;
 pub mod build;
 pub mod craft;
 pub mod drop_item;
+pub mod eat_from_inventory;
+pub mod eat_from_world;
 pub mod eat;
 pub mod flee_danger;
 pub mod fulfil_hunger;
 pub mod group_with_allies;
 pub mod hold_item;
-pub mod hold_weapon;
 pub mod kill_entity;
 pub mod move_in_direction;
 pub mod move_to_entity;

@@ -33,7 +33,7 @@ impl AIGoalTrait for FulfilHungerGoal {
                             || EatGoal{
                                 target: food,
                                 eat_from_inventory_goal: None,
-                                eat_from_ground_goal: None,
+                                eat_from_world_goal: None,
                             }
                             )
                             .resolve(parent_entity, data)
