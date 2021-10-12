@@ -37,9 +37,14 @@ impl<'a> System<'a> for PerceptionResolutionSystem {
                     if !gol
                         .goal_stack
                         .iter()
-                        .any(|goal| *goal == AIGoal::FulfilHunger)
+                        .any(|goal| 
+                            match goal {
+                                AIGoal::FulfilHunger(_) => true,
+                                _ => false,
+                            }
+                        )
                     {
-                        gol.goal_stack.push(AIGoal::FulfilHunger);
+                        gol.goal_stack.push(AIGoal::FulfilHunger(FulfilHungerGoal{eat_food_goal: None}));
                     }
                 }
             }

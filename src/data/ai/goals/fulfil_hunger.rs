@@ -5,7 +5,7 @@ use crate::prelude::*;
 
 pub struct FulfilHungerGoal {
     //Child goals and data here
-    eat_food_goal: Option<EatGoal>,
+    pub eat_food_goal: Option<EatGoal>,
 }
 
 impl AIGoalTrait for FulfilHungerGoal {
