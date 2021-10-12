@@ -2,6 +2,7 @@ use specs::prelude::*;
 
 use crate::prelude::*;
 
+#[derive(Debug, Clone)]
 pub struct TravelPathGoal {
     path: Vec<IPosition>,
     move_in_direction: Option<MoveInDirectionGoal>,
@@ -17,6 +18,14 @@ impl TravelPathGoal {
 }
 
 impl AIGoalTrait for TravelPathGoal {
+    pub fn get_textual_representation(&self, data: &RenderData) -> String {
+        if let Some(dest) = self.path.first() {
+            format!("Travel to {:?}", dest)
+        } else {
+            String::from("Travel somewhere")
+        }
+    }
+
     fn resolve(&mut self, parent_entity: Entity, data: GoalData) -> AIGoalResult {
         let pos = data.position.get(parent_entity).unwrap().pos;
 

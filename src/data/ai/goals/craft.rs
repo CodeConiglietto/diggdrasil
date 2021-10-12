@@ -2,6 +2,7 @@ use specs::prelude::*;
 
 use crate::prelude::*;
 
+#[derive(Debug, Clone)]
 pub struct CraftGoal {
     //Child goals and data here
     recipe: Recipe,
@@ -9,10 +10,16 @@ pub struct CraftGoal {
 }
 
 impl AIGoalTrait for CraftGoal {
+    fn get_textual_representation(&self, data: &RenderData) -> String {
+        //TODO: have the string print the ingredients if they exist
+
+        format!("Craft a {}", recipe.get_resulting_object_name())
+    }
+
     fn resolve(&mut self, parent_entity: Entity, data: GoalData) -> AIGoalResult {
         //TODO: rewrite
         //This should be created fully formed from the input component
-        
+
         // if let Some(inp) = inp {
         //     if let Some(inv) = inv {
         //         if let Some(recipe) = recipe {

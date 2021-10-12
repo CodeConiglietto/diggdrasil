@@ -243,7 +243,7 @@ impl<'a> System<'a> for InputResolutionSystem {
             if ms.left_button_pressed {
                 if let Some(path) = &inc.path {
                     gol.goal_stack
-                        .push(AIGoal::TravelPath { path: path.clone() });
+                        .push(AIGoal::TravelPath(TravelPathGoal::new(path.clone())));
                 }
             }
         }

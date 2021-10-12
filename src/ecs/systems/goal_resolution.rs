@@ -26,16 +26,20 @@ impl<'a> System<'a> for GoalResolutionSystem {
 
             while act.current_action.is_none() && gol.goal_stack.len() > 0 {
                 let mut current_goal = gol.goal_stack.last().unwrap();
-                
-                match current_goal.inner().resolve(data) {
+
+                match current_goal.resolve(data) {
                     Ok(success) => {
-                        println!("Goal {} {}", current_goal.inner().get_string_representation(), if success {"succeeded"} else {"failed"});
+                        println!(
+                            "Goal {} {}",
+                            current_goal.get_textual_representation(),
+                            if success { "succeeded" } else { "failed" }
+                        );
 
                         gol.goal_stack.pop();
-                    },
+                    }
                     Err(action) => {
                         act.current_action = Some(action);
-                    },
+                    }
                 }
             }
 

@@ -31,7 +31,7 @@ pub use crate::{
                 move_to_entity::MoveToEntityGoal,
                 stow_item::StowItemGoal,
                 travel_path::TravelPathGoal,
-                travel_to_position::TravelToPostionGoal,
+                travel_to_position::TravelToPositionGoal,
                 wander::WanderGoal,
             },
             shadowcast::{

@@ -2,6 +2,7 @@ use specs::prelude::*;
 
 use crate::prelude::*;
 
+#[derive(Debug)]
 pub struct EatFromWorldGoal {
     //Child goals and data here
     pub target: Entity,
@@ -9,6 +10,14 @@ pub struct EatFromWorldGoal {
 }
 
 impl AIGoalTrait for EatFromWorldGoal {
+    pub fn get_textual_representation(&self, data: &RenderData) -> String {
+        format!(
+            "Eat {} at {}",
+            data.name.get(self.target).unwrap().name,
+            data.position.get(self.target).unwrap().pos,
+        )
+    }
+
     fn resolve(&mut self, parent_entity: Entity, data: GoalData) -> AIGoalResult {
         let this_pos = data.position.get(parent_entity).unwrap();
 
@@ -33,7 +42,7 @@ impl AIGoalTrait for EatFromWorldGoal {
                 unreachable!();
             }
         } else {
-            println!("Entity attempting to eat item that is not in the world!");
+            println!("Entity attempting to eat item from world that is not in the world!");
             Self::failure()
         }
     }

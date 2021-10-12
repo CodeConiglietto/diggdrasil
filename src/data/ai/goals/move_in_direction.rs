@@ -3,12 +3,17 @@ use specs::prelude::*;
 
 use crate::prelude::*;
 
+#[derive(Debug, Clone)]
 pub struct MoveInDirectionGoal {
     //Child goals and data here
     pub direction: Direction,
 }
 
 impl AIGoalTrait for MoveInDirectionGoal {
+    fn get_textual_representation(&self, data: &RenderData) -> String {
+        format!("Move towards {:?}", self.direction)
+    }
+
     fn resolve(&mut self, parent_entity: Entity, data: GoalData) -> AIGoalResult {
         let pos = data.position.get(parent_entity).unwrap().pos;
         let offset = self.direction.get_offset();

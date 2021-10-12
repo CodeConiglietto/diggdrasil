@@ -3,12 +3,17 @@ use specs::prelude::*;
 
 use crate::prelude::*;
 
+#[derive(Debug, Clone)]
 pub struct AttackInDirectionGoal {
     //Child goals and data here
     direction: Direction,
 }
 
 impl AIGoalTrait for AttackInDirectionGoal {
+    fn get_textual_representation(&self, data: &RenderData) -> String {
+        format!("Attack towards {:?}", self.direction)
+    }
+
     fn resolve(&mut self, parent_entity: Entity, data: GoalData) -> AIGoalResult {
         //TODO: rewrite:
         //if Hold a weapon succeeds

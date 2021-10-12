@@ -2,11 +2,16 @@ use specs::prelude::*;
 
 use crate::prelude::*;
 
+#[derive(Debug, Clone)]
 pub struct FleeDangerGoal {
     //Child goals and data here
 }
 
 impl AIGoalTrait for FleeDangerGoal {
+    fn get_textual_representation(&self, data: &RenderData) -> String {
+        String::from("Flee from danger")
+    }
+
     fn resolve(&mut self, parent_entity: Entity, data: GoalData) -> AIGoalResult {
         let pos = data.position.get(parent_entity).unwrap().pos;
 

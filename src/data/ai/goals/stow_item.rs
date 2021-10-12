@@ -2,11 +2,16 @@ use specs::prelude::*;
 
 use crate::prelude::*;
 
+#[derive(Debug, Clone)]
 pub struct StowItemGoal {
     item: Entity,
 }
 
 impl AIGoalTrait for StowItemGoal {
+    fn get_textual_representation(&self, data: &RenderData) -> String {
+        format!("Stow {}", data.name.get(self.item).unwrap().name)
+    }
+
     fn resolve(&mut self, parent_entity: Entity, data: GoalData) -> AIGoalResult {
         if let Some(inventory) = data.inventory.get(parent_entity) {
             if inventory.items.iter().any(|item| *item == Some(self.item)) {

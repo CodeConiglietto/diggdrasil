@@ -2,12 +2,17 @@ use specs::prelude::*;
 
 use crate::prelude::*;
 
-pub struct TravelToPostionGoal {
+#[derive(Debug, Clone)]
+pub struct TravelToPositionGoal {
     target_pos: IPosition,
     travel_path: Option<TravelPathGoal>,
 }
 
-impl AIGoalTrait for TravelToPostionGoal {
+impl AIGoalTrait for TravelToPositionGoal {
+    fn get_textual_representation(&self, data: &RenderData) -> String {
+        format!("Travel to {:?}", self.target_pos)
+    }
+
     fn resolve(&mut self, parent_entity: Entity, data: GoalData) -> AIGoalResult {
         let pos = data.position.get(parent_entity).unwrap().pos;
 

@@ -2,9 +2,8 @@ use specs::prelude::*;
 
 use crate::prelude::*;
 
-pub struct ArmSelfGoal {
-
-}
+#[derive(Debug)]
+pub struct ArmSelfGoal {}
 
 impl AIGoalTrait for ArmSelfGoal {
     fn resolve(&mut self, parent_entity: Entity, data: GoalData) -> AIGoalResult {

@@ -2,14 +2,35 @@ use specs::prelude::*;
 
 use crate::prelude::*;
 
+#[derive(Debug, Clone)]
 pub struct BuildGoal {
     //Child goals and data here
-    pos: Option<(i32, i32)>,
+    pos: Option<IPosition>,
     tile_type: Option<TileType>,
     consumed_entity: Option<Entity>,
 }
 
 impl AIGoalTrait for BuildGoal {
+    fn get_textual_representation(&self, data: &RenderData) -> String {
+        let tile_name = if let Some(tile_type_known) = self.tile_type {
+            tile_type_known.get_name()
+        } else {
+            String::from("something")
+        };
+
+        let consumed_entity_name =
+            if let Some(name_component) = self.consumed_entity.map(|e| data.name.get(e).unwrap()) {
+                &name_component.name
+            } else {
+                "something"
+            };
+
+        format!(
+            "Build {} at {} from {}",
+            tile_name, self.pos, consumed_entity_name
+        )
+    }
+
     fn resolve(&mut self, parent_entity: Entity, data: GoalData) -> AIGoalResult {
         let pos = data.position.get(parent_entity).unwrap().pos;
 
