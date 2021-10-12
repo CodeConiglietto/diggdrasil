@@ -24,36 +24,51 @@ impl<'a> System<'a> for GoalResolutionSystem {
             //--Set act.current_action to action
             //
 
-            if let Some(current_goal) = gol.goal_stack.last_mut() {
-                println!("Entity resolving goal: {:?}", current_goal);
-                let goal_status = match current_goal {
-                    AIGoal::Wander => {}
-                    AIGoal::AttackInDirection { direction } => {}
-                    AIGoal::MoveInDirection { direction } => {}
-                    AIGoal::TravelPath { path } => {}
-                    AIGoal::TravelToPosition { target_pos } => {}
-                };
+            while act.current_action.is_none() && gol.goal_stack.len() > 0 {
+                let mut current_goal = gol.goal_stack.last().unwrap();
+                
+                match current_goal.inner().resolve(data) {
+                    Ok(success) => {
+                        println!("Goal {} {}", current_goal.inner().get_string_representation(), if success {"succeeded"} else {"failed"});
 
-                println!("Goal stack size: {}", gol.goal_stack.len());
-                println!("Goal status is: {:?}", goal_status);
-
-                match goal_status {
-                    AIGoalStatus::HasChildGoals { mut goals } => {
-                        gol.goal_stack.append(&mut goals);
-                    }
-                    AIGoalStatus::Finished | AIGoalStatus::Canceled => {
-                        gol.goal_stack.pop().unwrap();
-                    }
-                    AIGoalStatus::Continuing => (),
+                        gol.goal_stack.pop();
+                    },
+                    Err(action) => {
+                        act.current_action = Some(action);
+                    },
                 }
-            } else {
-                // println!("No goal, falling back on default behaviour");
-                // if let Some(pers) = pers.get(eid) {
-                //     if let Some(default_goal) = pers.get_default_goal(inp.is_some()) {
-                //         gol.goal_stack.push(default_goal);
-                //     }
-                // }
             }
+
+            // if let Some(current_goal) = gol.goal_stack.last_mut() {
+            //     println!("Entity resolving goal: {:?}", current_goal);
+            //     let goal_status = match current_goal {
+            //         AIGoal::Wander => {}
+            //         AIGoal::AttackInDirection { direction } => {}
+            //         AIGoal::MoveInDirection { direction } => {}
+            //         AIGoal::TravelPath { path } => {}
+            //         AIGoal::TravelToPosition { target_pos } => {}
+            //     };
+
+            //     println!("Goal stack size: {}", gol.goal_stack.len());
+            //     println!("Goal status is: {:?}", goal_status);
+
+            //     match goal_status {
+            //         AIGoalStatus::HasChildGoals { mut goals } => {
+            //             gol.goal_stack.append(&mut goals);
+            //         }
+            //         AIGoalStatus::Finished | AIGoalStatus::Canceled => {
+            //             gol.goal_stack.pop().unwrap();
+            //         }
+            //         AIGoalStatus::Continuing => (),
+            //     }
+            // } else {
+            //     // println!("No goal, falling back on default behaviour");
+            //     // if let Some(pers) = pers.get(eid) {
+            //     //     if let Some(default_goal) = pers.get_default_goal(inp.is_some()) {
+            //     //         gol.goal_stack.push(default_goal);
+            //     //     }
+            //     // }
+            // }
         }
     }
 }

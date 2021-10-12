@@ -3,52 +3,46 @@ use specs::prelude::*;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum AIGoal {
-    Wander,
-    MoveInDirection {
-        direction: Direction,
-    },
-    AttackInDirection {
-        direction: Direction,
-    },
-    TravelPath {
-        path: Vec<IPosition>,
-    },
-    TravelToPosition {
-        target_pos: IPosition,
-    },
-    StowItem {
-        item: Entity,
-    },
-    DropItem {
-        item: Entity,
-    },
-    HoldItem {
-        item: Option<Entity>,
-    },
-    Eat {
-        target: Option<Entity>,
-    },
-    Build {
-        pos: IPosition,
-        tile_type: Option<TileType>,
-        consumed_entity: Option<Entity>,
-    },
-    Craft {
-        recipe: Option<Recipe>,
-        ingredients: Vec<Entity>,
-    },
-    FulfilHunger,
-    FleeDanger,
-    GroupWithAllies,
-    KillEntity {
-        target: Entity,
-    },
-    AttackEntity {
-        target: Entity,
-    },
+    Wander(WanderGoal),
+    MoveInDirection(MoveInDirectionGoal),
+    AttackInDirection(AttackInDirectionGoal),
+    TravelPath(TravelPathGoal),
+    TravelToPosition(TravelToPositionGoal),
+    StowItem(StowItemGoal),
+    DropItem(DropItemGoal),
+    HoldItem(HoldItemGoal),
+    Eat(EatGoal),
+    Build(BuildGoal),
+    Craft(CraftGoal),
+    FulfilHunger(FulfilHungerGoal),
+    FleeDanger(FleeDangerGoal),
+    GroupWithAllies(GroupWithAlliesGoal),
+    KillEntity(KillEntityGoal),
+    AttackEntity(AttackEntityGoal),
 }
 
 impl AIGoal {
+    pub fn resolve(&mut self, parent_entity: Entity, data: GoalData) -> AIGoalResult {
+        match self {
+            Self::Wander(goal) => goal.resolve(parent_entity, data),
+            Self::MoveInDirection(goal) => goal.resolve(parent_entity, data),
+            Self::AttackInDirection(goal) => goal.resolve(parent_entity, data),
+            Self::TravelPath(goal) => goal.resolve(parent_entity, data),
+            Self::TravelToPosition(goal) => goal.resolve(parent_entity, data),
+            Self::StowItem(goal) => goal.resolve(parent_entity, data),
+            Self::DropItem(goal) => goal.resolve(parent_entity, data),
+            Self::HoldItem(goal) => goal.resolve(parent_entity, data),
+            Self::Eat(goal) => goal.resolve(parent_entity, data),
+            Self::Build(goal) => goal.resolve(parent_entity, data),
+            Self::Craft(goal) => goal.resolve(parent_entity, data),
+            Self::FulfilHunger(goal) => goal.resolve(parent_entity, data),
+            Self::FleeDanger(goal) => goal.resolve(parent_entity, data),
+            Self::GroupWithAllies(goal) => goal.resolve(parent_entity, data),
+            Self::KillEntity(goal) => goal.resolve(parent_entity, data),
+            Self::AttackEntity(goal) => goal.resolve(parent_entity, data),
+        }
+    }
+
     pub fn get_textual_representation(&self, data: &RenderData) -> String {
         match self {
             Self::Wander => String::from("Wander"),
