@@ -34,17 +34,13 @@ impl<'a> System<'a> for PerceptionResolutionSystem {
                 //TODO: allow for different thresholds depending on size of entity
                 if dig.get_total_nutrition(&edb) < 100 {
                     println!("Entity hungry, fulfilling hunger");
-                    if !gol
-                        .goal_stack
-                        .iter()
-                        .any(|goal| 
-                            match goal {
-                                AIGoal::FulfilHunger(_) => true, 
-                                _ => false,
-                            }
-                        )
-                    {
-                        gol.goal_stack.push(AIGoal::FulfilHunger(FulfilHungerGoal{eat_food_goal: None}));
+                    if !gol.goal_stack.iter().any(|goal| match goal {
+                        AIGoal::FulfilHunger(_) => true,
+                        _ => false,
+                    }) {
+                        gol.goal_stack.push(AIGoal::FulfilHunger(FulfilHungerGoal {
+                            eat_food_goal: None,
+                        }));
                     }
                 }
             }

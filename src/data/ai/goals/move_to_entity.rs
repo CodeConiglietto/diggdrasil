@@ -3,7 +3,7 @@ use specs::prelude::*;
 use crate::prelude::*;
 
 #[derive(Debug, Clone)]
-pub struct MoveToEntityGoal{
+pub struct MoveToEntityGoal {
     //Child goals and data here
     target: Entity,
 }

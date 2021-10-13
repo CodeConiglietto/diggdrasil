@@ -21,5 +21,4 @@ impl AIGoalTrait for WanderGoal {
             ),
         })
     }
-
 }
