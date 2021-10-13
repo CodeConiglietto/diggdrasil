@@ -14,7 +14,7 @@ pub struct EatGoal {
 
 impl AIGoalTrait for EatGoal {
     fn get_textual_representation(&self, data: &RenderData) -> String {
-        format!("Eat {}", data.name.get(self.target).unwrap())
+        format!("Eat {}", data.name.get(self.target).unwrap().name)
     }
 
     fn resolve(&mut self, parent_entity: Entity, data: GoalData) -> AIGoalResult {

@@ -18,7 +18,7 @@ impl TravelPathGoal {
 }
 
 impl AIGoalTrait for TravelPathGoal {
-    pub fn get_textual_representation(&self, data: &RenderData) -> String {
+    fn get_textual_representation(&self, data: &RenderData) -> String {
         if let Some(dest) = self.path.first() {
             format!("Travel to {:?}", dest)
         } else {

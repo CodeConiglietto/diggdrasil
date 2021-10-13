@@ -54,169 +54,169 @@ impl<'a> System<'a> for InputResolutionSystem {
                     //if no popup
                     match key {
                         //TODO: move these to use direction enum
-                        KeyCode::Numpad1 => {
-                            gol.goal_stack.push(AIGoal::MoveInDirection {
-                                direction: Direction::DownLeft,
-                            });
-                        }
-                        KeyCode::Numpad2 | KeyCode::Down => {
-                            gol.goal_stack.push(AIGoal::MoveInDirection {
-                                direction: Direction::Down,
-                            });
-                        }
-                        KeyCode::Numpad3 => {
-                            gol.goal_stack.push(AIGoal::MoveInDirection {
-                                direction: Direction::DownRight,
-                            });
-                        }
-                        KeyCode::Numpad4 | KeyCode::Left => {
-                            gol.goal_stack.push(AIGoal::MoveInDirection {
-                                direction: Direction::Left,
-                            });
-                        }
-                        KeyCode::Numpad6 | KeyCode::Right => {
-                            gol.goal_stack.push(AIGoal::MoveInDirection {
-                                direction: Direction::Right,
-                            });
-                        }
-                        KeyCode::Numpad7 => {
-                            gol.goal_stack.push(AIGoal::MoveInDirection {
-                                direction: Direction::UpLeft,
-                            });
-                        }
-                        KeyCode::Numpad8 | KeyCode::Up => {
-                            gol.goal_stack.push(AIGoal::MoveInDirection {
-                                direction: Direction::Up,
-                            });
-                        }
-                        KeyCode::Numpad9 => {
-                            gol.goal_stack.push(AIGoal::MoveInDirection {
-                                direction: Direction::UpRight,
-                            });
-                        }
-                        //TODO: add modifier check to see if player presses G or g.
-                        //G picks up an entity in a manipulator
-                        //g places an entity in the inventory
-                        //Both actions require a manipulator
-                        KeyCode::G => {
-                            if let Some(inv) = inv.get(eid) {
-                                if inv.any_slot_free() {
-                                    let mut pickup_goals: Vec<_> = twld
-                                        .get(pos.pos)
-                                        .unwrap()
-                                        .entities
-                                        .iter()
-                                        .filter(|entity| itc.get(**entity).is_some())
-                                        .enumerate()
-                                        .map(|(index, item)| {
-                                            PopupListItem::new(
-                                                index,
-                                                None,
-                                                AIGoal::StowItem { item: *item },
-                                            )
-                                        })
-                                        .collect();
+                        // KeyCode::Numpad1 => {
+                        //     gol.goal_stack.push(AIGoal::MoveInDirection {
+                        //         direction: Direction::DownLeft,
+                        //     });
+                        // }
+                        // KeyCode::Numpad2 | KeyCode::Down => {
+                        //     gol.goal_stack.push(AIGoal::MoveInDirection {
+                        //         direction: Direction::Down,
+                        //     });
+                        // }
+                        // KeyCode::Numpad3 => {
+                        //     gol.goal_stack.push(AIGoal::MoveInDirection {
+                        //         direction: Direction::DownRight,
+                        //     });
+                        // }
+                        // KeyCode::Numpad4 | KeyCode::Left => {
+                        //     gol.goal_stack.push(AIGoal::MoveInDirection {
+                        //         direction: Direction::Left,
+                        //     });
+                        // }
+                        // KeyCode::Numpad6 | KeyCode::Right => {
+                        //     gol.goal_stack.push(AIGoal::MoveInDirection {
+                        //         direction: Direction::Right,
+                        //     });
+                        // }
+                        // KeyCode::Numpad7 => {
+                        //     gol.goal_stack.push(AIGoal::MoveInDirection {
+                        //         direction: Direction::UpLeft,
+                        //     });
+                        // }
+                        // KeyCode::Numpad8 | KeyCode::Up => {
+                        //     gol.goal_stack.push(AIGoal::MoveInDirection {
+                        //         direction: Direction::Up,
+                        //     });
+                        // }
+                        // KeyCode::Numpad9 => {
+                        //     gol.goal_stack.push(AIGoal::MoveInDirection {
+                        //         direction: Direction::UpRight,
+                        //     });
+                        // }
+                        // //TODO: add modifier check to see if player presses G or g.
+                        // //G picks up an entity in a manipulator
+                        // //g places an entity in the inventory
+                        // //Both actions require a manipulator
+                        // KeyCode::G => {
+                        //     if let Some(inv) = inv.get(eid) {
+                        //         if inv.any_slot_free() {
+                        //             let mut pickup_goals: Vec<_> = twld
+                        //                 .get(pos.pos)
+                        //                 .unwrap()
+                        //                 .entities
+                        //                 .iter()
+                        //                 .filter(|entity| itc.get(**entity).is_some())
+                        //                 .enumerate()
+                        //                 .map(|(index, item)| {
+                        //                     PopupListItem::new(
+                        //                         index,
+                        //                         None,
+                        //                         AIGoal::StowItem { item: *item },
+                        //                     )
+                        //                 })
+                        //                 .collect();
 
-                                    match pickup_goals.len() {
-                                        0 => {}
-                                        1 => gol.goal_stack.push(pickup_goals.remove(0).goal),
-                                        _ => {
-                                            inc.popup = Some(Popup::list(
-                                                String::from("Stow what?"),
-                                                pickup_goals,
-                                            ));
-                                        }
-                                    }
-                                } else {
-                                    debug!("No room in inventory!");
-                                }
-                            } else {
-                                println!("No inventory to store item in!");
-                            }
-                        }
-                        KeyCode::D => {
-                            let drop_goals: Vec<_> = inv
-                                .get_mut(eid)
-                                .unwrap()
-                                .items
-                                .iter()
-                                .enumerate()
-                                .filter_map(|(index, inventory_slot)| {
-                                    //Check that the inventory slot has something in it, and also that it is an item
-                                    if let Some(item) = inventory_slot {
-                                        if itc.get(*item).is_some() {
-                                            return Some(PopupListItem::new(
-                                                index,
-                                                None,
-                                                AIGoal::DropItem { item: *item },
-                                            ));
-                                        }
-                                    }
+                        //             match pickup_goals.len() {
+                        //                 0 => {}
+                        //                 1 => gol.goal_stack.push(pickup_goals.remove(0).goal),
+                        //                 _ => {
+                        //                     inc.popup = Some(Popup::list(
+                        //                         String::from("Stow what?"),
+                        //                         pickup_goals,
+                        //                     ));
+                        //                 }
+                        //             }
+                        //         } else {
+                        //             debug!("No room in inventory!");
+                        //         }
+                        //     } else {
+                        //         println!("No inventory to store item in!");
+                        //     }
+                        // }
+                        // KeyCode::D => {
+                        //     let drop_goals: Vec<_> = inv
+                        //         .get_mut(eid)
+                        //         .unwrap()
+                        //         .items
+                        //         .iter()
+                        //         .enumerate()
+                        //         .filter_map(|(index, inventory_slot)| {
+                        //             //Check that the inventory slot has something in it, and also that it is an item
+                        //             if let Some(item) = inventory_slot {
+                        //                 if itc.get(*item).is_some() {
+                        //                     return Some(PopupListItem::new(
+                        //                         index,
+                        //                         None,
+                        //                         AIGoal::DropItem { item: *item },
+                        //                     ));
+                        //                 }
+                        //             }
 
-                                    None
-                                })
-                                .collect();
+                        //             None
+                        //         })
+                        //         .collect();
 
-                            match drop_goals.len() {
-                                0 => {}
-                                _ => {
-                                    inc.popup =
-                                        Some(Popup::list(String::from("Drop what?"), drop_goals));
-                                }
-                            }
-                        }
-                        KeyCode::W => {
-                            let hold_goals: Vec<_> = inv
-                                .get_mut(eid)
-                                .unwrap()
-                                .items
-                                .iter()
-                                .enumerate()
-                                .filter_map(|(index, inventory_slot)| {
-                                    //Check that the inventory slot has something in it, and also that it is an item
-                                    if let Some(item) = inventory_slot {
-                                        if itc.get(*item).is_some() {
-                                            return Some(PopupListItem::new(
-                                                index,
-                                                None,
-                                                AIGoal::HoldItem { item: Some(*item) },
-                                            ));
-                                        }
-                                    }
+                        //     match drop_goals.len() {
+                        //         0 => {}
+                        //         _ => {
+                        //             inc.popup =
+                        //                 Some(Popup::list(String::from("Drop what?"), drop_goals));
+                        //         }
+                        //     }
+                        // }
+                        // KeyCode::W => {
+                        //     let hold_goals: Vec<_> = inv
+                        //         .get_mut(eid)
+                        //         .unwrap()
+                        //         .items
+                        //         .iter()
+                        //         .enumerate()
+                        //         .filter_map(|(index, inventory_slot)| {
+                        //             //Check that the inventory slot has something in it, and also that it is an item
+                        //             if let Some(item) = inventory_slot {
+                        //                 if itc.get(*item).is_some() {
+                        //                     return Some(PopupListItem::new(
+                        //                         index,
+                        //                         None,
+                        //                         AIGoal::HoldItem { item: Some(*item) },
+                        //                     ));
+                        //                 }
+                        //             }
 
-                                    None
-                                })
-                                .collect();
+                        //             None
+                        //         })
+                        //         .collect();
 
-                            match hold_goals.len() {
-                                0 => {}
-                                _ => {
-                                    inc.popup =
-                                        Some(Popup::list(String::from("Hold what?"), hold_goals));
-                                }
-                            }
-                        }
-                        KeyCode::E => {
-                            gol.goal_stack.push(AIGoal::Eat { target: None });
-                        }
-                        KeyCode::B => {
-                            //TODO: ensure player has some way to manipulate objects, otherwise they can't build :(
-                            let pos = pos.pos;
+                        //     match hold_goals.len() {
+                        //         0 => {}
+                        //         _ => {
+                        //             inc.popup =
+                        //                 Some(Popup::list(String::from("Hold what?"), hold_goals));
+                        //         }
+                        //     }
+                        // }
+                        // KeyCode::E => {
+                        //     gol.goal_stack.push(AIGoal::Eat { target: None });
+                        // }
+                        // KeyCode::B => {
+                        //     //TODO: ensure player has some way to manipulate objects, otherwise they can't build :(
+                        //     let pos = pos.pos;
 
-                            inc.popup = Some(Popup::directions(
-                                String::from("Build where?"),
-                                Directions::all(),
-                                move |dir| AIGoal::Build {
-                                    pos: pos + dir.get_offset(),
-                                    tile_type: None,
-                                    consumed_entity: None,
-                                },
-                            ));
-                        }
-                        KeyCode::C => gol.goal_stack.push(AIGoal::Craft {
-                            recipe: None,
-                            ingredients: Vec::new(),
-                        }),
+                        //     inc.popup = Some(Popup::directions(
+                        //         String::from("Build where?"),
+                        //         Directions::all(),
+                        //         move |dir| AIGoal::Build {
+                        //             pos: pos + dir.get_offset(),
+                        //             tile_type: None,
+                        //             consumed_entity: None,
+                        //         },
+                        //     ));
+                        // }
+                        // KeyCode::C => gol.goal_stack.push(AIGoal::Craft {
+                        //     recipe: None,
+                        //     ingredients: Vec::new(),
+                        // }),
                         _ => (),
                     }
                 }

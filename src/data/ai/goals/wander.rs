@@ -9,9 +9,8 @@ pub struct WanderGoal {
 }
 
 impl AIGoalTrait for WanderGoal {
-
-    pub fn get_textual_representation(&self, data: &RenderData) -> String {
-        String::from("Wander"),
+    fn get_textual_representation(&self, data: &RenderData) -> String {
+        String::from("Wander")
     }
 
     fn resolve(&mut self, parent_entity: Entity, data: GoalData) -> AIGoalResult {

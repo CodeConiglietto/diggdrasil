@@ -12,7 +12,7 @@ pub struct AttackEntityGoal {
 
 impl AIGoalTrait for AttackEntityGoal {
     fn get_textual_representation(&self, data: &RenderData) -> String {
-        format!("Attack {}", data.name.get(*target).unwrap().name)
+        format!("Attack {}", data.name.get(self.target).unwrap().name)
     }
 
     fn resolve(&mut self, parent_entity: Entity, data: GoalData) -> AIGoalResult {

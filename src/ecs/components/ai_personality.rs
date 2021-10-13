@@ -15,7 +15,7 @@ impl AIPersonalityComponent {
         if under_player_control {
             None
         } else {
-            Some(AIGoal::Wander)
+            Some(AIGoal::Wander(WanderGoal{}))
         }
     }
 }

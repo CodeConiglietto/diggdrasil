@@ -6,14 +6,14 @@ use crate::prelude::*;
 pub struct CraftGoal {
     //Child goals and data here
     recipe: Recipe,
-    ingredients: Vec<RecipeIngredient>,
+    ingredients: Vec<Entity>,
 }
 
 impl AIGoalTrait for CraftGoal {
     fn get_textual_representation(&self, data: &RenderData) -> String {
         //TODO: have the string print the ingredients if they exist
 
-        format!("Craft a {}", recipe.get_resulting_object_name())
+        format!("Craft a {}", self.recipe.get_resulting_object_name())
     }
 
     fn resolve(&mut self, parent_entity: Entity, data: GoalData) -> AIGoalResult {

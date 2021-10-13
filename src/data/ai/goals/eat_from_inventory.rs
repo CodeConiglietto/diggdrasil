@@ -2,14 +2,14 @@ use specs::prelude::*;
 
 use crate::prelude::*;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct EatFromInventoryGoal {
     //Child goals and data here
     pub target: Entity,
 }
 
 impl AIGoalTrait for EatFromInventoryGoal {
-    pub fn get_textual_representation(&self, data: &RenderData) -> String {
+    fn get_textual_representation(&self, data: &RenderData) -> String {
         format!(
             "Eat {} from inventory",
             data.name.get(self.target).unwrap().name

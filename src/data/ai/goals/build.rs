@@ -27,7 +27,7 @@ impl AIGoalTrait for BuildGoal {
 
         format!(
             "Build {} at {} from {}",
-            tile_name, self.pos, consumed_entity_name
+            tile_name, if let Some(pos) = self.pos {format!("{}", pos)} else {String::from("somewhere")} , consumed_entity_name
         )
     }
 
