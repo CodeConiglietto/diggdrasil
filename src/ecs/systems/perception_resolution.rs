@@ -39,7 +39,7 @@ impl<'a> System<'a> for PerceptionResolutionSystem {
                         .iter()
                         .any(|goal| 
                             match goal {
-                                AIGoal::FulfilHunger(_) => true,
+                                AIGoal::FulfilHunger(_) => true, 
                                 _ => false,
                             }
                         )
