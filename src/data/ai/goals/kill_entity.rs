@@ -14,16 +14,18 @@ impl AIGoalTrait for KillEntityGoal {
         format!("Kill {}", data.name.get(self.target).unwrap().name)
     }
 
-    fn resolve(&mut self, parent_entity: Entity, data: GoalData) -> AIGoalResult {
+    fn resolve(&mut self, parent_entity: Entity, data: &mut GoalData) -> AIGoalResult {
         //If the entity has a health greater than 0
         //Create child goal "AttackEntity" with target
         //TODO: Check that entity is within view, or reasonable to attack
         if let Some(target_hpc) = data.health.get(self.target) {
             if target_hpc.value > 0 {
+                let target = self.target;
+
                 self.attack_entity_goal
                     .get_or_insert_with(|| AttackEntityGoal {
                         //Child goals and data here
-                        target: self.target,
+                        target,
                         move_to_entity_goal: None,
                         attack_in_direction_goal: None,
                     })

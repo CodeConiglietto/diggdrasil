@@ -17,11 +17,13 @@ impl AIGoalTrait for EatGoal {
         format!("Eat {}", data.name.get(self.target).unwrap().name)
     }
 
-    fn resolve(&mut self, parent_entity: Entity, data: GoalData) -> AIGoalResult {
+    fn resolve(&mut self, parent_entity: Entity, data: &mut GoalData) -> AIGoalResult {
+        let target = self.target;
+        
         if self
             .eat_from_inventory_goal
             .get_or_insert_with(|| EatFromInventoryGoal {
-                target: self.target,
+                target,
             })
             .resolve(parent_entity, data)?
         {
@@ -31,7 +33,7 @@ impl AIGoalTrait for EatGoal {
         if self
             .eat_from_world_goal
             .get_or_insert_with(|| EatFromWorldGoal {
-                target: self.target,
+                target,
                 move_to_entity_goal: None,
             })
             .resolve(parent_entity, data)?

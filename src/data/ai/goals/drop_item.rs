@@ -5,8 +5,8 @@ use crate::prelude::*;
 #[derive(Debug, Clone)]
 pub struct DropItemGoal {
     //Child goals and data here
-    item: Entity,
-    attempted: bool,
+    pub item: Entity,
+    pub attempted: bool,
 }
 
 impl AIGoalTrait for DropItemGoal {
@@ -14,7 +14,7 @@ impl AIGoalTrait for DropItemGoal {
         format!("Drop {}", data.name.get(self.item).unwrap().name)
     }
 
-    fn resolve(&mut self, parent_entity: Entity, data: GoalData) -> AIGoalResult {
+    fn resolve(&mut self, parent_entity: Entity, data: &mut GoalData) -> AIGoalResult {
         if !self.attempted {
             Self::action(AIAction::DropItemFromInventory { item: self.item })
         } else {

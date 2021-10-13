@@ -4,7 +4,7 @@ use crate::prelude::*;
 
 #[derive(Debug, Clone)]
 pub struct StowItemGoal {
-    item: Entity,
+    pub item: Entity,
 }
 
 impl AIGoalTrait for StowItemGoal {
@@ -12,7 +12,7 @@ impl AIGoalTrait for StowItemGoal {
         format!("Stow {}", data.name.get(self.item).unwrap().name)
     }
 
-    fn resolve(&mut self, parent_entity: Entity, data: GoalData) -> AIGoalResult {
+    fn resolve(&mut self, parent_entity: Entity, data: &mut GoalData) -> AIGoalResult {
         if let Some(inventory) = data.inventory.get(parent_entity) {
             if inventory.items.iter().any(|item| *item == Some(self.item)) {
                 return Self::success();

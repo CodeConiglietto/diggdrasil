@@ -5,9 +5,9 @@ use crate::prelude::*;
 #[derive(Debug, Clone)]
 pub struct BuildGoal {
     //Child goals and data here
-    pos: Option<IPosition>,
-    tile_type: Option<TileType>,
-    consumed_entity: Option<Entity>,
+    pub pos: Option<IPosition>,
+    pub tile_type: Option<TileType>,
+    pub consumed_entity: Option<Entity>,
 }
 
 impl AIGoalTrait for BuildGoal {
@@ -37,7 +37,7 @@ impl AIGoalTrait for BuildGoal {
         )
     }
 
-    fn resolve(&mut self, parent_entity: Entity, data: GoalData) -> AIGoalResult {
+    fn resolve(&mut self, parent_entity: Entity, data: &mut GoalData) -> AIGoalResult {
         let pos = data.position.get(parent_entity).unwrap().pos;
 
         if let Some(chunk_tile) = data.tile_world.get(pos) {

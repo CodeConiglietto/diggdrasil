@@ -4,8 +4,8 @@ use crate::prelude::*;
 
 #[derive(Debug, Clone)]
 pub struct TravelToPositionGoal {
-    target_pos: IPosition,
-    travel_path: Option<TravelPathGoal>,
+    pub target_pos: IPosition,
+    pub travel_path: Option<TravelPathGoal>,
 }
 
 impl AIGoalTrait for TravelToPositionGoal {
@@ -13,7 +13,7 @@ impl AIGoalTrait for TravelToPositionGoal {
         format!("Travel to {:?}", self.target_pos)
     }
 
-    fn resolve(&mut self, parent_entity: Entity, data: GoalData) -> AIGoalResult {
+    fn resolve(&mut self, parent_entity: Entity, data: &mut GoalData) -> AIGoalResult {
         let pos = data.position.get(parent_entity).unwrap().pos;
 
         if pos == self.target_pos {
@@ -27,7 +27,7 @@ impl AIGoalTrait for TravelToPositionGoal {
         }
 
         // If the previously computed path failed or we don't have one, compute a new one
-        if let Some(pathing) = data.pathing.get(parent_entity) {
+        if let Some(pathing) = data.pathing.get_mut(parent_entity) {
             if let Some(path) = pathing.pathfind(&data.tile_world, pos, self.target_pos) {
                 let travel_path = self.travel_path.insert(TravelPathGoal::new(path));
                 travel_path.resolve(parent_entity, data)

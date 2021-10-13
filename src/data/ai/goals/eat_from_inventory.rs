@@ -16,7 +16,7 @@ impl AIGoalTrait for EatFromInventoryGoal {
         )
     }
 
-    fn resolve(&mut self, parent_entity: Entity, data: GoalData) -> AIGoalResult {
+    fn resolve(&mut self, parent_entity: Entity, data: &mut GoalData) -> AIGoalResult {
         if let Some(inv) = data.inventory.get(parent_entity) {
             if inv.contains(self.target) {
                 Self::action(AIAction::EatItemFromInventory { item: self.target })

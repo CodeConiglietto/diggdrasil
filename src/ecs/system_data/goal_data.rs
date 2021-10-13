@@ -26,6 +26,5 @@ pub struct GoalData<'a> {
     pub position: ReadStorage<'a, PositionComponent>,
 
     //Write components
-    pub input: WriteStorage<'a, InputComponent>,
     pub pathing: WriteStorage<'a, PathingComponent>,
 }

@@ -5,7 +5,7 @@ use crate::prelude::*;
 #[derive(Debug, Clone)]
 pub struct MoveToEntityGoal {
     //Child goals and data here
-    target: Entity,
+    pub target: Entity,
 }
 
 impl AIGoalTrait for MoveToEntityGoal {
@@ -13,7 +13,7 @@ impl AIGoalTrait for MoveToEntityGoal {
         format!("Move to {}", data.name.get(self.target).unwrap().name)
     }
 
-    fn resolve(&mut self, parent_entity: Entity, data: GoalData) -> AIGoalResult {
+    fn resolve(&mut self, parent_entity: Entity, data: &mut GoalData) -> AIGoalResult {
         //TODO: implement like the whole fuckin' thing
         //Finish
         Self::success()

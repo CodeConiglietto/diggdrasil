@@ -5,9 +5,9 @@ use crate::prelude::*;
 #[derive(Debug, Clone)]
 pub struct AttackEntityGoal {
     //Child goals and data here
-    target: Entity,
-    move_to_entity_goal: Option<MoveToEntityGoal>,
-    attack_in_direction_goal: Option<AttackInDirectionGoal>,
+    pub target: Entity,
+    pub move_to_entity_goal: Option<MoveToEntityGoal>,
+    pub attack_in_direction_goal: Option<AttackInDirectionGoal>,
 }
 
 impl AIGoalTrait for AttackEntityGoal {
@@ -15,12 +15,14 @@ impl AIGoalTrait for AttackEntityGoal {
         format!("Attack {}", data.name.get(self.target).unwrap().name)
     }
 
-    fn resolve(&mut self, parent_entity: Entity, data: GoalData) -> AIGoalResult {
+    fn resolve(&mut self, parent_entity: Entity, data: &mut GoalData) -> AIGoalResult {
+        let target = self.target;
+        
         //Move there
         if self
             .move_to_entity_goal
             .get_or_insert_with(|| MoveToEntityGoal {
-                target: self.target,
+                target,
             })
             .resolve(parent_entity, data)?
         {
@@ -29,7 +31,7 @@ impl AIGoalTrait for AttackEntityGoal {
 
         //Attack
         let this_pos = data.position.get(parent_entity).unwrap().pos;
-        let target_pos = data.position.get(self.target).unwrap().pos;
+        let target_pos = data.position.get(target).unwrap().pos;
 
         if self
             .attack_in_direction_goal

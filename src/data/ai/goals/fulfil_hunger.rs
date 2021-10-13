@@ -14,7 +14,7 @@ impl AIGoalTrait for FulfilHungerGoal {
         String::from("Fulfil hunger")
     }
 
-    fn resolve(&mut self, parent_entity: Entity, data: GoalData) -> AIGoalResult {
+    fn resolve(&mut self, parent_entity: Entity, data: &mut GoalData) -> AIGoalResult {
         //TODO: add some greed or stomach size percentage to determine whether the creature is sated or not
         if let Some(dig) = data.digestion.get(parent_entity) {
             if dig.get_total_nutrition(&data.edible) >= 100 {

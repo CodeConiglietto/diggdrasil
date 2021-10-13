@@ -22,7 +22,7 @@ pub enum AIGoal {
 }
 
 impl AIGoalTrait for AIGoal {
-    fn resolve(&mut self, parent_entity: Entity, data: GoalData) -> AIGoalResult {
+    fn resolve(&mut self, parent_entity: Entity, data: &mut GoalData) -> AIGoalResult {
         match self {
             Self::Wander(goal) => goal.resolve(parent_entity, data),
             Self::MoveInDirection(goal) => goal.resolve(parent_entity, data),

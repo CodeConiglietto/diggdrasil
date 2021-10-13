@@ -6,7 +6,7 @@ use crate::prelude::*;
 #[derive(Debug, Clone)]
 pub struct AttackInDirectionGoal {
     //Child goals and data here
-    direction: Direction,
+    pub direction: Direction,
 }
 
 impl AIGoalTrait for AttackInDirectionGoal {
@@ -14,7 +14,7 @@ impl AIGoalTrait for AttackInDirectionGoal {
         format!("Attack towards {:?}", self.direction)
     }
 
-    fn resolve(&mut self, parent_entity: Entity, data: GoalData) -> AIGoalResult {
+    fn resolve(&mut self, parent_entity: Entity, data: &mut GoalData) -> AIGoalResult {
         //TODO: rewrite:
         //if Hold a weapon succeeds
         //-Attack using that weapon

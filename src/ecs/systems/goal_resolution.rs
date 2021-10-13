@@ -15,7 +15,7 @@ impl<'a> System<'a> for GoalResolutionSystem {
         GoalData<'a>,
     );
 
-    fn run(&mut self, (eids, gol, act, data): Self::SystemData) {
+    fn run(&mut self, (eids, mut gol, mut act, mut data): Self::SystemData) {
         for (eid, gol, act) in (&eids, &mut gol, &mut act).join() {
             //Check for latest goal in stack
             //Attempt to resolve goal
@@ -25,9 +25,9 @@ impl<'a> System<'a> for GoalResolutionSystem {
             //
 
             while act.current_action.is_none() && gol.goal_stack.len() > 0 {
-                let mut current_goal = gol.goal_stack.last().unwrap();
+                let current_goal = gol.goal_stack.last_mut().unwrap();
 
-                match current_goal.resolve(eid, data) {
+                match current_goal.resolve(eid, &mut data) {
                     Ok(success) => {
                         // println!(
                         //     "Goal {} {}",

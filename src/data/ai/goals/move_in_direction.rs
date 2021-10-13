@@ -14,7 +14,7 @@ impl AIGoalTrait for MoveInDirectionGoal {
         format!("Move towards {:?}", self.direction)
     }
 
-    fn resolve(&mut self, parent_entity: Entity, data: GoalData) -> AIGoalResult {
+    fn resolve(&mut self, parent_entity: Entity, data: &mut GoalData) -> AIGoalResult {
         let pos = data.position.get(parent_entity).unwrap().pos;
         let offset = self.direction.get_offset();
         let new_pos = pos + offset;

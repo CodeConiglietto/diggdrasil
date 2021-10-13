@@ -13,7 +13,7 @@ impl AIGoalTrait for HoldItemGoal {
         format!("Hold {}", data.name.get(self.item).unwrap().name)
     }
 
-    fn resolve(&mut self, parent_entity: Entity, data: GoalData) -> AIGoalResult {
+    fn resolve(&mut self, parent_entity: Entity, data: &mut GoalData) -> AIGoalResult {
         if let Some(man) = data.manipulator.get(parent_entity) {
             if let Some(held) = man.held_item {
                 //TODO: make this stow, drop, or sheath the held item

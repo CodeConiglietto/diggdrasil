@@ -26,7 +26,7 @@ impl AIGoalTrait for TravelPathGoal {
         }
     }
 
-    fn resolve(&mut self, parent_entity: Entity, data: GoalData) -> AIGoalResult {
+    fn resolve(&mut self, parent_entity: Entity, data: &mut GoalData) -> AIGoalResult {
         let pos = data.position.get(parent_entity).unwrap().pos;
 
         if let Some(move_in_direction) = &mut self.move_in_direction {

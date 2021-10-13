@@ -18,7 +18,7 @@ impl AIGoalTrait for EatFromWorldGoal {
         )
     }
 
-    fn resolve(&mut self, parent_entity: Entity, data: GoalData) -> AIGoalResult {
+    fn resolve(&mut self, parent_entity: Entity, data: &mut GoalData) -> AIGoalResult {
         let this_pos = data.position.get(parent_entity).unwrap();
 
         if let Some(target_pos) = data.position.get(self.target) {
@@ -28,10 +28,12 @@ impl AIGoalTrait for EatFromWorldGoal {
                     target: self.target,
                 })
             } else {
+                let target = self.target;
+
                 if !self
                     .move_to_entity_goal
                     .get_or_insert_with(|| MoveToEntityGoal {
-                        target: self.target,
+                        target,
                     })
                     .resolve(parent_entity, data)?
                 {

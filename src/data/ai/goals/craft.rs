@@ -5,8 +5,8 @@ use crate::prelude::*;
 #[derive(Debug, Clone)]
 pub struct CraftGoal {
     //Child goals and data here
-    recipe: Recipe,
-    ingredients: Vec<Entity>,
+    pub recipe: Recipe,
+    pub ingredients: Vec<Entity>,
 }
 
 impl AIGoalTrait for CraftGoal {
@@ -16,7 +16,7 @@ impl AIGoalTrait for CraftGoal {
         format!("Craft a {}", self.recipe.get_resulting_object_name())
     }
 
-    fn resolve(&mut self, parent_entity: Entity, data: GoalData) -> AIGoalResult {
+    fn resolve(&mut self, parent_entity: Entity, data: &mut GoalData) -> AIGoalResult {
         //TODO: rewrite
         //This should be created fully formed from the input component
 

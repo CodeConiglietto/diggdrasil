@@ -12,7 +12,7 @@ impl AIGoalTrait for GroupWithAlliesGoal {
         String::from("Group with similar creatures")
     }
 
-    fn resolve(&mut self, parent_entity: Entity, data: GoalData) -> AIGoalResult {
+    fn resolve(&mut self, parent_entity: Entity, data: &mut GoalData) -> AIGoalResult {
         //Find a nearby ally (Closest? Random that you can see?)
         //Determine a comfortable distance to that ally
         //If you're outside that distance, move towards that ally

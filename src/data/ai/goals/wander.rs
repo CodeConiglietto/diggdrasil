@@ -13,7 +13,7 @@ impl AIGoalTrait for WanderGoal {
         String::from("Wander")
     }
 
-    fn resolve(&mut self, parent_entity: Entity, data: GoalData) -> AIGoalResult {
+    fn resolve(&mut self, parent_entity: Entity, data: &mut GoalData) -> AIGoalResult {
         Self::action(AIAction::MoveInDirection {
             offset: IPosition::new(
                 thread_rng().gen_range(-1..=1),

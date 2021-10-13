@@ -12,7 +12,7 @@ impl AIGoalTrait for FleeDangerGoal {
         String::from("Flee from danger")
     }
 
-    fn resolve(&mut self, parent_entity: Entity, data: GoalData) -> AIGoalResult {
+    fn resolve(&mut self, parent_entity: Entity, data: &mut GoalData) -> AIGoalResult {
         let pos = data.position.get(parent_entity).unwrap().pos;
 
         if let Some(this_perc) = data.perception.get(parent_entity) {

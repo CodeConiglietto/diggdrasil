@@ -10,7 +10,7 @@ impl AIGoalTrait for ArmSelfGoal {
         String::from("Arm self")
     }
 
-    fn resolve(&mut self, parent_entity: Entity, data: GoalData) -> AIGoalResult {
+    fn resolve(&mut self, parent_entity: Entity, data: &mut GoalData) -> AIGoalResult {
         //TODO: actually implement this
         Self::success()
     }
