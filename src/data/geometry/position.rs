@@ -181,12 +181,12 @@ impl TryFrom<IPosition> for UPosition {
 }
 
 impl IPosition {
-    pub fn is_adjacent(self, other: Self) -> bool {
-        (self.x - other.x).abs() == 1 || (self.y - other.y).abs() == 1
+    pub fn is_adjacent_or_same(self, other: Self) -> bool {
+        (self.x - other.x).abs() <= 1 && (self.y - other.y).abs() <= 1
     }
 
-    pub fn is_adjacent_or_same(self, other: Self) -> bool {
-        self == other || self.is_adjacent(other)
+    pub fn is_adjacent(self, other: Self) -> bool {
+        self != other && self.is_adjacent_or_same(other)
     }
 
     pub fn global_to_local(self) -> (IPosition, UPosition) {
