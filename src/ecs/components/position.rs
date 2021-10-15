@@ -1,13 +1,10 @@
 use serde::{Deserialize, Serialize};
-use specs::{Component, FlaggedStorage, VecStorage};
+use specs::{Component, VecStorage};
 
 use crate::prelude::*;
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Component, Debug, Serialize, Deserialize)]
+#[storage(VecStorage)]
 pub struct PositionComponent {
     pub pos: IPosition,
-}
-
-impl Component for PositionComponent {
-    type Storage = FlaggedStorage<Self, VecStorage<Self>>;
 }

@@ -10,6 +10,7 @@ pub mod movement_resolution;
 pub mod particle;
 pub mod particle_emitter;
 pub mod perception_resolution;
+pub mod propagation;
 pub mod save_load;
 pub mod weather;
 pub mod world_maintenance;

@@ -31,14 +31,16 @@ impl AIGoalTrait for TravelPathGoal {
 
         if let Some(move_in_direction) = &mut self.move_in_direction {
             if !move_in_direction.resolve(parent_entity, data)? {
+                println!("Entity failed to resolve move in direction subgoal when pathing");
                 return Self::failure();
             }
         }
 
         // If the move succeeded or we don't have one ready, grab the next step
 
-        if let Some(next_step) = self.path.pop() {
+        while let Some(next_step) = self.path.pop() {
             if !next_step.is_adjacent_or_same(pos) {
+                println!("Entity's next step is not adjacent to current position");
                 return Self::failure();
             }
 
@@ -46,9 +48,13 @@ impl AIGoalTrait for TravelPathGoal {
                 direction: Direction::from_positions(next_step, pos),
                 attempted: false,
             });
-            move_in_direction.resolve(parent_entity, data)
-        } else {
-            Self::success()
+            
+            if !move_in_direction.resolve(parent_entity, data)? {
+                return Self::failure();
+            }
         }
+
+        println!("Entity's next path step is none");
+        Self::success()
     }
 }

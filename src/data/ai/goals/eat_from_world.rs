@@ -24,11 +24,13 @@ impl AIGoalTrait for EatFromWorldGoal {
         if let Some(target_pos) = data.position.get(self.target) {
             //We can assume that the item exists in the world
             if this_pos.pos.is_adjacent_or_same(target_pos.pos) {
+                println!("Entity adjacent to food, eating");
                 Self::action(AIAction::EatFromGround {
                     target: self.target,
                 })
             } else {
                 let target = self.target;
+                println!("Entity moving to food");
 
                 if !self
                     .move_to_entity_goal
@@ -38,11 +40,14 @@ impl AIGoalTrait for EatFromWorldGoal {
                     })
                     .resolve(parent_entity, data)?
                 {
+                    println!("Entity unable to move to food");
                     return Self::failure();
                 }
 
-                //This may be the case, if not rethink everything
-                unreachable!();
+                println!("Entity succeeded at moving to food, but is not adjacent to food");
+                //Our position was not adjacent, but our move was successful
+                //Move successful implies that the position is adjacent
+                unreachable!()
             }
         } else {
             println!("Entity attempting to eat item from world that is not in the world!");

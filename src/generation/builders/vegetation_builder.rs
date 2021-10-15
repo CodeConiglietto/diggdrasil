@@ -1,8 +1,10 @@
 use rand::prelude::*;
+use serde::{Serialize, Deserialize};
 use specs::{world::EntitiesRes, Builder, Entity, LazyUpdate};
 
 use crate::prelude::*;
 
+#[derive(Serialize, Deserialize)]
 pub enum VegetationBuilder {
     Grass,
     Tree,
@@ -24,7 +26,11 @@ impl VegetationBuilder {
                     name: String::from("grass"),
                 })
                 .with(EdibleComponent {
-                    nutrient_value: 100,
+                    nutrient_value: 3,
+                })
+                .with(VegPropagationComponent {
+                    propagation_chance: 250,
+                    parent_builder: VegetationBuilder::Grass,
                 })
                 .build(),
             Self::Tree => {

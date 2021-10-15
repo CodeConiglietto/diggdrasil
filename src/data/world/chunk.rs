@@ -80,27 +80,30 @@ impl Chunk {
         let entities = &world_data.entities;
 
         for local_pos in vegetation_local_positions {
-            self.spawn_entity(
-                match thread_rng().gen_range(0..=4) {
-                    0 => ItemBuilder::Stick.build(lazy, entities),
-                    1 => ItemBuilder::Log.build(lazy, entities),
-                    2 => VegetationBuilder::Grass.build(lazy, entities),
-                    3 => VegetationBuilder::BerryBush.build(lazy, entities),
-                    4 => VegetationBuilder::Tree.build(lazy, entities),
-                    _ => unreachable!(),
-                },
-                (chunk_pos, local_pos),
-                &mut world_data.position,
-            )
+            if !self.tiles[local_pos.to_idx().unwrap()].tile.tile_type.collides() {
+                self.spawn_entity(
+                    match 2 {
+                    //thread_rng().gen_range(0..=4) {
+                        0 => ItemBuilder::Stick.build(lazy, entities),
+                        1 => ItemBuilder::Log.build(lazy, entities),
+                        2 => VegetationBuilder::Grass.build(lazy, entities),
+                        3 => VegetationBuilder::BerryBush.build(lazy, entities),
+                        4 => VegetationBuilder::Tree.build(lazy, entities),
+                        _ => unreachable!(),
+                    },
+                    (chunk_pos, local_pos),
+                    &mut world_data.position,
+                )
+            }
         }
 
-        for _ in 0..16 {
-            self.spawn_somewhere_free(
-                || ItemBuilder::Stone.build(lazy, entities),
-                chunk_pos,
-                &mut world_data.position,
-            );
-        }
+        // for _ in 0..16 {
+        //     self.spawn_somewhere_free(
+        //         || ItemBuilder::Stone.build(lazy, entities),
+        //         chunk_pos,
+        //         &mut world_data.position,
+        //     );
+        // }
 
         // for _ in 0..4 {
         //     self.spawn_somewhere_free(

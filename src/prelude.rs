@@ -132,6 +132,7 @@ pub use crate::{
             position::PositionComponent,
             save_marker::SaveMarkerComponent,
             to_save::ToSaveComponent,
+            veg_propagation::VegPropagationComponent,
             velocity::VelocityComponent,
         },
         resources::{
@@ -167,6 +168,7 @@ pub use crate::{
             particle_emitter::ParticleEmitterSystem,
             particle::ParticleSystem,
             perception_resolution::PerceptionResolutionSystem,
+            propagation::PropagationSystem,
             save_load::SaveLoadSystem,
             weather::WeatherSystem,
             world_maintenance::WorldMaintenanceSystem,

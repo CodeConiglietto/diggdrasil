@@ -60,6 +60,7 @@ struct MainState {
     collision_resolution_system: CollisionResolutionSystem,
     digestion_resolution_system: DigestionResolutionSystem,
     health_resolution_system: HealthResolutionSystem,
+    propagation_system: PropagationSystem,
     particle_emitter_system: ParticleEmitterSystem,
     particle_system: ParticleSystem,
     field_of_view_calculation_system: FieldOfViewCalculationSystem,
@@ -116,6 +117,7 @@ impl MainState {
         ecs_world.register::<PositionComponent>();
         ecs_world.register::<SaveMarkerComponent>();
         ecs_world.register::<ToSaveComponent>();
+        ecs_world.register::<VegPropagationComponent>();
         ecs_world.register::<VelocityComponent>();
 
         //Initialise all resources
@@ -211,6 +213,7 @@ impl MainState {
             collision_resolution_system: CollisionResolutionSystem,
             digestion_resolution_system: DigestionResolutionSystem,
             health_resolution_system: HealthResolutionSystem,
+            propagation_system: PropagationSystem,
             particle_emitter_system: ParticleEmitterSystem,
             particle_system: ParticleSystem,
             field_of_view_calculation_system: FieldOfViewCalculationSystem,
@@ -308,6 +311,7 @@ impl event::EventHandler<ggez::GameError> for MainState {
         self.collision_resolution_system.run_now(&self.ecs_world);
         self.digestion_resolution_system.run_now(&self.ecs_world);
         self.health_resolution_system.run_now(&self.ecs_world);
+        self.propagation_system.run_now(&self.ecs_world);
         self.particle_emitter_system.run_now(&self.ecs_world);
         self.particle_system.run_now(&self.ecs_world);
         self.field_of_view_calculation_system

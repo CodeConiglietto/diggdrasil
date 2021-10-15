@@ -27,7 +27,7 @@ impl AIGoalTrait for EatGoal {
             })
             .resolve(parent_entity, data)?
         {
-            return Self::failure();
+            return Self::success();
         }
 
         if self
@@ -38,7 +38,7 @@ impl AIGoalTrait for EatGoal {
             })
             .resolve(parent_entity, data)?
         {
-            return Self::failure();
+            return Self::success();
         }
 
         Self::failure()

@@ -20,7 +20,7 @@ impl AIGoalTrait for MoveInDirectionGoal {
         let offset = self.direction.get_offset();
         let new_pos = pos + offset;
 
-        if self.attempted 
+        if self.attempted || pos == new_pos
         {
             Self::success()
         } else {

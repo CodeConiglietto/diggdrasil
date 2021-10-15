@@ -213,7 +213,7 @@ impl<'a> System<'a> for ActionResolutionSystem {
                     AIAction::EatItemFromInventory { item } => {
                         if let Some(dig) = dig.get_mut(eid) {
                             if let Some(inv) = inv.get_mut(eid) {
-                                inv.remove(item);
+                                assert!(inv.remove(item));
                                 dig.insert(item);
                             }
                         }

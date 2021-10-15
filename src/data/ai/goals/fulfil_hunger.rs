@@ -1,4 +1,3 @@
-use rand::prelude::*;
 use specs::prelude::*;
 
 use crate::prelude::*;
@@ -10,7 +9,7 @@ pub struct FulfilHungerGoal {
 }
 
 impl AIGoalTrait for FulfilHungerGoal {
-    fn get_textual_representation(&self, data: &RenderData) -> String {
+    fn get_textual_representation(&self, _data: &RenderData) -> String {
         String::from("Fulfil hunger")
     }
 
@@ -30,9 +29,17 @@ impl AIGoalTrait for FulfilHungerGoal {
                         .find(|item| data.edible.get(*item).is_some());
                 }
 
+                let parent_pos = data.position.get(parent_entity).unwrap();
+
                 if food.is_none() {
                     if let Some(perc) = data.perception.get(parent_entity) {
-                        food = perc.food.choose(&mut thread_rng()).copied();
+                        food = perc.food.iter().min_by_key(|a| {
+                            let a_pos = data.position.get(**a).unwrap();
+
+                            let pos_delta = a_pos.pos - parent_pos.pos;
+
+                            pos_delta.x.abs() + pos_delta.y.abs()
+                        }).copied();
                     }
                 }
 

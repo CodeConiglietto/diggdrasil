@@ -26,4 +26,5 @@ pub mod pathing;
 pub mod position;
 pub mod save_marker;
 pub mod to_save;
+pub mod veg_propagation;
 pub mod velocity;

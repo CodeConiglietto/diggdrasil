@@ -18,7 +18,7 @@ impl AIGoalTrait for MoveToEntityGoal {
         //TODO: change to move to closest adjacent tile to entity
         let target_pos = data.position.get(self.target).unwrap().pos;
         
-        if !self
+        if self
             .travel_to_position_goal
             .get_or_insert_with(|| TravelToPositionGoal {
                 target_pos,
@@ -26,9 +26,10 @@ impl AIGoalTrait for MoveToEntityGoal {
             })
             .resolve(parent_entity, data)?
         {
-            return Self::failure();
+            println!("Entity succeeded at traveling to position");
+            return Self::success();
         }
 
-        Self::success()
+        Self::failure()
     }
 }
