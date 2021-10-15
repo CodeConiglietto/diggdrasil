@@ -23,6 +23,7 @@ impl AIGoalTrait for AttackEntityGoal {
             .move_to_entity_goal
             .get_or_insert_with(|| MoveToEntityGoal {
                 target,
+                travel_to_position_goal: None,
             })
             .resolve(parent_entity, data)?
         {

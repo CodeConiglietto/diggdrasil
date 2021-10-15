@@ -54,46 +54,54 @@ impl<'a> System<'a> for InputResolutionSystem {
                     //if no popup
                     match key {
                         //TODO: move these to use direction enum
-                        // KeyCode::Numpad1 => {
-                        //     gol.goal_stack.push(AIGoal::MoveInDirection {
-                        //         direction: Direction::DownLeft,
-                        //     });
-                        // }
-                        // KeyCode::Numpad2 | KeyCode::Down => {
-                        //     gol.goal_stack.push(AIGoal::MoveInDirection {
-                        //         direction: Direction::Down,
-                        //     });
-                        // }
-                        // KeyCode::Numpad3 => {
-                        //     gol.goal_stack.push(AIGoal::MoveInDirection {
-                        //         direction: Direction::DownRight,
-                        //     });
-                        // }
-                        // KeyCode::Numpad4 | KeyCode::Left => {
-                        //     gol.goal_stack.push(AIGoal::MoveInDirection {
-                        //         direction: Direction::Left,
-                        //     });
-                        // }
-                        // KeyCode::Numpad6 | KeyCode::Right => {
-                        //     gol.goal_stack.push(AIGoal::MoveInDirection {
-                        //         direction: Direction::Right,
-                        //     });
-                        // }
-                        // KeyCode::Numpad7 => {
-                        //     gol.goal_stack.push(AIGoal::MoveInDirection {
-                        //         direction: Direction::UpLeft,
-                        //     });
-                        // }
-                        // KeyCode::Numpad8 | KeyCode::Up => {
-                        //     gol.goal_stack.push(AIGoal::MoveInDirection {
-                        //         direction: Direction::Up,
-                        //     });
-                        // }
-                        // KeyCode::Numpad9 => {
-                        //     gol.goal_stack.push(AIGoal::MoveInDirection {
-                        //         direction: Direction::UpRight,
-                        //     });
-                        // }
+                        KeyCode::Numpad1 => {
+                            gol.goal_stack.push(AIGoal::MoveInDirection(MoveInDirectionGoal {
+                                direction: Direction::DownLeft,
+                                attempted: false,
+                            }));
+                        }
+                        KeyCode::Numpad2 | KeyCode::Down => {
+                            gol.goal_stack.push(AIGoal::MoveInDirection(MoveInDirectionGoal {
+                                direction: Direction::Down,
+                                attempted: false,
+                            }));
+                        }
+                        KeyCode::Numpad3 => {
+                            gol.goal_stack.push(AIGoal::MoveInDirection(MoveInDirectionGoal {
+                                direction: Direction::DownRight,
+                                attempted: false,
+                            }));
+                        }
+                        KeyCode::Numpad4 | KeyCode::Left => {
+                            gol.goal_stack.push(AIGoal::MoveInDirection(MoveInDirectionGoal {
+                                direction: Direction::Left,
+                                attempted: false,
+                            }));
+                        }
+                        KeyCode::Numpad6 | KeyCode::Right => {
+                            gol.goal_stack.push(AIGoal::MoveInDirection(MoveInDirectionGoal {
+                                direction: Direction::Right,
+                                attempted: false,
+                            }));
+                        }
+                        KeyCode::Numpad7 => {
+                            gol.goal_stack.push(AIGoal::MoveInDirection(MoveInDirectionGoal {
+                                direction: Direction::UpLeft,
+                                attempted: false,
+                            }));
+                        }
+                        KeyCode::Numpad8 | KeyCode::Up => {
+                            gol.goal_stack.push(AIGoal::MoveInDirection(MoveInDirectionGoal {
+                                direction: Direction::Up,
+                                attempted: false,
+                            }));
+                        }
+                        KeyCode::Numpad9 => {
+                            gol.goal_stack.push(AIGoal::MoveInDirection(MoveInDirectionGoal {
+                                direction: Direction::UpRight,
+                                attempted: false,
+                            }));
+                        }
                         // //TODO: add modifier check to see if player presses G or g.
                         // //G picks up an entity in a manipulator
                         // //g places an entity in the inventory

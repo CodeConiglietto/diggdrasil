@@ -102,13 +102,13 @@ impl Chunk {
             );
         }
 
-        for _ in 0..4 {
-            self.spawn_somewhere_free(
-                || CreatureBuilder::Deer.build(lazy, entities),
-                chunk_pos,
-                &mut world_data.position,
-            );
-        }
+        // for _ in 0..4 {
+        //     self.spawn_somewhere_free(
+        //         || CreatureBuilder::Deer.build(lazy, entities),
+        //         chunk_pos,
+        //         &mut world_data.position,
+        //     );
+        // }
     }
 
     fn spawn_entity(

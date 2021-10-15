@@ -28,6 +28,7 @@ impl AIGoalTrait for FleeDangerGoal {
 
                 MoveInDirectionGoal {
                     direction: Direction::from_positions(pos, sum_pos),
+                    attempted: false,
                 }
                 .resolve(parent_entity, data)
             } else {

@@ -38,12 +38,13 @@ impl AIGoalTrait for TravelPathGoal {
         // If the move succeeded or we don't have one ready, grab the next step
 
         if let Some(next_step) = self.path.pop() {
-            if !next_step.is_adjacent(pos) {
+            if !next_step.is_adjacent_or_same(pos) {
                 return Self::failure();
             }
 
             let move_in_direction = self.move_in_direction.insert(MoveInDirectionGoal {
                 direction: Direction::from_positions(next_step, pos),
+                attempted: false,
             });
             move_in_direction.resolve(parent_entity, data)
         } else {

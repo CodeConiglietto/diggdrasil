@@ -27,7 +27,7 @@ impl<'a> System<'a> for GoalResolutionSystem {
             while act.current_action.is_none() && gol.goal_stack.len() > 0 {
                 let current_goal = gol.goal_stack.last_mut().unwrap();
 
-                match current_goal.resolve(eid, &mut data) {
+                match dbg!(current_goal.resolve(eid, &mut data)) {
                     Ok(success) => {
                         // println!(
                         //     "Goal {} {}",
