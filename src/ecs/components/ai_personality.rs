@@ -1,3 +1,4 @@
+use rand::prelude::*;
 use serde::{Deserialize, Serialize};
 use specs::{Component, VecStorage};
 
@@ -15,7 +16,15 @@ impl AIPersonalityComponent {
         if under_player_control {
             None
         } else {
-            Some(AIGoal::Wander(WanderGoal {}))
+            // if thread_rng().gen::<bool>() {
+                Some(AIGoal::GroupWithAllies(GroupWithAlliesGoal {move_in_direction_goal: None}))
+            // } else {
+            //     if thread_rng().gen::<bool>() {
+            //         Some(AIGoal::Wander(WanderGoal {travel_to_position_goal: None}))
+            //     } else {
+            //         None
+            //     }
+            // }
         }
     }
 }

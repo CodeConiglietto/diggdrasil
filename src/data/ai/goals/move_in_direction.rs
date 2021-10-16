@@ -26,7 +26,7 @@ impl AIGoalTrait for MoveInDirectionGoal {
         } else {
             self.attempted = true;
             if let Some(chunk_tile) = data.tile_world.get(new_pos) {
-                if !chunk_tile.tile.tile_type.collides() {
+                if !chunk_tile.tile.tile_type.collides() && !chunk_tile.entities.iter().any(|entity| data.collider.get(*entity).is_some()) {
                     //Try attack an entity on the tile
                     if !chunk_tile.entities.is_empty() {
                         for entity in chunk_tile.entities.iter() {

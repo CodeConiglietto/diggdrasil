@@ -1,4 +1,4 @@
-use specs::{Join, ReadStorage, System, WriteStorage};
+use specs::{Join, Entities, ReadStorage, System, WriteStorage};
 
 use crate::prelude::*;
 
@@ -6,22 +6,36 @@ pub struct PerceptionResolutionSystem;
 
 impl<'a> System<'a> for PerceptionResolutionSystem {
     type SystemData = (
+        Entities<'a>,
         ReadStorage<'a, DigestionComponent>,
         ReadStorage<'a, EdibleComponent>,
+        ReadStorage<'a, SpeciesComponent>,
         WriteStorage<'a, AIPerceptionComponent>,
         WriteStorage<'a, AIGoalComponent>,
     );
 
     fn run(&mut self, data: Self::SystemData) {
-        let (dig, edb, mut per, mut gol) = data;
+        let (eids, dig, edb, spc, mut per, mut gol) = data;
 
-        for (dig, per, gol) in ((&dig).maybe(), &mut per, &mut gol).join() {
+        for (eid, dig, per, gol) in (&eids, (&dig).maybe(), &mut per, &mut gol).join() {
             per.food.clear();
+            per.allies.clear();
             per.threats.clear();
+
+            let this_species = spc.get(eid);
 
             for entity in per.all.iter() {
                 if edb.get(*entity).is_some() {
                     per.food.push(*entity);
+                }
+
+                //TODO: Change to a more complex hostility check
+                if let Some(this_species) = this_species {
+                    if let Some(other_species) = spc.get(*entity) {
+                        if this_species.species == other_species.species {
+                            per.allies.push(*entity);
+                        }
+                    }
                 }
             }
 

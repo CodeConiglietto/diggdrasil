@@ -22,7 +22,7 @@ pub enum SymbolBuilder {
         wall_feature: Option<WallFeature>,
     },
     Humanoid {
-        race: Race,
+        species: Species,
     },
     Tree,
     Stick,
@@ -95,9 +95,9 @@ impl SymbolBuilder {
                     },
                 ],
             },
-            Self::Humanoid { race } => Symbol {
+            Self::Humanoid { species } => Symbol {
                 draw_chars: vec![GgBunnyChar {
-                    index: race.get_symbol(),
+                    index: species.get_symbol(),
                     foreground: Color::new(1.0, 0.0, 0.0, 1.0),
                     background: None,
                     rotation: CharRotation::None,

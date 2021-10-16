@@ -24,6 +24,16 @@ impl<'a> System<'a> for GoalResolutionSystem {
             //--Set act.current_action to action
             //
 
+            if gol.goal_stack.len() == 0 {
+                println!("No goal, falling back on default behaviour");
+                if let Some(pers) = data.personality.get(eid) {
+                    // if let Some(default_goal) = pers.get_default_goal(false) {
+                    if let Some(default_goal) = pers.get_default_goal(data.input.get(eid).is_some()) {
+                        gol.goal_stack.push(default_goal);
+                    }
+                }
+            }
+
             while act.current_action.is_none() && gol.goal_stack.len() > 0 {
                 let current_goal = gol.goal_stack.last_mut().unwrap();
 

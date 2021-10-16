@@ -4,7 +4,7 @@ use specs::{world::EntitiesRes, Builder, Entity, LazyUpdate};
 use crate::prelude::*;
 
 pub enum CreatureBuilder {
-    Humanoid { race: Race },
+    Humanoid { species: Species },
     Deer,
 }
 
@@ -12,13 +12,13 @@ pub enum CreatureBuilder {
 impl CreatureBuilder {
     pub fn build(&self, lazy: &LazyUpdate, entities: &EntitiesRes) -> Entity {
         match self {
-            Self::Humanoid { race } => {
+            Self::Humanoid { species } => {
                 //TODO: create stomach contents from something representative of the race
                 let stomach_contents = vec![
                     ItemBuilder::Berry.build(lazy, entities),
-                    // ItemBuilder::Berry.build(lazy, entities),
-                    // ItemBuilder::Berry.build(lazy, entities),
-                    // ItemBuilder::Berry.build(lazy, entities),
+                    ItemBuilder::Berry.build(lazy, entities),
+                    ItemBuilder::Berry.build(lazy, entities),
+                    ItemBuilder::Berry.build(lazy, entities),
                 ];
                 lazy.create_entity(entities)
                     .with(VelocityComponent { x: 0, y: 0 })
@@ -38,10 +38,13 @@ impl CreatureBuilder {
                         goal_stack: Vec::new(),
                     })
                     .with(AIPersonalityComponent {
-                        diet: race.get_diet(),
-                        disposition: race.get_disposition(),
+                        diet: species.get_diet(),
+                        disposition: species.get_disposition(),
                     })
                     .with(AIPerceptionComponent::default())
+                    .with(SpeciesComponent {
+                        species: *species,
+                    })
                     .with(FieldOfViewComponent::new(12))
                     .with(PathingComponent::default())
                     .with(HealthComponent {
@@ -56,8 +59,8 @@ impl CreatureBuilder {
                     })
                     .with(DrawComponent {
                         seed: thread_rng().gen::<usize>(),
-                        sprite_builder: SpriteBuilder::Humanoid { race: *race },
-                        symbol_builder: Some(SymbolBuilder::Humanoid { race: *race }),
+                        sprite_builder: SpriteBuilder::Humanoid { species: *species },
+                        symbol_builder: Some(SymbolBuilder::Humanoid { species: *species }),
                     })
                     .with(DeathComponent {
                         contained_entities: Vec::new(),
@@ -89,7 +92,10 @@ impl CreatureBuilder {
                         disposition: Disposition::Timid,
                     })
                     .with(AIPerceptionComponent::default())
-                    .with(FieldOfViewComponent::new(5))
+                    .with(SpeciesComponent {
+                        species: Species::Deer,
+                    })
+                    .with(FieldOfViewComponent::new(8))
                     .with(PathingComponent::default())
                     .with(HealthComponent {
                         hit_particle: Some(ParticleBuilder::Blood { spawn_height: 1 }),

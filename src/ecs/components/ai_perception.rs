@@ -7,6 +7,8 @@ pub struct AIPerceptionComponent {
     #[serde(skip)]
     pub all: Vec<Entity>,
     #[serde(skip)]
+    pub allies: Vec<Entity>,
+    #[serde(skip)]
     pub threats: Vec<Entity>,
     #[serde(skip)]
     pub food: Vec<Entity>,

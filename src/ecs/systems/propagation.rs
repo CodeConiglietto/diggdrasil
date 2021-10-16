@@ -23,7 +23,7 @@ impl<'a> System<'a> for PropagationSystem {
                     let target_pos = this_pos.pos + IPosition::new(thread_rng().gen_range(-1..=1), thread_rng().gen_range(-1..=1));
 
                     if let Some(tile) = twld.get_mut(target_pos) {
-                        if tile.entities.is_empty() && !tile.tile.tile_type.collides() {
+                        if tile.entities.is_empty() && !tile.tile.tile_type.collides() && tile.tile.fertility > thread_rng().gen_range(0..=255) {
                             twld.spawn_entity(
                                 vpc.parent_builder
                                     .build(

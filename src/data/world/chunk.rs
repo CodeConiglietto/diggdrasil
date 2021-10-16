@@ -27,7 +27,7 @@ impl Chunk {
 
             let fertility = gen_package
                 .fertility_noise
-                .get([pos.x as f64 * 0.05, pos.y as f64 * 0.05])
+                .get([pos.x as f64 * 0.01, pos.y as f64 * 0.01])
                 .abs();
 
             chunk_tile.tile = Tile {
@@ -35,7 +35,7 @@ impl Chunk {
                 fertility: (fertility * 256.0) as u8,
                 tile_type: if gen_package
                     .elevation_noise
-                    .get([pos.x as f64 * 0.05, pos.y as f64 * 0.05])
+                    .get([pos.x as f64 * 0.025, pos.y as f64 * 0.025])
                     > 0.25
                 {
                     TileType::Wall {
@@ -82,13 +82,15 @@ impl Chunk {
         for local_pos in vegetation_local_positions {
             if !self.tiles[local_pos.to_idx().unwrap()].tile.tile_type.collides() {
                 self.spawn_entity(
-                    match 2 {
-                    //thread_rng().gen_range(0..=4) {
+                    match thread_rng().gen_range(0..=5) {
                         0 => ItemBuilder::Stick.build(lazy, entities),
                         1 => ItemBuilder::Log.build(lazy, entities),
                         2 => VegetationBuilder::Grass.build(lazy, entities),
-                        3 => VegetationBuilder::BerryBush.build(lazy, entities),
-                        4 => VegetationBuilder::Tree.build(lazy, entities),
+                        // 3 => VegetationBuilder::BerryBush.build(lazy, entities),
+                        // 4 => VegetationBuilder::Tree.build(lazy, entities),
+                        3 => VegetationBuilder::Grass.build(lazy, entities),
+                        4 => VegetationBuilder::Grass.build(lazy, entities),
+                        5 => VegetationBuilder::Grass.build(lazy, entities),
                         _ => unreachable!(),
                     },
                     (chunk_pos, local_pos),
@@ -105,13 +107,13 @@ impl Chunk {
         //     );
         // }
 
-        // for _ in 0..4 {
-        //     self.spawn_somewhere_free(
-        //         || CreatureBuilder::Deer.build(lazy, entities),
-        //         chunk_pos,
-        //         &mut world_data.position,
-        //     );
-        // }
+        for _ in 0..4 {
+            self.spawn_somewhere_free(
+                || CreatureBuilder::Deer.build(lazy, entities),
+                chunk_pos,
+                &mut world_data.position,
+            );
+        }
     }
 
     fn spawn_entity(

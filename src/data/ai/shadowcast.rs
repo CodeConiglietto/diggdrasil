@@ -6,7 +6,7 @@ use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use crate::prelude::*;
 
 pub struct Shadowcast {
-    radius: u32,
+    pub radius: u32,
     fov: Array2<bool>,
     frontier: Vec<(u32, (f32, f32))>,
 }

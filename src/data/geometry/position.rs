@@ -206,6 +206,11 @@ impl IPosition {
         chunk_pos * CHUNK_SIZE as i32 + IPosition::try_from(local_pos).unwrap()
     }
 
+    pub fn chebyshev_distance(&self, other: &IPosition) -> i32 {
+        let (x_delta, y_delta) = (self.x - other.x, self.y - other.y);
+        x_delta.max(y_delta)
+    }
+
     pub fn left(self) -> Self {
         Self {
             x: self.x - 1,

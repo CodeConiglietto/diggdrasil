@@ -3,21 +3,26 @@ use serde::{Deserialize, Serialize};
 
 use crate::prelude::*;
 
-#[derive(Clone, Copy, Serialize, Deserialize)]
-pub enum Race {
+#[derive(Clone, Copy, Serialize, Deserialize, PartialEq)]
+pub enum Species {
+    //Sapient
     Human,
     Elf,
     Kobold,
     Goblin,
+    //Other
+    Deer,
 }
 
-impl Race {
+impl Species {
     pub fn get_name(&self) -> &str {
         match self {
             Self::Human => "human",
             Self::Elf => "elf",
             Self::Kobold => "kobold",
             Self::Goblin => "goblin",
+
+            Self::Deer => "deer",
         }
     }
 
@@ -27,6 +32,8 @@ impl Race {
             Self::Elf => Color::new(0.0, 0.75, 0.0, 1.0),
             Self::Kobold => Color::new(0.75, 0.75, 0.75, 1.0),
             Self::Goblin => Color::new(0.75, 0.75, 0.0, 1.0),
+            
+            Self::Deer => Color::new(0.75, 0.75, 0.0, 1.0),
         }
     }
 
@@ -44,6 +51,8 @@ impl Race {
             Self::Elf => Diet::Herbivorous,
             Self::Kobold => Diet::Omnivorous,
             Self::Goblin => Diet::Carnivorous,
+
+            Self::Deer => Diet::Herbivorous,
         }
     }
 
@@ -53,6 +62,8 @@ impl Race {
             Self::Elf => Disposition::Neutral,
             Self::Kobold => Disposition::Timid,
             Self::Goblin => Disposition::Agressive,
+
+            Self::Deer => Disposition::Timid,
         }
     }
 }

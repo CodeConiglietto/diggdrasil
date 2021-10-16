@@ -1,3 +1,4 @@
+use rand::prelude::*;
 use specs::prelude::*;
 
 use crate::prelude::*;
@@ -33,6 +34,7 @@ impl AIGoalTrait for FulfilHungerGoal {
 
                 if food.is_none() {
                     if let Some(perc) = data.perception.get(parent_entity) {
+                        // food = perc.food.choose(&mut thread_rng()).copied();
                         food = perc.food.iter().min_by_key(|a| {
                             let a_pos = data.position.get(**a).unwrap();
 
@@ -43,7 +45,7 @@ impl AIGoalTrait for FulfilHungerGoal {
                     }
                 }
 
-                if let Some(food) = food {
+                if let Some(food) = food { 
                     self.eat_food_goal
                         .get_or_insert_with(|| EatGoal {
                             target: food,
@@ -53,7 +55,7 @@ impl AIGoalTrait for FulfilHungerGoal {
                         .resolve(parent_entity, data)
                 } else {
                     //TODO: change this to be a search for food goal
-                    WanderGoal {}.resolve(parent_entity, data)
+                    WanderGoal {travel_to_position_goal: None}.resolve(parent_entity, data)
                 }
 
                 //TODO:

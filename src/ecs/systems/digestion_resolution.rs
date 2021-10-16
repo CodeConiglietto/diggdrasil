@@ -17,7 +17,7 @@ impl<'a> System<'a> for DigestionResolutionSystem {
         let (eids, mut hpc, mut dig, mut edc) = data;
 
         for (hpc, dig) in (&mut hpc, &mut dig).join() {
-            // if thread_rng().gen::<bool>() {
+            if thread_rng().gen::<bool>() {
                 if let Some(edible) = dig.contents.first() {
                     let mut nutrient = edc.get_mut(*edible).unwrap();
 
@@ -29,14 +29,13 @@ impl<'a> System<'a> for DigestionResolutionSystem {
                         dig.contents.remove(0);
                     }
 
-                    //TODO: change HP to use a
                     if hpc.value < hpc.max_value {
                         hpc.value += 1;
                     }
                 } else {
                     hpc.turn_damage += 1;
                 }
-            // }
+            }
         }
     }
 }

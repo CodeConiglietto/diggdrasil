@@ -26,7 +26,7 @@ pub enum SpriteBuilder {
         wall_feature: Option<WallFeature>,
     },
     Humanoid {
-        race: Race,
+        species: Species,
     },
     Grass,
     Tree,
@@ -207,14 +207,14 @@ impl SpriteBuilder {
                     ],
                 }
             }
-            Self::Humanoid { race } => Sprite {
+            Self::Humanoid { species } => Sprite {
                 origin_x: 0,
                 origin_y: 1,
                 contents: array![
                     [Symbol {
                         draw_chars: vec![GgBunnyChar {
                             index: 0x00C,
-                            foreground: race.get_color(),
+                            foreground: species.get_color(),
                             background: None,
                             rotation: CharRotation::None,
                             mirror: CharMirror::None,
@@ -223,7 +223,7 @@ impl SpriteBuilder {
                     [Symbol {
                         draw_chars: vec![GgBunnyChar {
                             index: 0x05E,
-                            foreground: race.get_color(),
+                            foreground: species.get_color(),
                             background: None,
                             rotation: CharRotation::None,
                             mirror: CharMirror::None,

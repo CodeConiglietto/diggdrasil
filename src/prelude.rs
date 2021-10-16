@@ -53,7 +53,7 @@ pub use crate::{
             recipe_requirement::RecipeRequirement,
         },
         creatures::{
-            race::Race
+            species::Species,
         },
         effects::{
             particle_type::ParticleType,
@@ -131,6 +131,7 @@ pub use crate::{
             pathing::PathingComponent,
             position::PositionComponent,
             save_marker::SaveMarkerComponent,
+            species::SpeciesComponent,
             to_save::ToSaveComponent,
             veg_propagation::VegPropagationComponent,
             velocity::VelocityComponent,

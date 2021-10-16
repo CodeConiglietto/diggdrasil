@@ -26,10 +26,10 @@ impl VegetationBuilder {
                     name: String::from("grass"),
                 })
                 .with(EdibleComponent {
-                    nutrient_value: 3,
+                    nutrient_value: 50,
                 })
                 .with(VegPropagationComponent {
-                    propagation_chance: 250,
+                    propagation_chance: 100,
                     parent_builder: VegetationBuilder::Grass,
                 })
                 .build(),

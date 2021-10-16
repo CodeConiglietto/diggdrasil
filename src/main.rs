@@ -116,6 +116,7 @@ impl MainState {
         ecs_world.register::<PathingComponent>();
         ecs_world.register::<PositionComponent>();
         ecs_world.register::<SaveMarkerComponent>();
+        ecs_world.register::<SpeciesComponent>();
         ecs_world.register::<ToSaveComponent>();
         ecs_world.register::<VegPropagationComponent>();
         ecs_world.register::<VelocityComponent>();
@@ -152,7 +153,8 @@ impl MainState {
                 WriteStorage<InputComponent>,
             ) = ecs_world.system_data();
 
-            let player = CreatureBuilder::Humanoid { race: Race::Human }.build(&lazy, &entities);
+            let player = CreatureBuilder::Humanoid { species: Species::Human }.build(&lazy, &entities);
+            // let player = CreatureBuilder::Deer { }.build(&lazy, &entities);
             input.insert(player, InputComponent::default()).unwrap();
             tile_world.spawn_entity(player, IPosition::new(16, 16), &mut position);
         }
