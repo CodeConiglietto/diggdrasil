@@ -9,6 +9,7 @@ use crate::prelude::*;
 
 #[derive(Clone, Serialize, Deserialize)]
 pub enum SymbolBuilder {
+    GroundEdge,
     Ground {
         fertility: u8,
     },
@@ -42,6 +43,48 @@ pub enum SymbolBuilder {
 impl SymbolBuilder {
     pub fn get_symbol(&self, seed: usize) -> Symbol {
         match self {
+            Self::GroundEdge => {
+                let (rotation_fill, mirror_fill) = get_random_transforms_from_seed(seed);
+                let (rotation_dither, mirror_dither) = get_random_transforms_from_seed(seed << 1);
+
+                Symbol {
+                    draw_chars: vec![GgBunnyChar {
+                        index: 0x2B2 + (seed) % 4,
+                        foreground: Color::new(0.1, 0.05, 0.05, 1.0),
+                        background: None,
+                        rotation: rotation_fill,
+                        mirror: mirror_fill,
+                    },
+                    GgBunnyChar {
+                        index: 0x2C1,
+                        foreground: Color::new(0.2, 0.15, 0.15, 1.0),
+                        background: None,
+                        rotation: Rotation::Rotation180,
+                        mirror: Mirror::None,
+                    },
+                    GgBunnyChar {
+                        index: 0x311,
+                        foreground: Color::new(0.15, 0.1, 0.1, 1.0),
+                        background: None,
+                        rotation: Rotation::Rotation180,
+                        mirror: Mirror::None,
+                    },
+                    GgBunnyChar {
+                        index: 0x2B0 + (seed << 1) % 2,
+                        foreground: Color::BLACK,
+                        background: None,
+                        rotation: rotation_dither,
+                        mirror: mirror_dither,
+                    },
+                    GgBunnyChar {
+                        index: 0x2C0,
+                        foreground: Color::new(0.2, 0.15, 0.15, 1.0),
+                        background: None,
+                        rotation: Rotation::Rotation180,
+                        mirror: Mirror::None,
+                    }]
+                }
+            }
             Self::Ground { fertility } => {
                 let grass_index = if *fertility < 8 {
                     0x000

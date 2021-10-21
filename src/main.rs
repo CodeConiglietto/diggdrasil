@@ -153,8 +153,8 @@ impl MainState {
                 WriteStorage<InputComponent>,
             ) = ecs_world.system_data();
 
-            let player = CreatureBuilder::Humanoid { species: Species::Human }.build(&lazy, &entities);
-            // let player = CreatureBuilder::Deer { }.build(&lazy, &entities);
+            // let player = CreatureBuilder::Humanoid { species: Species::Human }.build(&lazy, &entities);
+            let player = CreatureBuilder::Deer { }.build(&lazy, &entities);
             input.insert(player, InputComponent::default()).unwrap();
             tile_world.spawn_entity(player, IPosition::new(16, 16), &mut position);
         }
@@ -328,13 +328,14 @@ impl event::EventHandler<ggez::GameError> for MainState {
 
         self.current_tic += 1;
 
-        std::thread::sleep(Duration::from_millis(50));
+        std::thread::sleep(Duration::from_millis(100));
 
         Ok(())
     }
 
     fn draw(&mut self, ctx: &mut Context) -> GameResult {
-        graphics::clear(ctx, [0.05, 0.05, 0.05, 1.0].into());
+        graphics::clear(ctx, Color::BLACK);
+        // graphics::clear(ctx, [0.05, 0.05, 0.05, 1.0].into());
 
         self.font_batch.clear();
 

@@ -1,6 +1,6 @@
 use std::{convert::TryFrom, ops::Not};
 
-use specs::{Component, VecStorage};
+use specs::{Component, ReadStorage, VecStorage};
 
 use crate::prelude::*;
 
@@ -23,6 +23,7 @@ impl PathingComponent {
         tile_world: &TileWorldResource,
         start: IPosition,
         end: IPosition,
+        collider: &ReadStorage<ColliderComponent>,
     ) -> Option<Vec<IPosition>> {
         let loaded_offset = tile_world.offset * CHUNK_SIZE as i32;
 
@@ -51,12 +52,12 @@ impl PathingComponent {
 
                     let buffer_pos = loaded / u32::try_from(CHUNK_SIZE).unwrap();
                     let local_pos = loaded % u32::try_from(CHUNK_SIZE).unwrap();
-
-                    buffer[TileWorldResource::buffer_idx(buffer_pos).unwrap()].tiles
-                        [local_pos.to_idx().unwrap()]
-                    .tile
-                    .tile_type
-                    .collides()
+                    
+                    let chunk_tile = &buffer[TileWorldResource::buffer_idx(buffer_pos).unwrap()].tiles
+                    [local_pos.to_idx().unwrap()];
+                    
+                    (chunk_tile.tile.tile_type.collides() || 
+                    chunk_tile.entities.iter().any(|entity| collider.get(*entity).is_some()))
                     .not()
                     .then(|| 1 + diff.x.abs() as u32 + diff.y.abs() as u32)
                 },

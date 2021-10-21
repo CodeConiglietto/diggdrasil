@@ -30,7 +30,7 @@ impl AIGoalTrait for TravelToPositionGoal {
 
         // If the previously computed path failed or we don't have one, compute a new one
         if let Some(pathing) = data.pathing.get_mut(parent_entity) {
-            if let Some(path) = pathing.pathfind(&data.tile_world, pos, self.target_pos) {
+            if let Some(path) = pathing.pathfind(&data.tile_world, pos, self.target_pos, &data.collider) {
                 println!("Entity recomputing path");
                 let travel_path = self.travel_path.insert(TravelPathGoal::new(path));
                 travel_path.resolve(parent_entity, data)

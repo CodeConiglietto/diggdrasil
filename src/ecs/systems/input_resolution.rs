@@ -244,7 +244,7 @@ impl<'a> System<'a> for InputResolutionSystem {
                 let tile_mouse = top_left + char_mouse;
 
                 if let Some(pth) = pth {
-                    inc.path = pth.pathfind(&*twld, pos.pos, tile_mouse);
+                    inc.path = pth.pathfind(&*twld, pos.pos, tile_mouse, &data.collider);
                 }
             }
 

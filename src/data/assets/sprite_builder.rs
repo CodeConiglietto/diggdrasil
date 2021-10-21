@@ -75,15 +75,7 @@ impl SpriteBuilder {
                         fertility: *fertility
                     }
                     .get_symbol(seed)],
-                    [Symbol {
-                        draw_chars: vec![GgBunnyChar {
-                            index: 0x2B4 + (seed) % 4,
-                            foreground: Color::new(0.2, 0.15, 0.15, 1.0),
-                            background: Some(Color::new(0.15, 0.1, 0.1, 1.0)),
-                            rotation: CharRotation::None,
-                            mirror: CharMirror::None,
-                        }]
-                    }]
+                    [SymbolBuilder::GroundEdge{}.get_symbol(seed)]
                 ],
             },
             Self::Wall { material } => {
@@ -110,15 +102,7 @@ impl SpriteBuilder {
                                 mirror: CharMirror::None,
                             }]
                         }],
-                        [Symbol {
-                            draw_chars: vec![GgBunnyChar {
-                                index: 0x2B0 + (seed) % 8,
-                                foreground: Color::new(0.2, 0.15, 0.15, 1.0),
-                                background: Some(Color::new(0.15, 0.1, 0.1, 1.0)),
-                                rotation: CharRotation::None,
-                                mirror: CharMirror::None,
-                            }]
-                        }]
+                        [SymbolBuilder::GroundEdge{}.get_symbol(seed)]
                     ],
                 }
             }
@@ -195,15 +179,7 @@ impl SpriteBuilder {
                                 mid_variant_char
                             ]
                         }],
-                        [Symbol {
-                            draw_chars: vec![GgBunnyChar {
-                                index: 0x2B0,
-                                foreground: Color::new(0.2, 0.15, 0.15, 1.0),
-                                background: Some(Color::new(0.15, 0.1, 0.1, 1.0)),
-                                rotation: CharRotation::None,
-                                mirror: CharMirror::None,
-                            }]
-                        }]
+                        [SymbolBuilder::GroundEdge{}.get_symbol(seed)]
                     ],
                 }
             }

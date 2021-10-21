@@ -27,8 +27,8 @@ impl<'a> System<'a> for GoalResolutionSystem {
             if gol.goal_stack.len() == 0 {
                 println!("No goal, falling back on default behaviour");
                 if let Some(pers) = data.personality.get(eid) {
-                    // if let Some(default_goal) = pers.get_default_goal(false) {
-                    if let Some(default_goal) = pers.get_default_goal(data.input.get(eid).is_some()) {
+                    if let Some(default_goal) = pers.get_default_goal(false) {
+                    // if let Some(default_goal) = pers.get_default_goal(data.input.get(eid).is_some()) {
                         gol.goal_stack.push(default_goal);
                     }
                 }
