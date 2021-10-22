@@ -1,4 +1,4 @@
-use std::{convert::TryFrom, fs};
+use std::{convert::TryFrom, env, fs, path::PathBuf, time::Duration};
 
 use bunnyfont::ggez::{GgBunnyFont, GgBunnyFontBatch};
 use bunnyfont::{
@@ -6,7 +6,7 @@ use bunnyfont::{
     ggez::GgBunnyChar,
 };
 use ggez::{
-    conf::WindowMode,
+    conf::{ModuleConf, WindowMode},
     event::{self, KeyCode, KeyMods},
     graphics::{self, Color, DrawParam, FilterMode, Image},
     input::{
@@ -23,7 +23,7 @@ use specs::{
     BitSet, Entities, Join, LazyUpdate, Read, RunNow, World as ECSWorld, WorldExt as ECSWorldExt,
     WriteStorage,
 };
-use std::{env, path::PathBuf, time::Duration};
+use structopt::StructOpt;
 use tui::{
     layout::{Constraint, Direction as LayoutDirection, Layout},
     style::{Color as TuiColor, Style},
@@ -40,6 +40,15 @@ pub mod data;
 pub mod ecs;
 pub mod generation;
 pub mod util;
+
+#[derive(StructOpt)]
+struct Opts {
+    #[structopt(long)]
+    no_audio: bool,
+
+    #[structopt(long)]
+    no_gamepad: bool,
+}
 
 struct MainState {
     //Assets
@@ -154,7 +163,7 @@ impl MainState {
             ) = ecs_world.system_data();
 
             // let player = CreatureBuilder::Humanoid { species: Species::Human }.build(&lazy, &entities);
-            let player = CreatureBuilder::Deer { }.build(&lazy, &entities);
+            let player = CreatureBuilder::Deer {}.build(&lazy, &entities);
             input.insert(player, InputComponent::default()).unwrap();
             tile_world.spawn_entity(player, IPosition::new(16, 16), &mut position);
         }
@@ -696,11 +705,18 @@ pub fn main() -> GameResult {
         .apply()
         .unwrap();
 
-    let mut cb = ggez::ContextBuilder::new("Diggdrasil", "CodeBunny").window_mode(WindowMode {
-        width: WINDOW_WIDTH as f32,
-        height: WINDOW_HEIGHT as f32,
-        ..WindowMode::default()
-    });
+    let opts = Opts::from_args();
+
+    let mut cb = ggez::ContextBuilder::new("Diggdrasil", "CodeBunny")
+        .window_mode(WindowMode {
+            width: WINDOW_WIDTH as f32,
+            height: WINDOW_HEIGHT as f32,
+            ..WindowMode::default()
+        })
+        .modules(ModuleConf {
+            gamepad: !opts.no_gamepad,
+            audio: !opts.no_audio,
+        });
 
     if let Ok(manifest_dir) = env::var("CARGO_MANIFEST_DIR") {
         let mut path = PathBuf::from(manifest_dir);

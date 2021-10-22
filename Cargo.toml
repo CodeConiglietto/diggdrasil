@@ -23,5 +23,6 @@ rand = "0.8.4"
 rmp-serde = "0.15.5"
 serde = { version = "1.0.130", features = ["derive"] }
 specs = { version = "0.17.0", features = ["shred-derive", "specs-derive", "serde"] }
+structopt = "0.3.25"
 strum = { version = "0.21.0", features = ["derive"] }
 tui = { version = "0.16.0", default-features = false }
